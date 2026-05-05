@@ -52,6 +52,14 @@ Frontend läuft auf http://localhost:5173
 Backend läuft auf http://localhost:8000
 API-Dokumentation: http://localhost:8000/docs
 
+## Entwicklung
+
+### API-Typen aktualisieren
+Nach jeder Änderung an Backend-Endpunkten oder Schemas:
+```powershell
+cd frontend && pnpm generate-api
+```
+
 ## Lizenz
 
 Apache 2.0 - siehe LICENSE

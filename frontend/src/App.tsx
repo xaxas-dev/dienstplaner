@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { checkHealth } from './lib/api'
+import { apiGet } from './lib/api'
+import type { components } from './lib/api-types'
 
+type HealthResponse = components['schemas']['HealthResponse']
 type Status = 'idle' | 'connected' | 'error'
 
 export default function App() {
@@ -8,7 +10,7 @@ export default function App() {
 
   const handleCheck = async () => {
     try {
-      await checkHealth()
+      await apiGet<HealthResponse>('/api/health')
       setStatus('connected')
     } catch {
       setStatus('error')
