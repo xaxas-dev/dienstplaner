@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+.env
+.env.*
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# uv
+.python-version
+
+# SQLite
+*.sqlite
+*.sqlite3
+*.db
+
+# Node
+node_modules/
+dist/
+build/
+.pnpm-store/
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+
+# Testdaten (keine echten Klinikdaten ins Repo)
+**/testdata/real/
+**/fixtures/real/
+
+# Exports (werden on-demand generiert)
+exports/
