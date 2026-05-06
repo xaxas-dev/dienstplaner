@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.doctor import DoctorType
+from app.schemas.employment_period import EmploymentPeriodResponse
+from app.schemas.qualification import QualificationResponse
 
 
 class DoctorBase(BaseModel):
@@ -34,3 +38,8 @@ class DoctorResponse(DoctorBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class DoctorWithRelations(DoctorResponse):
+    employment_periods: list[EmploymentPeriodResponse] = []
+    qualifications: list[QualificationResponse] = []

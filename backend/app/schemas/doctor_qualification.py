@@ -23,3 +23,10 @@ class DoctorQualificationResponse(DoctorQualificationBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class DoctorQualificationBody(BaseModel):
+    """Optionaler Body für die Qualifikations-Zuweisung (Pfad liefert IDs)."""
+
+    acquired_at: date | None = None
+    expires_at: date | None = None

@@ -39,6 +39,12 @@ class Doctor(Base):
     doctor_qualifications: Mapped[list["DoctorQualification"]] = relationship(  # noqa: F821
         "DoctorQualification", back_populates="doctor", cascade="all, delete-orphan"
     )
+    qualifications: Mapped[list["Qualification"]] = relationship(  # noqa: F821
+        "Qualification",
+        secondary="doctor_qualifications",
+        viewonly=True,
+        overlaps="doctor_qualifications,qualification",
+    )
     rule_overrides: Mapped[list["RuleOverride"]] = relationship(  # noqa: F821
         "RuleOverride", back_populates="doctor"
     )
