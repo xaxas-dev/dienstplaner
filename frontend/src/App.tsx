@@ -1,40 +1,28 @@
-import { useState } from 'react'
-import { apiGet } from './lib/api'
-import type { components } from './lib/api-types'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { AppShell } from '@/components/layout/AppShell'
+import { DoctorListPage } from '@/features/doctors/DoctorListPage'
+import { DoctorCreatePage } from '@/features/doctors/DoctorCreatePage'
+import { DoctorDetailPage } from '@/features/doctors/DoctorDetailPage'
 
-type HealthResponse = components['schemas']['HealthResponse']
-type Status = 'idle' | 'connected' | 'error'
+function NotFoundPage() {
+  return (
+    <div className="flex flex-col items-center justify-center flex-1 gap-4 p-8">
+      <h2 className="text-2xl font-semibold text-foreground">Seite nicht gefunden</h2>
+      <p className="text-muted-foreground">Die angeforderte Seite existiert nicht.</p>
+    </div>
+  )
+}
 
 export default function App() {
-  const [status, setStatus] = useState<Status>('idle')
-
-  const handleCheck = async () => {
-    try {
-      await apiGet<HealthResponse>('/api/health')
-      setStatus('connected')
-    } catch {
-      setStatus('error')
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold text-gray-900">Dienstplaner</h1>
-        <p className="text-gray-500">Schichtplanungs-Software</p>
-        <button
-          onClick={() => void handleCheck()}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Verbindung prüfen
-        </button>
-        {status === 'connected' && (
-          <p className="text-green-600 font-medium">Verbunden</p>
-        )}
-        {status === 'error' && (
-          <p className="text-red-600 font-medium">Keine Verbindung</p>
-        )}
-      </div>
-    </div>
+    <Routes>
+      <Route element={<AppShell />}>
+        <Route index element={<Navigate to="/doctors" replace />} />
+        <Route path="/doctors" element={<DoctorListPage />} />
+        <Route path="/doctors/new" element={<DoctorCreatePage />} />
+        <Route path="/doctors/:doctorId" element={<DoctorDetailPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
   )
 }
