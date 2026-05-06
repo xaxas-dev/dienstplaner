@@ -14,7 +14,7 @@ const navItems: NavItem[] = [
   { label: 'Stationen', to: '/departments', icon: Building2, disabled: true },
   { label: 'Schichttypen', to: '/shift-types', icon: Clock, disabled: true },
   { label: 'Qualifikationen', to: '/qualifications', icon: Award, disabled: true },
-  { label: 'Tarif-Overrides', to: '/rule-overrides', icon: Settings, disabled: true },
+  { label: 'Sonderregelungen', to: '/rule-overrides', icon: Settings, disabled: true },
   { label: 'Pläne', to: '/plans', icon: CalendarDays, disabled: true },
 ]
 
