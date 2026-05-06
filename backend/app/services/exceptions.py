@@ -35,3 +35,58 @@ class DuplicateQualificationError(Exception):
         )
         self.doctor_id = doctor_id
         self.qualification_id = qualification_id
+
+
+class DepartmentNotFoundError(Exception):
+    def __init__(self, department_id: int) -> None:
+        super().__init__(f"Bereich mit ID {department_id} nicht gefunden")
+        self.department_id = department_id
+
+
+class DepartmentValidationError(Exception):
+    def __init__(self, detail: str) -> None:
+        super().__init__(detail)
+        self.detail = detail
+
+
+class ShiftTypeNotFoundError(Exception):
+    def __init__(self, shift_type_id: int) -> None:
+        super().__init__(f"Schichttyp mit ID {shift_type_id} nicht gefunden")
+        self.shift_type_id = shift_type_id
+
+
+class ShiftTypeValidationError(Exception):
+    def __init__(self, detail: str) -> None:
+        super().__init__(detail)
+        self.detail = detail
+
+
+class QualificationInUseError(Exception):
+    def __init__(self, doctor_names: list[str]) -> None:
+        self.doctor_names = doctor_names
+        if len(doctor_names) <= 10:
+            names_str = ", ".join(doctor_names)
+        else:
+            names_str = ", ".join(doctor_names[:10]) + f" ... und {len(doctor_names) - 10} weitere"
+        super().__init__(
+            f"Qualifikation wird noch von folgenden Ärzten verwendet: {names_str}"
+        )
+        self.detail = str(self)
+
+
+class QualificationValidationError(Exception):
+    def __init__(self, detail: str) -> None:
+        super().__init__(detail)
+        self.detail = detail
+
+
+class RuleOverrideNotFoundError(Exception):
+    def __init__(self, override_id: int) -> None:
+        super().__init__(f"Regelüberschreibung mit ID {override_id} nicht gefunden")
+        self.override_id = override_id
+
+
+class RuleOverrideValidationError(Exception):
+    def __init__(self, detail: str) -> None:
+        super().__init__(detail)
+        self.detail = detail

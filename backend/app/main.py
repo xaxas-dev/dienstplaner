@@ -4,10 +4,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.departments import router as departments_router
 from app.api.doctors import ep_router
 from app.api.doctors import router as doctors_router
 from app.api.error_handlers import register_error_handlers
 from app.api.health import router as health_router
+from app.api.qualifications import router as qualifications_router
+from app.api.rule_overrides import router as rule_overrides_router
+from app.api.shift_types import router as shift_types_router
 from app.config import BASE_DIR
 
 
@@ -29,4 +33,8 @@ app.add_middleware(
 app.include_router(health_router, prefix="/api")
 app.include_router(doctors_router, prefix="/api")
 app.include_router(ep_router, prefix="/api")
+app.include_router(departments_router, prefix="/api")
+app.include_router(shift_types_router, prefix="/api")
+app.include_router(qualifications_router, prefix="/api")
+app.include_router(rule_overrides_router, prefix="/api")
 register_error_handlers(app)

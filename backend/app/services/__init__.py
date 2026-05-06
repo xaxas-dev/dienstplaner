@@ -1,19 +1,45 @@
-from app.services import doctor_service
+from app.services import (
+    department_service,
+    doctor_service,
+    qualification_service,
+    rule_override_service,
+    shift_type_service,
+)
 from app.services.exceptions import (
+    DepartmentNotFoundError,
+    DepartmentValidationError,
     DoctorNotFoundError,
     DoctorValidationError,
     DuplicateQualificationError,
     EmploymentPeriodNotFoundError,
     EmploymentPeriodOverlapError,
+    QualificationInUseError,
     QualificationNotFoundError,
+    QualificationValidationError,
+    RuleOverrideNotFoundError,
+    RuleOverrideValidationError,
+    ShiftTypeNotFoundError,
+    ShiftTypeValidationError,
 )
 
 __all__ = [
+    "DepartmentNotFoundError",
+    "DepartmentValidationError",
     "DoctorNotFoundError",
     "DoctorValidationError",
     "DuplicateQualificationError",
     "EmploymentPeriodNotFoundError",
     "EmploymentPeriodOverlapError",
+    "QualificationInUseError",
     "QualificationNotFoundError",
+    "QualificationValidationError",
+    "RuleOverrideNotFoundError",
+    "RuleOverrideValidationError",
+    "ShiftTypeNotFoundError",
+    "ShiftTypeValidationError",
+    "department_service",
     "doctor_service",
+    "qualification_service",
+    "rule_override_service",
+    "shift_type_service",
 ]

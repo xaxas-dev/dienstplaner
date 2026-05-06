@@ -2,12 +2,20 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.services.exceptions import (
+    DepartmentNotFoundError,
+    DepartmentValidationError,
     DoctorNotFoundError,
     DoctorValidationError,
     DuplicateQualificationError,
     EmploymentPeriodNotFoundError,
     EmploymentPeriodOverlapError,
+    QualificationInUseError,
     QualificationNotFoundError,
+    QualificationValidationError,
+    RuleOverrideNotFoundError,
+    RuleOverrideValidationError,
+    ShiftTypeNotFoundError,
+    ShiftTypeValidationError,
 )
 
 
@@ -43,3 +51,51 @@ def register_error_handlers(app: FastAPI) -> None:
         _: Request, exc: DuplicateQualificationError
     ) -> JSONResponse:
         return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    @app.exception_handler(DepartmentNotFoundError)
+    async def department_not_found(
+        _: Request, exc: DepartmentNotFoundError
+    ) -> JSONResponse:
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+    @app.exception_handler(DepartmentValidationError)
+    async def department_validation(
+        _: Request, exc: DepartmentValidationError
+    ) -> JSONResponse:
+        return JSONResponse(status_code=422, content={"detail": exc.detail})
+
+    @app.exception_handler(ShiftTypeNotFoundError)
+    async def shift_type_not_found(
+        _: Request, exc: ShiftTypeNotFoundError
+    ) -> JSONResponse:
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+    @app.exception_handler(ShiftTypeValidationError)
+    async def shift_type_validation(
+        _: Request, exc: ShiftTypeValidationError
+    ) -> JSONResponse:
+        return JSONResponse(status_code=422, content={"detail": exc.detail})
+
+    @app.exception_handler(QualificationInUseError)
+    async def qualification_in_use(
+        _: Request, exc: QualificationInUseError
+    ) -> JSONResponse:
+        return JSONResponse(status_code=422, content={"detail": exc.detail})
+
+    @app.exception_handler(QualificationValidationError)
+    async def qualification_validation(
+        _: Request, exc: QualificationValidationError
+    ) -> JSONResponse:
+        return JSONResponse(status_code=422, content={"detail": exc.detail})
+
+    @app.exception_handler(RuleOverrideNotFoundError)
+    async def rule_override_not_found(
+        _: Request, exc: RuleOverrideNotFoundError
+    ) -> JSONResponse:
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+    @app.exception_handler(RuleOverrideValidationError)
+    async def rule_override_validation(
+        _: Request, exc: RuleOverrideValidationError
+    ) -> JSONResponse:
+        return JSONResponse(status_code=422, content={"detail": exc.detail})
