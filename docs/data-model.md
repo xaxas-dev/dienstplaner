@@ -254,8 +254,170 @@ T1 (Interdisziplinäre Notaufnahme) ist ein bereichsspezifischer Tagdienst,
 der global modelliert ist. Die Eingrenzung auf die INA als Bereich folgt
 in M8 als Solver-Constraint.
 
-## Hinweis: Plan-Entitäten folgen in M2
+## Plan-Entitäten (ab M2)
 
-Die Entitäten Plan, Schicht, Zuweisung, Abwesenheit und Wunsch werden
-in Meilenstein M2 ergänzt. Das vorliegende Schema bildet die vollständige
-Stammdaten-Grundlage.
+### Übersicht: Plan-Modell
+
+```mermaid
+erDiagram
+    Plan {
+        int id PK
+        string name
+        date valid_from
+        date valid_to
+        enum status
+        text notes
+        datetime created_at
+        datetime updated_at
+    }
+
+    PlanVersion {
+        int id PK
+        int plan_id FK
+        int version_number
+        text snapshot_json
+        text comment
+        datetime created_at
+        datetime updated_at
+    }
+
+    Shift {
+        int id PK
+        int plan_id FK
+        date shift_date
+        int shift_type_id FK
+        int doctor_id FK
+        bool is_pinned
+        text notes
+        datetime created_at
+        datetime updated_at
+    }
+
+    RotationAssignment {
+        int id PK
+        int plan_id FK
+        int doctor_id FK
+        int department_id FK
+        date valid_from
+        date valid_to
+        text notes
+        datetime created_at
+        datetime updated_at
+    }
+
+    Absence {
+        int id PK
+        int doctor_id FK
+        enum absence_type
+        date valid_from
+        date valid_to
+        text notes
+        datetime created_at
+        datetime updated_at
+    }
+
+    Wish {
+        int id PK
+        int doctor_id FK
+        date wish_date
+        enum wish_type
+        int shift_type_id FK
+        int priority
+        text notes
+        datetime created_at
+        datetime updated_at
+    }
+
+    Plan ||--o{ PlanVersion : "versioniert"
+    Plan ||--o{ Shift : "enthält"
+    Plan ||--o{ RotationAssignment : "hat"
+    Doctor ||--o{ Shift : "leistet"
+    Doctor ||--o{ RotationAssignment : "auf Rotation"
+    Doctor ||--o{ Absence : "abwesend"
+    Doctor ||--o{ Wish : "wünscht"
+    ShiftType ||--o{ Shift : "Typ"
+    ShiftType ||--o{ Wish : "bevorzugter Typ"
+    Department ||--o{ RotationAssignment : "zugeordnet"
+```
+
+### Hybrid-Modell: Schicht ohne Bereich
+
+Eine `Shift` speichert **nicht** den Bereich (Department) direkt. Der Bereich
+ergibt sich zur Laufzeit aus den aktiven `RotationAssignments` des Arztes
+zum Zeitpunkt der Schicht. Dieses Hybrid-Modell hat zwei Vorteile:
+
+1. Schichten müssen nicht bei Rotationsänderungen migriert werden.
+2. Unbesetzte Schichten (`doctor_id=NULL`) haben naturgemäß keinen Bereich.
+
+Die Bereichszuordnung wird im Service-Layer und später im Solver berechnet.
+
+### Plan-Status und Editierbarkeit
+
+`PlanStatus` kennt drei Zustände: `DRAFT`, `RELEASED`, `ARCHIVED`.
+Der Plan bleibt auch nach `RELEASED` editierbar – für Krankheitsausfälle
+und kurzfristige Änderungen. `ARCHIVED` signalisiert abgelaufene Zeiträume
+und wird nur im UI als Schutz genutzt, nicht als DB-Constraint.
+
+### Plan-Versionierung als JSON-Snapshot
+
+`PlanVersion` speichert den vollständigen Planstand als JSON-Text in SQLite.
+Format:
+```json
+{
+  "plan": {...},
+  "shifts": [...],
+  "rotation_assignments": [...]
+}
+```
+Jede Version ist durch `(plan_id, version_number)` eindeutig (1-basiert).
+Snapshot-Erstellung und -Restore-Logik folgen in M2-002.
+
+### Pin-Konzept (Variante C)
+
+`Shift.is_pinned = True` markiert manuell gesetzte Zuweisungen. Der Solver
+(ab M5/M8) respektiert gepinnte Schichten und überschreibt sie nicht.
+Pin ist pro Schicht einzeln löschbar.
+
+### Geteilte Rotationen
+
+Mehrere `RotationAssignment`-Einträge für denselben Plan, Arzt und Bereich
+mit überlappenden Zeiträumen sind explizit erlaubt (kein UNIQUE-Constraint).
+Das Modell zeigt "Doctor A und Doctor B sind beide auf SU vom 1. bis 30."
+Die fachliche Interpretation (Aufteilung, Vollzeit-Äquivalente) obliegt
+dem Solver in M8.
+
+### Abwesenheiten (plan-unabhängig)
+
+`Absence` ist nicht an einen Plan gebunden. Urlaub oder Krankheit gilt
+für alle Pläne, die den Zeitraum berühren. Der Service-Layer verknüpft
+Abwesenheiten zur Planungszeit mit dem relevanten Plan.
+
+`AbsenceType` kennt: URLAUB, KRANKHEIT, FORTBILDUNG, ELTERNZEIT,
+MUTTERSCHUTZ, SONSTIGES.
+
+### Wünsche (date-basiert)
+
+`Wish` ist doctor-bezogen und referenziert einen konkreten Tag (`wish_date`).
+
+| WishType | shift_type_id |
+|----------|--------------|
+| AVOID_DAY | muss NULL sein |
+| AVOID_SHIFT | muss gesetzt sein |
+| REQUIRE_SHIFT | muss gesetzt sein |
+
+Diese Cross-Field-Regel wird im Pydantic-Schema (`model_validator`) und
+im Service-Layer geprüft. Recurring-Wünsche und Cross-Day-Constraints
+folgen in einem späteren Schema-Update.
+
+`priority`: 1 = hoch, 2 = mittel, 3 = niedrig.
+
+### Cascade-Verhalten
+
+| Eltern-Entität gelöscht | Kaskadiert auf |
+|------------------------|----------------|
+| Plan | Shifts, RotationAssignments, PlanVersions |
+| Doctor | Absences, Wishes, RotationAssignments, (Shifts: SET NULL) |
+| Department | RotationAssignments |
+| ShiftType | (Shifts: RESTRICT), (Wishes: SET NULL) |
+
+Doctors und Departments werden beim Plan-Löschen **nicht** kaskadiert gelöscht.
