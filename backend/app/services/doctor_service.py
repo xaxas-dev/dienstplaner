@@ -2,7 +2,7 @@ from datetime import date
 
 from sqlalchemy.orm import Session
 
-from app.models.doctor import Doctor, DoctorType
+from app.models.doctor import Doctor
 from app.models.employment_period import EmploymentPeriod
 from app.models.qualification import Qualification
 from app.repositories import doctor_qualification_repository as dq_repo
@@ -10,7 +10,6 @@ from app.repositories import doctor_repository as doctor_repo
 from app.repositories import employment_period_repository as ep_repo
 from app.services.exceptions import (
     DoctorNotFoundError,
-    DoctorValidationError,
     DuplicateQualificationError,
     EmploymentPeriodNotFoundError,
     EmploymentPeriodOverlapError,
@@ -26,21 +25,10 @@ def _periods_overlap(from_a: date, to_a: date | None, from_b: date, to_b: date |
 
 
 def validate_doctor_data(data: dict) -> None:
-    is_facharzt = data.get("is_facharzt", False)
-    doctor_type = data.get("doctor_type", DoctorType.INTERNAL)
-    weiterbildungsjahr = data.get("weiterbildungsjahr")
-
-    if is_facharzt and weiterbildungsjahr is not None:
-        raise DoctorValidationError(
-            "Fachärzte haben kein Weiterbildungsjahr (bitte auf null setzen)"
-        )
-    if doctor_type == DoctorType.EXTERNAL and weiterbildungsjahr is not None:
-        raise DoctorValidationError(
-            "Externe Ärzte haben kein Weiterbildungsjahr (bitte auf null setzen)"
-        )
     # entry_date vs. virtual_entry_date werden absichtlich nicht gegeneinander
     # validiert: virtual_entry_date kann durch Anrechnungszeiten auch VOR dem
     # realen Eintrittsdatum liegen.
+    pass
 
 
 def validate_employment_period_overlap(
@@ -78,7 +66,6 @@ def update_doctor_with_validation(db: Session, doctor_id: int, data: dict) -> Do
     merged = {
         "doctor_type": doctor.doctor_type,
         "is_facharzt": doctor.is_facharzt,
-        "weiterbildungsjahr": doctor.weiterbildungsjahr,
     }
     merged.update(data)
     validate_doctor_data(merged)

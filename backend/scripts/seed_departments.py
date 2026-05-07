@@ -43,7 +43,36 @@ DEPARTMENTS: list[dict] = [
     {"name": "Intensiv Innere", "short_name": None, "display_order": 19, **_E},
     {"name": "Psychiatrie", "short_name": None, "display_order": 20, **_E},
     {"name": "ZIP", "short_name": None, "display_order": 21, **_E},
+    {"name": "Intensiv (NCH)", "short_name": None, "display_order": 22, **_E},
+    {"name": "Intensiv extern", "short_name": None, "display_order": 23, **_E},
 ]
+
+# Sollbesetzung (min/max): nur setzen, wenn beide Werte noch null sind
+HEADCOUNT_DEFAULTS: dict[str, tuple[int | None, int | None]] = {
+    "511/LBEST": (1, 1),
+    "511": (2, 3),
+    "ITS": (2, 3),
+    "SU-Stationsarzt": (1, 1),
+    "SU": (6, 8),
+    "Duplex": (1, 1),
+    "Poli": (1, 1),
+    "Poli/EMG": (1, 1),
+    "EMG": (1, 1),
+    "Springer": (2, 2),
+    "Parkinson Komplextherapie": (1, 1),
+    "Tagesklinik": (1, 1),
+    "Neuromotorik-TK": (1, 1),
+    "Poli/Botox/THS": (1, 1),
+    "Poli/Botox": (1, 1),
+    "MS-Sprechstunde/Konsile": (1, 1),
+    "Forschung": (4, 5),
+    "Curschmann Klinik": (None, None),
+    "Intensiv Innere": (1, 1),
+    "Psychiatrie": (2, 4),
+    "ZIP": (0, 1),
+    "Intensiv (NCH)": (1, 1),
+    "Intensiv extern": (1, 1),
+}
 
 
 def seed() -> None:
@@ -68,10 +97,33 @@ def seed() -> None:
                 session.add(dept)
                 inserted += 1
         session.commit()
+
+        # Reload after insert
+        existing = {row.name: row for row in session.query(Department).all()}
+
+        # Sollbesetzung setzen (nur wenn beide Werte noch null)
+        hc_set = 0
+        hc_skipped = 0
+        for name, (min_hc, max_hc) in HEADCOUNT_DEFAULTS.items():
+            dept = existing.get(name)
+            if dept is None:
+                print(f"  Warnung: Bereich '{name}' nicht gefunden, übersprungen")
+                continue
+            if dept.min_headcount is None and dept.max_headcount is None:
+                dept.min_headcount = min_hc
+                dept.max_headcount = max_hc
+                print(f"  Bereich {name}: min={min_hc}, max={max_hc} gesetzt")
+                hc_set += 1
+            else:
+                print(f"  Bereich {name}: min/max bereits gepflegt, übersprungen")
+                hc_skipped += 1
+        session.commit()
+
         print(
             f"{inserted} Bereiche eingefügt, {updated} aktualisiert, "
-            f"{len(existing) - updated} bereits korrekt."
+            f"{len(existing) - inserted - updated} bereits korrekt."
         )
+        print(f"Sollbesetzung: {hc_set} gesetzt, {hc_skipped} übersprungen.")
 
 
 if __name__ == "__main__":

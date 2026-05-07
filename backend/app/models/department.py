@@ -22,4 +22,6 @@ class Department(Base):
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     display_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     requires_full_time: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    min_headcount: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    max_headcount: Mapped[int | None] = mapped_column(Integer, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)

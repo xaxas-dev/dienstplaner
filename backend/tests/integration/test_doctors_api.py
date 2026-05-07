@@ -49,7 +49,6 @@ def test_create_doctor_full(client: TestClient) -> None:
         "name": "Dr. Vollständig",
         "short_name": "VV",
         "doctor_type": "INTERNAL",
-        "weiterbildungsjahr": 3,
         "is_facharzt": False,
         "active": True,
         "notes": "Test-Notiz",
@@ -58,17 +57,18 @@ def test_create_doctor_full(client: TestClient) -> None:
     assert r.status_code == 201
     data = r.json()
     assert data["short_name"] == "VV"
-    assert data["weiterbildungsjahr"] == 3
+    assert data["weiterbildungsjahr"] is None  # kein entry_date → null
     assert data["notes"] == "Test-Notiz"
 
 
-def test_create_doctor_validation_facharzt_with_wbj(client: TestClient) -> None:
+def test_create_doctor_facharzt(client: TestClient) -> None:
     r = client.post(
         "/api/doctors",
-        json={"name": "Dr. Ungültig", "is_facharzt": True, "weiterbildungsjahr": 3},
+        json={"name": "Dr. Facharzt", "is_facharzt": True},
     )
-    assert r.status_code == 422
-    assert "Weiterbildungsjahr" in r.json()["detail"]
+    assert r.status_code == 201
+    assert r.json()["is_facharzt"] is True
+    assert r.json()["weiterbildungsjahr"] is None
 
 
 def test_get_doctor_with_relations(client: TestClient) -> None:
@@ -208,15 +208,39 @@ def test_include_inactive_filter(client: TestClient) -> None:
     assert "Dr. Inaktiv" in names
 
 
-def test_doctor_weiterbildungsjahr_above_6(client: TestClient) -> None:
-    r = client.post("/api/doctors", json={"name": "Dr. WBJ8", "weiterbildungsjahr": 8})
+def test_doctor_weiterbildungsjahr_computed_facharzt(client: TestClient) -> None:
+    r = client.post(
+        "/api/doctors",
+        json={"name": "Dr. Facharzt WBJ", "is_facharzt": True, "entry_date": "2020-01-01"},
+    )
     assert r.status_code == 201
-    assert r.json()["weiterbildungsjahr"] == 8
+    assert r.json()["weiterbildungsjahr"] is None
 
 
-def test_doctor_weiterbildungsjahr_zero_invalid(client: TestClient) -> None:
-    r = client.post("/api/doctors", json={"name": "Dr. WBJ0", "weiterbildungsjahr": 0})
-    assert r.status_code == 422
+def test_doctor_weiterbildungsjahr_computed_no_entry_date(client: TestClient) -> None:
+    r = client.post("/api/doctors", json={"name": "Dr. Kein Eintr."})
+    assert r.status_code == 201
+    assert r.json()["weiterbildungsjahr"] is None
+
+
+def test_doctor_weiterbildungsjahr_computed_normal(client: TestClient) -> None:
+    r = client.post(
+        "/api/doctors",
+        json={"name": "Dr. WBJ3", "entry_date": "2024-05-01"},
+    )
+    assert r.status_code == 201
+    wbj = r.json()["weiterbildungsjahr"]
+    # entry_date=2024-05-01, heute=2026-05-07 → ~2 Jahre → WBJ=3
+    assert wbj == 3
+
+
+def test_doctor_weiterbildungsjahr_computed_future(client: TestClient) -> None:
+    r = client.post(
+        "/api/doctors",
+        json={"name": "Dr. Zukünftig", "entry_date": "2099-01-01"},
+    )
+    assert r.status_code == 201
+    assert r.json()["weiterbildungsjahr"] is None
 
 
 def test_doctor_with_entry_dates(client: TestClient) -> None:

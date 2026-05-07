@@ -11,6 +11,8 @@ class DepartmentBase(BaseModel):
     active: bool = True
     display_order: int = 0
     requires_full_time: bool = False
+    min_headcount: int | None = None
+    max_headcount: int | None = None
     notes: str | None = None
 
 
@@ -25,6 +27,8 @@ class DepartmentUpdate(BaseModel):
     active: bool | None = None
     display_order: int | None = None
     requires_full_time: bool | None = None
+    min_headcount: int | None = None
+    max_headcount: int | None = None
     notes: str | None = None
 
 

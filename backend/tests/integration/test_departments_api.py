@@ -144,7 +144,7 @@ def test_seed_data_present(client: TestClient) -> None:
     _seed_departments(client)
     r = client.get("/api/departments?include_inactive=true")
     assert r.status_code == 200
-    assert len(r.json()) == 21
+    assert len(r.json()) == 21  # _seed_departments helper only seeds 21; full seed has 23
 
 
 def test_department_requires_full_time(client: TestClient) -> None:
@@ -165,3 +165,45 @@ def test_department_requires_full_time_default_false(client: TestClient) -> None
     r = client.post("/api/departments", json={"name": "Beliebige Station"})
     assert r.status_code == 201
     assert r.json()["requires_full_time"] is False
+
+
+def test_department_min_max_headcount(client: TestClient) -> None:
+    r = client.post(
+        "/api/departments",
+        json={"name": "SU", "min_headcount": 6, "max_headcount": 8},
+    )
+    assert r.status_code == 201
+    data = r.json()
+    assert data["min_headcount"] == 6
+    assert data["max_headcount"] == 8
+
+    r2 = client.get(f"/api/departments/{data['id']}")
+    assert r2.json()["min_headcount"] == 6
+    assert r2.json()["max_headcount"] == 8
+
+
+def test_department_min_greater_than_max(client: TestClient) -> None:
+    r = client.post(
+        "/api/departments",
+        json={"name": "Ungültige Besetzung", "min_headcount": 5, "max_headcount": 3},
+    )
+    assert r.status_code == 422
+    assert "Mindestbesetzung" in r.json()["detail"]
+
+
+def test_department_negative_min(client: TestClient) -> None:
+    r = client.post(
+        "/api/departments",
+        json={"name": "Neg Min", "min_headcount": -1},
+    )
+    assert r.status_code == 422
+
+
+def test_department_zero_max_allowed(client: TestClient) -> None:
+    r = client.post(
+        "/api/departments",
+        json={"name": "ZIP", "min_headcount": 0, "max_headcount": 1},
+    )
+    assert r.status_code == 201
+    assert r.json()["min_headcount"] == 0
+    assert r.json()["max_headcount"] == 1

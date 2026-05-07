@@ -28,7 +28,6 @@ class Doctor(Base):
         nullable=False,
         default=DoctorType.INTERNAL,
     )
-    weiterbildungsjahr: Mapped[int | None] = mapped_column(Integer, nullable=True)
     is_facharzt: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     entry_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     virtual_entry_date: Mapped[date | None] = mapped_column(Date, nullable=True)

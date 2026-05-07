@@ -10,27 +10,16 @@ from app.services.doctor_service import (
     validate_doctor_data,
     validate_employment_period_overlap,
 )
-from app.services.exceptions import DoctorValidationError, EmploymentPeriodOverlapError
+from app.services.exceptions import EmploymentPeriodOverlapError
 
 # ── validate_doctor_data ───────────────────────────────────────────────────────
 
 
-def test_validate_doctor_data_facharzt_no_wbj() -> None:
-    validate_doctor_data({"is_facharzt": True, "weiterbildungsjahr": None})
-
-
-def test_validate_doctor_data_facharzt_with_wbj() -> None:
-    with pytest.raises(DoctorValidationError, match="Weiterbildungsjahr"):
-        validate_doctor_data({"is_facharzt": True, "weiterbildungsjahr": 3})
-
-
-def test_validate_doctor_data_external_with_wbj() -> None:
-    with pytest.raises(DoctorValidationError, match="Externe"):
-        validate_doctor_data({"doctor_type": DoctorType.EXTERNAL, "weiterbildungsjahr": 2})
-
-
-def test_validate_doctor_data_internal_with_wbj_ok() -> None:
-    validate_doctor_data({"doctor_type": DoctorType.INTERNAL, "weiterbildungsjahr": 4})
+def test_validate_doctor_data_noop() -> None:
+    # validate_doctor_data hat keine Validierungsregeln mehr; sollte immer durchlaufen
+    validate_doctor_data({"is_facharzt": True, "doctor_type": DoctorType.INTERNAL})
+    validate_doctor_data({})
+    validate_doctor_data({"is_facharzt": False, "doctor_type": DoctorType.EXTERNAL})
 
 
 # ── _periods_overlap ───────────────────────────────────────────────────────────
