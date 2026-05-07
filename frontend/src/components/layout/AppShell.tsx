@@ -11,10 +11,10 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Ärzte', to: '/doctors', icon: Users },
-  { label: 'Stationen', to: '/departments', icon: Building2, disabled: true },
-  { label: 'Schichttypen', to: '/shift-types', icon: Clock, disabled: true },
-  { label: 'Qualifikationen', to: '/qualifications', icon: Award, disabled: true },
-  { label: 'Sonderregelungen', to: '/rule-overrides', icon: Settings, disabled: true },
+  { label: 'Stationen', to: '/departments', icon: Building2 },
+  { label: 'Schichttypen', to: '/shift-types', icon: Clock },
+  { label: 'Qualifikationen', to: '/qualifications', icon: Award },
+  { label: 'Sonderregelungen', to: '/rule-overrides', icon: Settings },
   { label: 'Pläne', to: '/plans', icon: CalendarDays, disabled: true },
 ]
 

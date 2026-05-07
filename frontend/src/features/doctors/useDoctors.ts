@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost, apiPatch, apiDelete } from '@/lib/api'
-import type { Doctor, DoctorCreate, DoctorUpdate, EmploymentPeriodCreate, EmploymentPeriodUpdate, Qualification, DoctorQualificationBody } from '@/lib/types'
+import type { Doctor, DoctorCreate, DoctorUpdate, EmploymentPeriodCreate, EmploymentPeriodUpdate, DoctorQualificationBody } from '@/lib/types'
+
+export { useQualifications } from '@/features/qualifications/useQualifications'
 
 // ── Query Keys ────────────────────────────────────────────────────────────────
 
@@ -23,13 +25,6 @@ export function useDoctor(doctorId: number) {
   return useQuery({
     queryKey: doctorKeys.detail(doctorId),
     queryFn: () => apiGet<Doctor>(`/api/doctors/${doctorId}`),
-  })
-}
-
-export function useQualifications() {
-  return useQuery({
-    queryKey: ['qualifications'],
-    queryFn: () => apiGet<Qualification[]>('/api/qualifications'),
   })
 }
 

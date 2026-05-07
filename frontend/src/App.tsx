@@ -3,6 +3,10 @@ import { AppShell } from '@/components/layout/AppShell'
 import { DoctorListPage } from '@/features/doctors/DoctorListPage'
 import { DoctorCreatePage } from '@/features/doctors/DoctorCreatePage'
 import { DoctorDetailPage } from '@/features/doctors/DoctorDetailPage'
+import { DepartmentListPage } from '@/features/departments/DepartmentListPage'
+import { ShiftTypeListPage } from '@/features/shift-types/ShiftTypeListPage'
+import { QualificationListPage } from '@/features/qualifications/QualificationListPage'
+import { RuleOverrideListPage } from '@/features/rule-overrides/RuleOverrideListPage'
 
 function NotFoundPage() {
   return (
@@ -21,6 +25,10 @@ export default function App() {
         <Route path="/doctors" element={<DoctorListPage />} />
         <Route path="/doctors/new" element={<DoctorCreatePage />} />
         <Route path="/doctors/:doctorId" element={<DoctorDetailPage />} />
+        <Route path="/departments" element={<DepartmentListPage />} />
+        <Route path="/shift-types" element={<ShiftTypeListPage />} />
+        <Route path="/qualifications" element={<QualificationListPage />} />
+        <Route path="/rule-overrides" element={<RuleOverrideListPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

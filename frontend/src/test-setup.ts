@@ -15,6 +15,14 @@ global.ResizeObserver = class ResizeObserver {
   }
 }
 
+// Radix UI uses hasPointerCapture — jsdom doesn't implement it
+window.HTMLElement.prototype.hasPointerCapture = () => false
+window.HTMLElement.prototype.setPointerCapture = () => {}
+window.HTMLElement.prototype.releasePointerCapture = () => {}
+
+// Radix UI Select calls scrollIntoView on selected items — jsdom doesn't implement it
+Element.prototype.scrollIntoView = () => {}
+
 // suppress missing pointer events on element
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
