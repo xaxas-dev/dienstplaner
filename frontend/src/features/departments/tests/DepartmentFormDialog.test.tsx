@@ -76,3 +76,52 @@ describe('DepartmentFormDialog – requires_full_time', () => {
     expect(vollzeitSwitch).toHaveAttribute('aria-checked', 'true')
   })
 })
+
+describe('DepartmentFormDialog – Sollbesetzung', () => {
+  it('zeigt Mindest- und Maximalbesetzung Felder', () => {
+    renderDialog()
+    expect(screen.getByLabelText(/Mindestbesetzung/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Maximalbesetzung/i)).toBeInTheDocument()
+  })
+
+  it('zeigt Fehler wenn min > max', async () => {
+    const user = userEvent.setup()
+    renderDialog()
+
+    const nameInput = screen.getByPlaceholderText(/Intensivstation/i)
+    await user.type(nameInput, 'Test')
+
+    const minInput = screen.getByLabelText(/Mindestbesetzung/i)
+    const maxInput = screen.getByLabelText(/Maximalbesetzung/i)
+    await user.type(minInput, '5')
+    await user.type(maxInput, '3')
+
+    await user.click(screen.getByRole('button', { name: /^Speichern$/i }))
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Mindestbesetzung darf nicht größer als Maximalbesetzung/i),
+      ).toBeInTheDocument()
+    })
+  })
+
+  it('erlaubt nur min ohne max', async () => {
+    const user = userEvent.setup()
+    renderDialog()
+
+    const nameInput = screen.getByPlaceholderText(/Intensivstation/i)
+    await user.type(nameInput, 'Test')
+
+    const minInput = screen.getByLabelText(/Mindestbesetzung/i)
+    await user.type(minInput, '2')
+
+    // Kein Validierungsfehler nach Submit (andere Fehler könnten aus API-Call kommen)
+    await user.click(screen.getByRole('button', { name: /^Speichern$/i }))
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText(/Mindestbesetzung darf nicht größer/i),
+      ).not.toBeInTheDocument()
+    })
+  })
+})

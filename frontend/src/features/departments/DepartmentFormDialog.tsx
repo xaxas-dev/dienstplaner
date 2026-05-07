@@ -26,16 +26,31 @@ import { ApiError } from '@/lib/api'
 import { useCreateDepartment, useUpdateDepartment } from './useDepartments'
 import type { Department } from '@/lib/types'
 
-const schema = z.object({
-  name: z.string().min(1, 'Name ist erforderlich').max(200, 'Maximal 200 Zeichen'),
-  short_name: z.string().max(50, 'Maximal 50 Zeichen').nullable().optional(),
-  is_external: z.boolean(),
-  is_shift_relevant: z.boolean(),
-  display_order: z.number({ error: 'Zahl erforderlich' }).int(),
-  requires_full_time: z.boolean(),
-  active: z.boolean(),
-  notes: z.string().nullable().optional(),
-})
+const schema = z
+  .object({
+    name: z.string().min(1, 'Name ist erforderlich').max(200, 'Maximal 200 Zeichen'),
+    short_name: z.string().max(50, 'Maximal 50 Zeichen').nullable().optional(),
+    is_external: z.boolean(),
+    is_shift_relevant: z.boolean(),
+    display_order: z.number({ error: 'Zahl erforderlich' }).int(),
+    requires_full_time: z.boolean(),
+    min_headcount: z.number().int().min(0).nullable().optional(),
+    max_headcount: z.number().int().min(0).nullable().optional(),
+    active: z.boolean(),
+    notes: z.string().nullable().optional(),
+  })
+  .refine(
+    (data) => {
+      const min = data.min_headcount
+      const max = data.max_headcount
+      if (min != null && max != null) return min <= max
+      return true
+    },
+    {
+      message: 'Mindestbesetzung darf nicht größer als Maximalbesetzung sein',
+      path: ['min_headcount'],
+    },
+  )
 
 type FormValues = z.infer<typeof schema>
 
@@ -58,6 +73,8 @@ export function DepartmentFormDialog({ open, onOpenChange, department }: Departm
       is_shift_relevant: department?.is_shift_relevant ?? true,
       display_order: department?.display_order ?? 0,
       requires_full_time: department?.requires_full_time ?? false,
+      min_headcount: department?.min_headcount ?? null,
+      max_headcount: department?.max_headcount ?? null,
       active: department?.active ?? true,
       notes: department?.notes ?? null,
     },
@@ -72,6 +89,8 @@ export function DepartmentFormDialog({ open, onOpenChange, department }: Departm
         is_shift_relevant: department?.is_shift_relevant ?? true,
         display_order: department?.display_order ?? 0,
         requires_full_time: department?.requires_full_time ?? false,
+        min_headcount: department?.min_headcount ?? null,
+        max_headcount: department?.max_headcount ?? null,
         active: department?.active ?? true,
         notes: department?.notes ?? null,
       })
@@ -83,6 +102,8 @@ export function DepartmentFormDialog({ open, onOpenChange, department }: Departm
       ...values,
       short_name: values.short_name || null,
       notes: values.notes || null,
+      min_headcount: values.min_headcount ?? null,
+      max_headcount: values.max_headcount ?? null,
     }
 
     const handleError = (err: unknown) => {
@@ -196,6 +217,55 @@ export function DepartmentFormDialog({ open, onOpenChange, department }: Departm
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="min_headcount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mindestbesetzung</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder="—"
+                        value={field.value ?? ''}
+                        onChange={(e) =>
+                          field.onChange(e.target.value !== '' ? Number(e.target.value) : null)
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="max_headcount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Maximalbesetzung</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder="—"
+                        value={field.value ?? ''}
+                        onChange={(e) =>
+                          field.onChange(e.target.value !== '' ? Number(e.target.value) : null)
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground -mt-2">
+              Lassen Sie die Felder leer, wenn die Besetzung nicht definierbar ist.
+            </p>
 
             <div className="grid grid-cols-2 gap-4">
               <FormField

@@ -107,6 +107,7 @@ export function DepartmentListPage() {
                   <TableHead>Kurzname</TableHead>
                   <TableHead>Typ</TableHead>
                   <TableHead>Dienst-relevant</TableHead>
+                  <TableHead>Besetzung</TableHead>
                   <TableHead className="text-right">Reihenfolge</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-24 text-right">Aktionen</TableHead>
@@ -128,6 +129,15 @@ export function DepartmentListPage() {
                       <Badge variant={dept.is_shift_relevant ? 'default' : 'secondary'}>
                         {dept.is_shift_relevant ? 'Ja' : 'Nein'}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {dept.min_headcount != null && dept.max_headcount != null
+                        ? `${dept.min_headcount} – ${dept.max_headcount}`
+                        : dept.min_headcount != null
+                          ? `≥ ${dept.min_headcount}`
+                          : dept.max_headcount != null
+                            ? `≤ ${dept.max_headcount}`
+                            : '—'}
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground">
                       {dept.display_order}

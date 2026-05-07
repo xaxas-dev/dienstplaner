@@ -10,7 +10,6 @@ import { Switch } from '@/components/ui/switch'
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -27,25 +26,16 @@ import { ApiError } from '@/lib/api'
 import { useCreateDoctor, useUpdateDoctor } from './useDoctors'
 import type { Doctor } from '@/lib/types'
 
-const schema = z
-  .object({
-    name: z.string().min(1, 'Name ist erforderlich').max(200, 'Maximal 200 Zeichen'),
-    short_name: z.string().max(50, 'Maximal 50 Zeichen').nullable().optional(),
-    doctor_type: z.enum(['INTERNAL', 'EXTERNAL']),
-    weiterbildungsjahr: z.number().int().min(1).nullable().optional(),
-    is_facharzt: z.boolean(),
-    active: z.boolean(),
-    entry_date: z.string().nullable().optional(),
-    virtual_entry_date: z.string().nullable().optional(),
-    notes: z.string().nullable().optional(),
-  })
-  .refine(
-    (data) => !(data.is_facharzt && data.weiterbildungsjahr != null),
-    {
-      message: 'Fachärzte haben kein Weiterbildungsjahr',
-      path: ['weiterbildungsjahr'],
-    },
-  )
+const schema = z.object({
+  name: z.string().min(1, 'Name ist erforderlich').max(200, 'Maximal 200 Zeichen'),
+  short_name: z.string().max(50, 'Maximal 50 Zeichen').nullable().optional(),
+  doctor_type: z.enum(['INTERNAL', 'EXTERNAL']),
+  is_facharzt: z.boolean(),
+  active: z.boolean(),
+  entry_date: z.string().nullable().optional(),
+  virtual_entry_date: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+})
 
 type FormValues = z.infer<typeof schema>
 
@@ -65,7 +55,6 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
       name: doctor?.name ?? '',
       short_name: doctor?.short_name ?? null,
       doctor_type: doctor?.doctor_type ?? 'INTERNAL',
-      weiterbildungsjahr: doctor?.weiterbildungsjahr ?? null,
       is_facharzt: doctor?.is_facharzt ?? false,
       active: doctor?.active ?? true,
       entry_date: doctor?.entry_date ?? null,
@@ -75,8 +64,6 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
   })
 
   const doctorType = form.watch('doctor_type')
-  const isFacharzt = form.watch('is_facharzt')
-  const showWeiterbildung = doctorType === 'INTERNAL' && !isFacharzt
 
   // Reset when doctor prop changes (e.g. after save)
   useEffect(() => {
@@ -85,7 +72,6 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
         name: doctor.name,
         short_name: doctor.short_name ?? null,
         doctor_type: doctor.doctor_type,
-        weiterbildungsjahr: doctor.weiterbildungsjahr ?? null,
         is_facharzt: doctor.is_facharzt,
         active: doctor.active,
         entry_date: doctor.entry_date ?? null,
@@ -100,7 +86,6 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
       ...values,
       short_name: values.short_name || null,
       notes: values.notes || null,
-      weiterbildungsjahr: showWeiterbildung ? (values.weiterbildungsjahr ?? null) : null,
       entry_date: values.entry_date || null,
       virtual_entry_date: values.virtual_entry_date || null,
     }
@@ -217,35 +202,6 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
           />
         )}
 
-        {/* Weiterbildungsjahr (intern + kein Facharzt) */}
-        {showWeiterbildung && (
-          <FormField
-            control={form.control}
-            name="weiterbildungsjahr"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Weiterbildungsjahr</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={1}
-                    placeholder="z.B. 3"
-                    value={field.value ?? ''}
-                    onChange={(e) =>
-                      field.onChange(e.target.value ? Number(e.target.value) : null)
-                    }
-                  />
-                </FormControl>
-                <FormDescription>
-                  Aktuelles Weiterbildungsjahr (1, 2, 3, …). Kann auch &gt;6 sein bei
-                  verlängerten Weiterbildungen.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-
         {/* Eintrittsdatum */}
         <FormField
           control={form.control}
@@ -281,9 +237,6 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
                   onChange={(e) => field.onChange(e.target.value || null)}
                 />
               </FormControl>
-              <FormDescription>
-                Berechnet sich aus Eintrittsdatum + Anrechnungszeiten. Manuell pflegen.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

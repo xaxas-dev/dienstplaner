@@ -294,6 +294,10 @@ export interface components {
              * @default false
              */
             requires_full_time: boolean;
+            /** Min Headcount */
+            min_headcount?: number | null;
+            /** Max Headcount */
+            max_headcount?: number | null;
             /** Notes */
             notes?: string | null;
         };
@@ -328,6 +332,10 @@ export interface components {
              * @default false
              */
             requires_full_time: boolean;
+            /** Min Headcount */
+            min_headcount?: number | null;
+            /** Max Headcount */
+            max_headcount?: number | null;
             /** Notes */
             notes?: string | null;
             /** Id */
@@ -359,6 +367,10 @@ export interface components {
             display_order?: number | null;
             /** Requires Full Time */
             requires_full_time?: boolean | null;
+            /** Min Headcount */
+            min_headcount?: number | null;
+            /** Max Headcount */
+            max_headcount?: number | null;
             /** Notes */
             notes?: string | null;
         };
@@ -370,8 +382,6 @@ export interface components {
             short_name?: string | null;
             /** @default INTERNAL */
             doctor_type: components["schemas"]["DoctorType"];
-            /** Weiterbildungsjahr */
-            weiterbildungsjahr?: number | null;
             /**
              * Is Facharzt
              * @default false
@@ -428,8 +438,6 @@ export interface components {
             short_name?: string | null;
             /** @default INTERNAL */
             doctor_type: components["schemas"]["DoctorType"];
-            /** Weiterbildungsjahr */
-            weiterbildungsjahr?: number | null;
             /**
              * Is Facharzt
              * @default false
@@ -458,6 +466,8 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            /** Weiterbildungsjahr */
+            readonly weiterbildungsjahr: number | null;
         };
         /**
          * DoctorType
@@ -471,8 +481,6 @@ export interface components {
             /** Short Name */
             short_name?: string | null;
             doctor_type?: components["schemas"]["DoctorType"] | null;
-            /** Weiterbildungsjahr */
-            weiterbildungsjahr?: number | null;
             /** Is Facharzt */
             is_facharzt?: boolean | null;
             /** Active */
@@ -492,8 +500,6 @@ export interface components {
             short_name?: string | null;
             /** @default INTERNAL */
             doctor_type: components["schemas"]["DoctorType"];
-            /** Weiterbildungsjahr */
-            weiterbildungsjahr?: number | null;
             /**
              * Is Facharzt
              * @default false
@@ -532,6 +538,8 @@ export interface components {
              * @default []
              */
             qualifications: components["schemas"]["QualificationResponse"][];
+            /** Weiterbildungsjahr */
+            readonly weiterbildungsjahr: number | null;
         };
         /**
          * EmploymentPeriodBody

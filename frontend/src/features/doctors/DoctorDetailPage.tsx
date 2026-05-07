@@ -129,6 +129,14 @@ export function DoctorDetailPage() {
       <div className="flex-1 overflow-auto px-6 py-6">
         {activeTab === 'stammdaten' && (
           <div className="max-w-lg">
+            {doctor.weiterbildungsjahr != null && (
+              <div className="mb-5 rounded-md border border-border px-4 py-3 text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  {doctor.weiterbildungsjahr}. Weiterbildungsjahr
+                </span>{' '}
+                (berechnet aus Eintrittsdatum)
+              </div>
+            )}
             <DoctorForm doctor={doctor} />
           </div>
         )}

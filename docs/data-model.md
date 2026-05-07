@@ -13,7 +13,6 @@ erDiagram
         string name
         string short_name
         enum doctor_type
-        int weiterbildungsjahr
         bool is_facharzt
         bool active
         date entry_date
@@ -60,6 +59,8 @@ erDiagram
         bool is_external
         bool is_shift_relevant
         bool requires_full_time
+        int min_headcount
+        int max_headcount
         bool active
         int display_order
         text notes
@@ -136,6 +137,24 @@ Beide Felder sind nullable. Für externe Ärzte werden sie typischerweise nicht
 gepflegt. In der ersten Version werden beide Felder manuell gesetzt.
 Eine automatische Berechnung aus konfigurierten Anrechnungszeiten folgt später.
 
+### `weiterbildungsjahr` als computed property
+
+`weiterbildungsjahr` wird **nicht** in der Datenbank gespeichert, sondern bei
+jedem API-Aufruf berechnet. Berechnungsregel:
+
+- Wenn `is_facharzt = True`: `weiterbildungsjahr = null`
+- Wenn `entry_date = null`: `weiterbildungsjahr = null`
+- Wenn `entry_date` in der Zukunft liegt: `weiterbildungsjahr = null`
+- Sonst: `weiterbildungsjahr = floor((heute - entry_date).days / 365.25) + 1`
+
+Beispiele (heute = 2026-05-07):
+- `entry_date=2024-05-01` → ~2 Jahre → WBJ 3
+- `entry_date=2026-05-07` → 0 Jahre → WBJ 1
+- `entry_date=2025-12-31` → ~0.35 Jahre → WBJ 1
+
+Das Feld erscheint in der OpenAPI-Spezifikation (via Pydantic `@computed_field`),
+ist im Frontend read-only und wird nicht als Formularfeld angeboten.
+
 ### Warum `is_external` und `is_shift_relevant` getrennt sind
 
 Ein `Department` kann eine externe Rotation sein (`is_external=True`), also
@@ -157,6 +176,23 @@ Die Durchsetzung (keine Teilzeit-Zuweisung auf Vollzeit-Rotation) erfolgt
 in Meilenstein M5 als Constraint im Solver. Das Feld ist reine Metadaten für
 den Planungskontext.
 
+### `min_headcount` und `max_headcount` an Bereichen (Sollbesetzung)
+
+Die Felder `min_headcount` und `max_headcount` definieren die Sollbesetzung
+eines Bereichs. Beide sind nullable:
+
+- `min_headcount = null`: keine Mindestbesetzung definiert
+- `max_headcount = null`: keine Obergrenze (unbegrenzt)
+- `max_headcount = 0`: Bereich darf nicht besetzt sein (geschlossen)
+- Alle Werte im Bereich `[min, max]` sind akzeptabel
+
+Validierungsregeln: beide Felder >= 0; wenn beide gesetzt, dann min <= max.
+
+Die Seeds setzen Initialwerte aus der Excel-Auswertung. Manuell gepflegte
+Werte werden durch erneutes Seeden **nicht** überschrieben (Idempotenz).
+
+Die Durchsetzung (Plan unterschreitet Mindestbesetzung) folgt in M5/M8.
+
 ### Wie `RuleOverride` funktioniert (Ebenen A und B)
 
 Override-Ebene A (global): `scope=GLOBAL`, `doctor_id=NULL`.
@@ -176,31 +212,33 @@ Service-Layer interpretiert den Typ anhand von `rule_key`.
 Override-Ebene C (Einzel-Verstoß-Akzeptanz) ist plan-bezogen und wird
 in Meilenstein M2/M5 ergänzt.
 
-## Initiale Bereiche (21 Stück)
+## Initiale Bereiche (23 Stück)
 
-| Nr | Name | Kürzel | Extern | Dienst-relevant | Vollzeit |
-|----|------|--------|--------|-----------------|----------|
-| 1 | 511/LBEST | LBEST | Nein | Ja | Nein |
-| 2 | 511 | 511 | Nein | Ja | Nein |
-| 3 | ITS | ITS | Nein | Ja | Nein |
-| 4 | SU-Stationsarzt | SU-SA | Nein | Ja | Nein |
-| 5 | SU | SU | Nein | Ja | Nein |
-| 6 | Duplex | Du | Nein | Ja | Nein |
-| 7 | Poli | Poli | Nein | Ja | Nein |
-| 8 | Poli/EMG | Poli/EMG | Nein | Ja | Nein |
-| 9 | EMG | EMG | Nein | Ja | Nein |
-| 10 | Springer | Spr | Nein | Ja | Nein |
-| 11 | Parkinson Komplextherapie | ParkiKomp | Nein | Ja | Nein |
-| 12 | Tagesklinik | TK | Nein | Ja | Nein |
-| 13 | Neuromotorik-TK | NM-TK | Nein | Ja | Nein |
-| 14 | Poli/Botox/THS | – | Nein | Ja | Nein |
-| 15 | Poli/Botox | – | Nein | Ja | Nein |
-| 16 | MS-Sprechstunde/Konsile | MS | Nein | Ja | Nein |
-| 17 | Forschung | Fo | Nein | Ja | Nein |
-| 18 | Curschmann Klinik | CK | Nein | Ja | **Ja** |
-| 19 | Intensiv Innere | – | Ja | Nein | Nein |
-| 20 | Psychiatrie | – | Ja | Nein | Nein |
-| 21 | ZIP | – | Ja | Nein | Nein |
+| Nr | Name | Kürzel | Extern | Dienst-relevant | Vollzeit | Min | Max |
+|----|------|--------|--------|-----------------|----------|-----|-----|
+| 1 | 511/LBEST | LBEST | Nein | Ja | Nein | 1 | 1 |
+| 2 | 511 | 511 | Nein | Ja | Nein | 2 | 3 |
+| 3 | ITS | ITS | Nein | Ja | Nein | 2 | 3 |
+| 4 | SU-Stationsarzt | SU-SA | Nein | Ja | Nein | 1 | 1 |
+| 5 | SU | SU | Nein | Ja | Nein | 6 | 8 |
+| 6 | Duplex | Du | Nein | Ja | Nein | 1 | 1 |
+| 7 | Poli | Poli | Nein | Ja | Nein | 1 | 1 |
+| 8 | Poli/EMG | Poli/EMG | Nein | Ja | Nein | 1 | 1 |
+| 9 | EMG | EMG | Nein | Ja | Nein | 1 | 1 |
+| 10 | Springer | Spr | Nein | Ja | Nein | 2 | 2 |
+| 11 | Parkinson Komplextherapie | ParkiKomp | Nein | Ja | Nein | 1 | 1 |
+| 12 | Tagesklinik | TK | Nein | Ja | Nein | 1 | 1 |
+| 13 | Neuromotorik-TK | NM-TK | Nein | Ja | Nein | 1 | 1 |
+| 14 | Poli/Botox/THS | – | Nein | Ja | Nein | 1 | 1 |
+| 15 | Poli/Botox | – | Nein | Ja | Nein | 1 | 1 |
+| 16 | MS-Sprechstunde/Konsile | MS | Nein | Ja | Nein | 1 | 1 |
+| 17 | Forschung | Fo | Nein | Ja | Nein | 4 | 5 |
+| 18 | Curschmann Klinik | CK | Nein | Ja | **Ja** | – | – |
+| 19 | Intensiv Innere | – | Ja | Nein | Nein | 1 | 1 |
+| 20 | Psychiatrie | – | Ja | Nein | Nein | 2 | 4 |
+| 21 | ZIP | – | Ja | Nein | Nein | 0 | 1 |
+| 22 | Intensiv (NCH) | – | Ja | Nein | Nein | 1 | 1 |
+| 23 | Intensiv extern | – | Ja | Nein | Nein | 1 | 1 |
 
 ## Initiale Schichttypen
 
@@ -215,12 +253,6 @@ Uhrzeiten für V, T, N sind vorerst `NULL` und werden später konfiguriert.
 T1 (Interdisziplinäre Notaufnahme) ist ein bereichsspezifischer Tagdienst,
 der global modelliert ist. Die Eingrenzung auf die INA als Bereich folgt
 in M8 als Solver-Constraint.
-
-### Hinweis: weiterbildungsjahr ohne oberes Limit
-
-Das Feld `weiterbildungsjahr` akzeptiert beliebige positive ganzzahlige Werte
-(>= 1). Es gibt kein oberes Limit, da Weiterbildungen am UKSH Lübeck bis
-zu 10 Jahre dauern können.
 
 ## Hinweis: Plan-Entitäten folgen in M2
 
