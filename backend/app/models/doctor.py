@@ -1,7 +1,7 @@
 import enum
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, Integer, String, Text
+from sqlalchemy import Boolean, Date, DateTime, Enum, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -30,6 +30,8 @@ class Doctor(Base):
     )
     weiterbildungsjahr: Mapped[int | None] = mapped_column(Integer, nullable=True)
     is_facharzt: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    entry_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    virtual_entry_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 

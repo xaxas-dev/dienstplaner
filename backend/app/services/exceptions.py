@@ -68,9 +68,7 @@ class QualificationInUseError(Exception):
             names_str = ", ".join(doctor_names)
         else:
             names_str = ", ".join(doctor_names[:10]) + f" ... und {len(doctor_names) - 10} weitere"
-        super().__init__(
-            f"Qualifikation wird noch von folgenden Ärzten verwendet: {names_str}"
-        )
+        super().__init__(f"Qualifikation wird noch von folgenden Ärzten verwendet: {names_str}")
         self.detail = str(self)
 
 

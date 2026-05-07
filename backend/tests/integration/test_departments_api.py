@@ -145,3 +145,23 @@ def test_seed_data_present(client: TestClient) -> None:
     r = client.get("/api/departments?include_inactive=true")
     assert r.status_code == 200
     assert len(r.json()) == 21
+
+
+def test_department_requires_full_time(client: TestClient) -> None:
+    r = client.post(
+        "/api/departments",
+        json={"name": "Curschmann Klinik", "short_name": "CK", "requires_full_time": True},
+    )
+    assert r.status_code == 201
+    data = r.json()
+    assert data["requires_full_time"] is True
+
+    r2 = client.get(f"/api/departments/{data['id']}")
+    assert r2.status_code == 200
+    assert r2.json()["requires_full_time"] is True
+
+
+def test_department_requires_full_time_default_false(client: TestClient) -> None:
+    r = client.post("/api/departments", json={"name": "Beliebige Station"})
+    assert r.status_code == 201
+    assert r.json()["requires_full_time"] is False

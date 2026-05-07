@@ -10,6 +10,7 @@ class DepartmentBase(BaseModel):
     is_shift_relevant: bool = True
     active: bool = True
     display_order: int = 0
+    requires_full_time: bool = False
     notes: str | None = None
 
 
@@ -23,6 +24,7 @@ class DepartmentUpdate(BaseModel):
     is_shift_relevant: bool | None = None
     active: bool | None = None
     display_order: int | None = None
+    requires_full_time: bool | None = None
     notes: str | None = None
 
 

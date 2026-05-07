@@ -69,9 +69,7 @@ def test_get_404(client: TestClient) -> None:
 
 def test_update_partial(client: TestClient) -> None:
     override = _create_override(client)
-    r = client.patch(
-        f"/api/rule-overrides/{override['id']}", json={"override_value": "99"}
-    )
+    r = client.patch(f"/api/rule-overrides/{override['id']}", json={"override_value": "99"})
     assert r.status_code == 200
     assert r.json()["override_value"] == "99"
 
@@ -127,9 +125,7 @@ def test_validation_doctor_without_doctor_id(client: TestClient) -> None:
 def test_filter_by_scope(client: TestClient) -> None:
     doctor = _create_doctor(client)
     _create_override(client, scope="GLOBAL", rule_key="GLOBAL_RULE")
-    _create_override(
-        client, scope="DOCTOR", doctor_id=doctor["id"], rule_key="DOCTOR_RULE"
-    )
+    _create_override(client, scope="DOCTOR", doctor_id=doctor["id"], rule_key="DOCTOR_RULE")
     r = client.get("/api/rule-overrides?scope=GLOBAL")
     assert all(o["scope"] == "GLOBAL" for o in r.json())
     assert len(r.json()) == 1

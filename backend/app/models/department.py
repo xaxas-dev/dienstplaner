@@ -21,4 +21,5 @@ class Department(Base):
     is_shift_relevant: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     display_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    requires_full_time: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)

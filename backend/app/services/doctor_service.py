@@ -18,9 +18,7 @@ from app.services.exceptions import (
 )
 
 
-def _periods_overlap(
-    from_a: date, to_a: date | None, from_b: date, to_b: date | None
-) -> bool:
+def _periods_overlap(from_a: date, to_a: date | None, from_b: date, to_b: date | None) -> bool:
     """Zwei Zeiträume überschneiden sich, wenn keiner vollständig vor dem anderen liegt."""
     a_before_b = to_a is not None and to_a < from_b
     b_before_a = to_b is not None and to_b < from_a
@@ -40,6 +38,9 @@ def validate_doctor_data(data: dict) -> None:
         raise DoctorValidationError(
             "Externe Ärzte haben kein Weiterbildungsjahr (bitte auf null setzen)"
         )
+    # entry_date vs. virtual_entry_date werden absichtlich nicht gegeneinander
+    # validiert: virtual_entry_date kann durch Anrechnungszeiten auch VOR dem
+    # realen Eintrittsdatum liegen.
 
 
 def validate_employment_period_overlap(
@@ -93,9 +94,7 @@ def add_employment_period_with_validation(
 ) -> EmploymentPeriod:
     if doctor_repo.get_doctor(db, doctor_id) is None:
         raise DoctorNotFoundError(doctor_id)
-    validate_employment_period_overlap(
-        db, doctor_id, data["valid_from"], data.get("valid_to")
-    )
+    validate_employment_period_overlap(db, doctor_id, data["valid_from"], data.get("valid_to"))
     ep = ep_repo.create_employment_period(db, doctor_id, data)
     db.commit()
     db.refresh(ep)
@@ -144,9 +143,7 @@ def add_qualification_to_doctor(
     db.commit()
 
 
-def remove_qualification_from_doctor(
-    db: Session, doctor_id: int, qualification_id: int
-) -> None:
+def remove_qualification_from_doctor(db: Session, doctor_id: int, qualification_id: int) -> None:
     if doctor_repo.get_doctor(db, doctor_id) is None:
         raise DoctorNotFoundError(doctor_id)
     removed = dq_repo.remove_qualification(db, doctor_id, qualification_id)

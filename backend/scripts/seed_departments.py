@@ -33,7 +33,13 @@ DEPARTMENTS: list[dict] = [
     {"name": "Poli/Botox", "short_name": None, "display_order": 15, **_I},
     {"name": "MS-Sprechstunde/Konsile", "short_name": "MS", "display_order": 16, **_I},
     {"name": "Forschung", "short_name": "Fo", "display_order": 17, **_I},
-    {"name": "Curschmann Klinik", "short_name": "CK", "display_order": 18, **_I},
+    {
+        "name": "Curschmann Klinik",
+        "short_name": "CK",
+        "display_order": 18,
+        "requires_full_time": True,
+        **_I,
+    },
     {"name": "Intensiv Innere", "short_name": None, "display_order": 19, **_E},
     {"name": "Psychiatrie", "short_name": None, "display_order": 20, **_E},
     {"name": "ZIP", "short_name": None, "display_order": 21, **_E},
@@ -46,16 +52,26 @@ def seed() -> None:
     Base.metadata.create_all(bind=engine)
 
     with SessionLocal() as session:
-        existing_names = {row[0] for row in session.query(Department.name).all()}
+        existing: dict[str, Department] = {row.name: row for row in session.query(Department).all()}
         inserted = 0
+        updated = 0
         for dept_data in DEPARTMENTS:
-            if dept_data["name"] in existing_names:
-                continue
-            dept = Department(**dept_data)
-            session.add(dept)
-            inserted += 1
+            if dept_data["name"] in existing:
+                dept = existing[dept_data["name"]]
+                # Idempotent: requires_full_time korrekt setzen falls abweichend
+                new_rft = dept_data.get("requires_full_time", False)
+                if dept.requires_full_time != new_rft:
+                    dept.requires_full_time = new_rft
+                    updated += 1
+            else:
+                dept = Department(**dept_data)
+                session.add(dept)
+                inserted += 1
         session.commit()
-        print(f"{inserted} Bereiche eingefügt, {len(existing_names)} bereits vorhanden.")
+        print(
+            f"{inserted} Bereiche eingefügt, {updated} aktualisiert, "
+            f"{len(existing) - updated} bereits korrekt."
+        )
 
 
 if __name__ == "__main__":

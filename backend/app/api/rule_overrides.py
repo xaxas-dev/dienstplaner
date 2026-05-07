@@ -42,19 +42,13 @@ def get_rule_override(override_id: int, db: Session = Depends(get_db)):
     return override
 
 
-@router.post(
-    "", response_model=RuleOverrideResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("", response_model=RuleOverrideResponse, status_code=status.HTTP_201_CREATED)
 def create_rule_override(body: RuleOverrideCreate, db: Session = Depends(get_db)):
-    return rule_override_service.create_rule_override_with_validation(
-        db, body.model_dump()
-    )
+    return rule_override_service.create_rule_override_with_validation(db, body.model_dump())
 
 
 @router.patch("/{override_id}", response_model=RuleOverrideResponse)
-def update_rule_override(
-    override_id: int, body: RuleOverrideUpdate, db: Session = Depends(get_db)
-):
+def update_rule_override(override_id: int, body: RuleOverrideUpdate, db: Session = Depends(get_db)):
     return rule_override_service.update_rule_override_with_validation(
         db, override_id, body.model_dump(exclude_unset=True)
     )

@@ -19,9 +19,7 @@ def create_department_with_validation(db: Session, data: dict) -> Department:
     return dept
 
 
-def update_department_with_validation(
-    db: Session, department_id: int, data: dict
-) -> Department:
+def update_department_with_validation(db: Session, department_id: int, data: dict) -> Department:
     dept = dept_repo.get_department(db, department_id)
     if dept is None:
         raise DepartmentNotFoundError(department_id)

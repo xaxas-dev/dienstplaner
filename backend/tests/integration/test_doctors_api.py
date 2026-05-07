@@ -1,4 +1,3 @@
-
 from fastapi.testclient import TestClient
 
 
@@ -207,3 +206,32 @@ def test_include_inactive_filter(client: TestClient) -> None:
     names = [d["name"] for d in r.json()]
     assert "Dr. Aktiv" in names
     assert "Dr. Inaktiv" in names
+
+
+def test_doctor_weiterbildungsjahr_above_6(client: TestClient) -> None:
+    r = client.post("/api/doctors", json={"name": "Dr. WBJ8", "weiterbildungsjahr": 8})
+    assert r.status_code == 201
+    assert r.json()["weiterbildungsjahr"] == 8
+
+
+def test_doctor_weiterbildungsjahr_zero_invalid(client: TestClient) -> None:
+    r = client.post("/api/doctors", json={"name": "Dr. WBJ0", "weiterbildungsjahr": 0})
+    assert r.status_code == 422
+
+
+def test_doctor_with_entry_dates(client: TestClient) -> None:
+    payload = {
+        "name": "Dr. Eintrittsdaten",
+        "entry_date": "2020-03-01",
+        "virtual_entry_date": "2019-09-01",
+    }
+    r = client.post("/api/doctors", json=payload)
+    assert r.status_code == 201
+    data = r.json()
+    assert data["entry_date"] == "2020-03-01"
+    assert data["virtual_entry_date"] == "2019-09-01"
+
+    r2 = client.get(f"/api/doctors/{data['id']}")
+    assert r2.status_code == 200
+    assert r2.json()["entry_date"] == "2020-03-01"
+    assert r2.json()["virtual_entry_date"] == "2019-09-01"

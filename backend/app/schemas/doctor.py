@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -13,9 +13,11 @@ class DoctorBase(BaseModel):
     name: str = Field(max_length=200)
     short_name: str | None = Field(default=None, max_length=50)
     doctor_type: DoctorType = DoctorType.INTERNAL
-    weiterbildungsjahr: int | None = Field(default=None, ge=1, le=6)
+    weiterbildungsjahr: int | None = Field(default=None, ge=1)
     is_facharzt: bool = False
     active: bool = True
+    entry_date: date | None = None
+    virtual_entry_date: date | None = None
     notes: str | None = None
 
 
@@ -26,9 +28,11 @@ class DoctorUpdate(BaseModel):
     name: str | None = Field(default=None, max_length=200)
     short_name: str | None = Field(default=None, max_length=50)
     doctor_type: DoctorType | None = None
-    weiterbildungsjahr: int | None = Field(default=None, ge=1, le=6)
+    weiterbildungsjahr: int | None = Field(default=None, ge=1)
     is_facharzt: bool | None = None
     active: bool | None = None
+    entry_date: date | None = None
+    virtual_entry_date: date | None = None
     notes: str | None = None
 
 

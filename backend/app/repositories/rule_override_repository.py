@@ -42,9 +42,7 @@ def create_rule_override(db: Session, data: dict) -> RuleOverride:
     return override
 
 
-def update_rule_override(
-    db: Session, override_id: int, data: dict
-) -> RuleOverride | None:
+def update_rule_override(db: Session, override_id: int, data: dict) -> RuleOverride | None:
     override = db.get(RuleOverride, override_id)
     if override is None:
         return None

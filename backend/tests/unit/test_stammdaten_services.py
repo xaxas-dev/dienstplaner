@@ -133,6 +133,4 @@ def test_rule_override_empty_rule_key_raises() -> None:
 
 def test_rule_override_empty_value_raises() -> None:
     with pytest.raises(RuleOverrideValidationError, match="override_value"):
-        validate_rule_override_data(
-            {"rule_key": "K", "override_value": "", "scope": "GLOBAL"}
-        )
+        validate_rule_override_data({"rule_key": "K", "override_value": "", "scope": "GLOBAL"})

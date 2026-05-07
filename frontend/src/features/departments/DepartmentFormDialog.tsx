@@ -16,6 +16,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -31,6 +32,7 @@ const schema = z.object({
   is_external: z.boolean(),
   is_shift_relevant: z.boolean(),
   display_order: z.number({ error: 'Zahl erforderlich' }).int(),
+  requires_full_time: z.boolean(),
   active: z.boolean(),
   notes: z.string().nullable().optional(),
 })
@@ -55,6 +57,7 @@ export function DepartmentFormDialog({ open, onOpenChange, department }: Departm
       is_external: department?.is_external ?? false,
       is_shift_relevant: department?.is_shift_relevant ?? true,
       display_order: department?.display_order ?? 0,
+      requires_full_time: department?.requires_full_time ?? false,
       active: department?.active ?? true,
       notes: department?.notes ?? null,
     },
@@ -68,6 +71,7 @@ export function DepartmentFormDialog({ open, onOpenChange, department }: Departm
         is_external: department?.is_external ?? false,
         is_shift_relevant: department?.is_shift_relevant ?? true,
         display_order: department?.display_order ?? 0,
+        requires_full_time: department?.requires_full_time ?? false,
         active: department?.active ?? true,
         notes: department?.notes ?? null,
       })
@@ -174,6 +178,24 @@ export function DepartmentFormDialog({ open, onOpenChange, department }: Departm
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="requires_full_time"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center gap-3 space-y-0 rounded-md border p-3">
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                  <div>
+                    <FormLabel className="cursor-pointer font-normal">Vollzeit erforderlich</FormLabel>
+                    <FormDescription className="text-xs">
+                      Diese Rotation kann nur von Vollzeit-Mitarbeitern besetzt werden.
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <FormField

@@ -16,6 +16,8 @@ erDiagram
         int weiterbildungsjahr
         bool is_facharzt
         bool active
+        date entry_date
+        date virtual_entry_date
         text notes
         datetime created_at
         datetime updated_at
@@ -57,6 +59,7 @@ erDiagram
         string short_name
         bool is_external
         bool is_shift_relevant
+        bool requires_full_time
         bool active
         int display_order
         text notes
@@ -120,6 +123,19 @@ Externe Ärzte (z.B. Leihärzte, Honorarärzte) haben ein vereinfachtes Modell:
   nicht oder nur eingeschränkt.
 - Sie können dennoch Dienste übernehmen und werden im Dienstplan aufgeführt.
 
+### `entry_date` und `virtual_entry_date` am Arzt
+
+`entry_date` ist das reale Eintrittsdatum des Arztes in die Klinik.
+
+`virtual_entry_date` ist das für die Rotationspriorisierung maßgebliche
+virtuelle Eintrittsdatum. Es ergibt sich aus dem realen Eintrittsdatum plus
+Anrechnungszeiten (z.B. aus Voranstellungen). Da das virtuelle Datum auf
+Anrechnungen basiert, kann es **vor** dem realen Eintrittsdatum liegen.
+
+Beide Felder sind nullable. Für externe Ärzte werden sie typischerweise nicht
+gepflegt. In der ersten Version werden beide Felder manuell gesetzt.
+Eine automatische Berechnung aus konfigurierten Anrechnungszeiten folgt später.
+
 ### Warum `is_external` und `is_shift_relevant` getrennt sind
 
 Ein `Department` kann eine externe Rotation sein (`is_external=True`), also
@@ -128,6 +144,18 @@ Diese Bereiche brauchen keine eigene Dienstplanung (`is_shift_relevant=False`).
 
 Die Felder sind dennoch unabhängig, weil theoretisch auch ein externer Bereich
 geplante Dienste haben könnte. Beide Felder werden separat konfiguriert.
+
+### `requires_full_time` an Bereichen
+
+Manche Rotationen können ausschließlich von Vollzeit-Mitarbeitern (100%)
+besetzt werden. Das Feld `requires_full_time` kennzeichnet diese Bereiche.
+
+Aktuell betrifft das die Curschmann Klinik (CK). Weitere Bereiche können
+im Laufe der Zeit hinzukommen.
+
+Die Durchsetzung (keine Teilzeit-Zuweisung auf Vollzeit-Rotation) erfolgt
+in Meilenstein M5 als Constraint im Solver. Das Feld ist reine Metadaten für
+den Planungskontext.
 
 ### Wie `RuleOverride` funktioniert (Ebenen A und B)
 
@@ -150,40 +178,49 @@ in Meilenstein M2/M5 ergänzt.
 
 ## Initiale Bereiche (21 Stück)
 
-| Nr | Name | Kürzel | Extern | Dienst-relevant |
-|----|------|--------|--------|-----------------|
-| 1 | 511/LBEST | LBEST | Nein | Ja |
-| 2 | 511 | 511 | Nein | Ja |
-| 3 | ITS | ITS | Nein | Ja |
-| 4 | SU-Stationsarzt | SU-SA | Nein | Ja |
-| 5 | SU | SU | Nein | Ja |
-| 6 | Duplex | Du | Nein | Ja |
-| 7 | Poli | Poli | Nein | Ja |
-| 8 | Poli/EMG | Poli/EMG | Nein | Ja |
-| 9 | EMG | EMG | Nein | Ja |
-| 10 | Springer | Spr | Nein | Ja |
-| 11 | Parkinson Komplextherapie | ParkiKomp | Nein | Ja |
-| 12 | Tagesklinik | TK | Nein | Ja |
-| 13 | Neuromotorik-TK | NM-TK | Nein | Ja |
-| 14 | Poli/Botox/THS | – | Nein | Ja |
-| 15 | Poli/Botox | – | Nein | Ja |
-| 16 | MS-Sprechstunde/Konsile | MS | Nein | Ja |
-| 17 | Forschung | Fo | Nein | Ja |
-| 18 | Curschmann Klinik | CK | Nein | Ja |
-| 19 | Intensiv Innere | – | Ja | Nein |
-| 20 | Psychiatrie | – | Ja | Nein |
-| 21 | ZIP | – | Ja | Nein |
+| Nr | Name | Kürzel | Extern | Dienst-relevant | Vollzeit |
+|----|------|--------|--------|-----------------|----------|
+| 1 | 511/LBEST | LBEST | Nein | Ja | Nein |
+| 2 | 511 | 511 | Nein | Ja | Nein |
+| 3 | ITS | ITS | Nein | Ja | Nein |
+| 4 | SU-Stationsarzt | SU-SA | Nein | Ja | Nein |
+| 5 | SU | SU | Nein | Ja | Nein |
+| 6 | Duplex | Du | Nein | Ja | Nein |
+| 7 | Poli | Poli | Nein | Ja | Nein |
+| 8 | Poli/EMG | Poli/EMG | Nein | Ja | Nein |
+| 9 | EMG | EMG | Nein | Ja | Nein |
+| 10 | Springer | Spr | Nein | Ja | Nein |
+| 11 | Parkinson Komplextherapie | ParkiKomp | Nein | Ja | Nein |
+| 12 | Tagesklinik | TK | Nein | Ja | Nein |
+| 13 | Neuromotorik-TK | NM-TK | Nein | Ja | Nein |
+| 14 | Poli/Botox/THS | – | Nein | Ja | Nein |
+| 15 | Poli/Botox | – | Nein | Ja | Nein |
+| 16 | MS-Sprechstunde/Konsile | MS | Nein | Ja | Nein |
+| 17 | Forschung | Fo | Nein | Ja | Nein |
+| 18 | Curschmann Klinik | CK | Nein | Ja | **Ja** |
+| 19 | Intensiv Innere | – | Ja | Nein | Nein |
+| 20 | Psychiatrie | – | Ja | Nein | Nein |
+| 21 | ZIP | – | Ja | Nein | Nein |
 
 ## Initiale Schichttypen
 
-| Name | Kürzel | Werktag | Wochenende |
-|------|--------|---------|------------|
-| V-Dienst | V | Ja | Nein |
-| Tagdienst | T | Nein | Ja |
-| Nachtdienst | N | Ja | Ja |
+| Name | Kürzel | Werktag | Wochenende | Start | Ende |
+|------|--------|---------|------------|-------|------|
+| V-Dienst | V | Ja | Nein | – | – |
+| Tagdienst | T | Nein | Ja | – | – |
+| Nachtdienst | N | Ja | Ja | – | – |
+| Tagdienst INA | T1 | Ja | Nein | 07:30 | 16:00 |
 
-Uhrzeiten (`start_time`, `end_time`) sind vorerst `NULL` und werden später
-konfiguriert.
+Uhrzeiten für V, T, N sind vorerst `NULL` und werden später konfiguriert.
+T1 (Interdisziplinäre Notaufnahme) ist ein bereichsspezifischer Tagdienst,
+der global modelliert ist. Die Eingrenzung auf die INA als Bereich folgt
+in M8 als Solver-Constraint.
+
+### Hinweis: weiterbildungsjahr ohne oberes Limit
+
+Das Feld `weiterbildungsjahr` akzeptiert beliebige positive ganzzahlige Werte
+(>= 1). Es gibt kein oberes Limit, da Weiterbildungen am UKSH Lübeck bis
+zu 10 Jahre dauern können.
 
 ## Hinweis: Plan-Entitäten folgen in M2
 

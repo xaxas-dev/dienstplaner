@@ -289,6 +289,11 @@ export interface components {
              * @default 0
              */
             display_order: number;
+            /**
+             * Requires Full Time
+             * @default false
+             */
+            requires_full_time: boolean;
             /** Notes */
             notes?: string | null;
         };
@@ -318,6 +323,11 @@ export interface components {
              * @default 0
              */
             display_order: number;
+            /**
+             * Requires Full Time
+             * @default false
+             */
+            requires_full_time: boolean;
             /** Notes */
             notes?: string | null;
             /** Id */
@@ -347,6 +357,8 @@ export interface components {
             active?: boolean | null;
             /** Display Order */
             display_order?: number | null;
+            /** Requires Full Time */
+            requires_full_time?: boolean | null;
             /** Notes */
             notes?: string | null;
         };
@@ -370,6 +382,10 @@ export interface components {
              * @default true
              */
             active: boolean;
+            /** Entry Date */
+            entry_date?: string | null;
+            /** Virtual Entry Date */
+            virtual_entry_date?: string | null;
             /** Notes */
             notes?: string | null;
         };
@@ -424,6 +440,10 @@ export interface components {
              * @default true
              */
             active: boolean;
+            /** Entry Date */
+            entry_date?: string | null;
+            /** Virtual Entry Date */
+            virtual_entry_date?: string | null;
             /** Notes */
             notes?: string | null;
             /** Id */
@@ -457,6 +477,10 @@ export interface components {
             is_facharzt?: boolean | null;
             /** Active */
             active?: boolean | null;
+            /** Entry Date */
+            entry_date?: string | null;
+            /** Virtual Entry Date */
+            virtual_entry_date?: string | null;
             /** Notes */
             notes?: string | null;
         };
@@ -480,6 +504,10 @@ export interface components {
              * @default true
              */
             active: boolean;
+            /** Entry Date */
+            entry_date?: string | null;
+            /** Virtual Entry Date */
+            virtual_entry_date?: string | null;
             /** Notes */
             notes?: string | null;
             /** Id */

@@ -30,13 +30,9 @@ def get_qualification(qualification_id: int, db: Session = Depends(get_db)):
     return qual
 
 
-@router.post(
-    "", response_model=QualificationResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("", response_model=QualificationResponse, status_code=status.HTTP_201_CREATED)
 def create_qualification(body: QualificationCreate, db: Session = Depends(get_db)):
-    return qualification_service.create_qualification_with_validation(
-        db, body.model_dump()
-    )
+    return qualification_service.create_qualification_with_validation(db, body.model_dump())
 
 
 @router.patch("/{qualification_id}", response_model=QualificationResponse)

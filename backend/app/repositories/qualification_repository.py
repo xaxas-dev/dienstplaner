@@ -4,9 +4,7 @@ from sqlalchemy.orm import Session
 from app.models.qualification import Qualification
 
 
-def list_qualifications(
-    db: Session, *, include_inactive: bool = False
-) -> list[Qualification]:
+def list_qualifications(db: Session, *, include_inactive: bool = False) -> list[Qualification]:
     query = db.query(Qualification)
     if not include_inactive:
         query = query.filter(Qualification.active.is_(True))
@@ -29,9 +27,7 @@ def create_qualification(db: Session, data: dict) -> Qualification:
     return qual
 
 
-def update_qualification(
-    db: Session, qualification_id: int, data: dict
-) -> Qualification | None:
+def update_qualification(db: Session, qualification_id: int, data: dict) -> Qualification | None:
     qual = db.get(Qualification, qualification_id)
     if qual is None:
         return None

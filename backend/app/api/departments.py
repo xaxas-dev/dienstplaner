@@ -32,9 +32,7 @@ def create_department(body: DepartmentCreate, db: Session = Depends(get_db)):
 
 
 @router.patch("/{department_id}", response_model=DepartmentResponse)
-def update_department(
-    department_id: int, body: DepartmentUpdate, db: Session = Depends(get_db)
-):
+def update_department(department_id: int, body: DepartmentUpdate, db: Session = Depends(get_db)):
     return department_service.update_department_with_validation(
         db, department_id, body.model_dump(exclude_unset=True)
     )

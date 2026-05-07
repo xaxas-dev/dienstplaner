@@ -48,3 +48,31 @@ describe('DepartmentFormDialog – Validierung', () => {
     })
   })
 })
+
+describe('DepartmentFormDialog – requires_full_time', () => {
+  it('rendert den Switch "Vollzeit erforderlich"', () => {
+    renderDialog()
+    expect(screen.getByText('Vollzeit erforderlich')).toBeInTheDocument()
+  })
+
+  it('Switch ist standardmäßig deaktiviert', () => {
+    renderDialog()
+    const switches = screen.getAllByRole('switch')
+    const vollzeitSwitch = switches.find((s) =>
+      s.closest('[class*="rounded-md"]')?.textContent?.includes('Vollzeit'),
+    )
+    expect(vollzeitSwitch).toBeDefined()
+    expect(vollzeitSwitch).toHaveAttribute('aria-checked', 'false')
+  })
+
+  it('Switch kann aktiviert werden', async () => {
+    const user = userEvent.setup()
+    renderDialog()
+    const switches = screen.getAllByRole('switch')
+    const vollzeitSwitch = switches.find((s) =>
+      s.closest('[class*="rounded-md"]')?.textContent?.includes('Vollzeit'),
+    )!
+    await user.click(vollzeitSwitch)
+    expect(vollzeitSwitch).toHaveAttribute('aria-checked', 'true')
+  })
+})

@@ -9,16 +9,12 @@ def validate_shift_type_data(data: dict) -> None:
     applies_on_weekdays = data.get("applies_on_weekdays", True)
     applies_on_weekend = data.get("applies_on_weekend", False)
     if not applies_on_weekdays and not applies_on_weekend:
-        raise ShiftTypeValidationError(
-            "Schichttyp muss mindestens an einem Tag-Typ gelten"
-        )
+        raise ShiftTypeValidationError("Schichttyp muss mindestens an einem Tag-Typ gelten")
 
     start_time = data.get("start_time")
     end_time = data.get("end_time")
     if start_time is not None and end_time is not None and start_time == end_time:
-        raise ShiftTypeValidationError(
-            "start_time und end_time dürfen nicht identisch sein"
-        )
+        raise ShiftTypeValidationError("start_time und end_time dürfen nicht identisch sein")
 
 
 def create_shift_type_with_validation(db: Session, data: dict) -> ShiftType:
@@ -29,9 +25,7 @@ def create_shift_type_with_validation(db: Session, data: dict) -> ShiftType:
     return st
 
 
-def update_shift_type_with_validation(
-    db: Session, shift_type_id: int, data: dict
-) -> ShiftType:
+def update_shift_type_with_validation(db: Session, shift_type_id: int, data: dict) -> ShiftType:
     st = st_repo.get_shift_type(db, shift_type_id)
     if st is None:
         raise ShiftTypeNotFoundError(shift_type_id)

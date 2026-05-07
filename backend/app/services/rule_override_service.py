@@ -24,9 +24,7 @@ def validate_rule_override_data(data: dict) -> None:
     valid_from = data.get("valid_from")
     valid_to = data.get("valid_to")
     if valid_from is not None and valid_to is not None and valid_from > valid_to:
-        raise RuleOverrideValidationError(
-            "valid_from darf nicht nach valid_to liegen"
-        )
+        raise RuleOverrideValidationError("valid_from darf nicht nach valid_to liegen")
 
 
 def create_rule_override_with_validation(db: Session, data: dict) -> RuleOverride:
@@ -37,9 +35,7 @@ def create_rule_override_with_validation(db: Session, data: dict) -> RuleOverrid
     return override
 
 
-def update_rule_override_with_validation(
-    db: Session, override_id: int, data: dict
-) -> RuleOverride:
+def update_rule_override_with_validation(db: Session, override_id: int, data: dict) -> RuleOverride:
     override = ro_repo.get_rule_override(db, override_id)
     if override is None:
         raise RuleOverrideNotFoundError(override_id)

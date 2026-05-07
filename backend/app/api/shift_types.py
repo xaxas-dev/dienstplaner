@@ -32,9 +32,7 @@ def create_shift_type(body: ShiftTypeCreate, db: Session = Depends(get_db)):
 
 
 @router.patch("/{shift_type_id}", response_model=ShiftTypeResponse)
-def update_shift_type(
-    shift_type_id: int, body: ShiftTypeUpdate, db: Session = Depends(get_db)
-):
+def update_shift_type(shift_type_id: int, body: ShiftTypeUpdate, db: Session = Depends(get_db)):
     return shift_type_service.update_shift_type_with_validation(
         db, shift_type_id, body.model_dump(exclude_unset=True)
     )
