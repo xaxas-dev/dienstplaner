@@ -9,7 +9,11 @@ from app.api.doctors import ep_router
 from app.api.doctors import router as doctors_router
 from app.api.error_handlers import register_error_handlers
 from app.api.health import router as health_router
+from app.api.plan_shifts import router as plan_shifts_router
+from app.api.plan_versions import router as plan_versions_router
+from app.api.plans import router as plans_router
 from app.api.qualifications import router as qualifications_router
+from app.api.rotations import plan_rotations_router, rotations_router
 from app.api.rule_overrides import router as rule_overrides_router
 from app.api.shift_types import router as shift_types_router
 from app.config import BASE_DIR
@@ -37,4 +41,9 @@ app.include_router(departments_router, prefix="/api")
 app.include_router(shift_types_router, prefix="/api")
 app.include_router(qualifications_router, prefix="/api")
 app.include_router(rule_overrides_router, prefix="/api")
+app.include_router(plans_router, prefix="/api")
+app.include_router(plan_versions_router, prefix="/api")
+app.include_router(plan_shifts_router, prefix="/api")
+app.include_router(plan_rotations_router, prefix="/api")
+app.include_router(rotations_router, prefix="/api")
 register_error_handlers(app)

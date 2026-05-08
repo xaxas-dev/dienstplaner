@@ -5,6 +5,8 @@ from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.plan import PlanStatus
+from app.schemas.rotation_assignment import RotationAssignmentResponse
+from app.schemas.shift import ShiftResponse
 
 
 class PlanBase(BaseModel):
@@ -15,7 +17,8 @@ class PlanBase(BaseModel):
     notes: str | None = None
 
 
-class PlanCreate(PlanBase): ...
+class PlanCreate(PlanBase):
+    shift_type_ids: list[int] | None = None
 
 
 class PlanUpdate(BaseModel):
@@ -23,6 +26,13 @@ class PlanUpdate(BaseModel):
     valid_from: date | None = None
     valid_to: date | None = None
     status: PlanStatus | None = None
+    notes: str | None = None
+
+
+class PlanClone(BaseModel):
+    name: str = Field(max_length=200, min_length=1)
+    valid_from: date
+    valid_to: date
     notes: str | None = None
 
 
@@ -34,11 +44,12 @@ class PlanResponse(PlanBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-# Importiert nach den Basis-Klassen um Kreisimporte zu vermeiden
-from app.schemas.rotation_assignment import RotationAssignmentResponse  # noqa: E402
-from app.schemas.shift import ShiftResponse  # noqa: E402
-
-
 class PlanWithRelations(PlanResponse):
     shifts: list[ShiftResponse] = []
     rotation_assignments: list[RotationAssignmentResponse] = []
+
+
+class CloneResult(BaseModel):
+    plan: PlanWithRelations
+    rotations_copied: int
+    rotations_skipped: int

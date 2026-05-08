@@ -9,11 +9,16 @@ from app.services.exceptions import (
     DuplicateQualificationError,
     EmploymentPeriodNotFoundError,
     EmploymentPeriodOverlapError,
+    PlanNotFoundError,
+    PlanValidationError,
     QualificationInUseError,
     QualificationNotFoundError,
     QualificationValidationError,
+    RotationNotFoundError,
+    RotationValidationError,
     RuleOverrideNotFoundError,
     RuleOverrideValidationError,
+    ShiftNotFoundError,
     ShiftTypeNotFoundError,
     ShiftTypeValidationError,
 )
@@ -79,3 +84,23 @@ def register_error_handlers(app: FastAPI) -> None:
         _: Request, exc: RuleOverrideValidationError
     ) -> JSONResponse:
         return JSONResponse(status_code=422, content={"detail": exc.detail})
+
+    @app.exception_handler(PlanNotFoundError)
+    async def plan_not_found(_: Request, exc: PlanNotFoundError) -> JSONResponse:
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+    @app.exception_handler(PlanValidationError)
+    async def plan_validation(_: Request, exc: PlanValidationError) -> JSONResponse:
+        return JSONResponse(status_code=422, content={"detail": exc.detail})
+
+    @app.exception_handler(RotationNotFoundError)
+    async def rotation_not_found(_: Request, exc: RotationNotFoundError) -> JSONResponse:
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+    @app.exception_handler(RotationValidationError)
+    async def rotation_validation(_: Request, exc: RotationValidationError) -> JSONResponse:
+        return JSONResponse(status_code=422, content={"detail": exc.detail})
+
+    @app.exception_handler(ShiftNotFoundError)
+    async def shift_not_found(_: Request, exc: ShiftNotFoundError) -> JSONResponse:
+        return JSONResponse(status_code=404, content={"detail": str(exc)})

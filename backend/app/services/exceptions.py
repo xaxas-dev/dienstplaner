@@ -88,3 +88,33 @@ class RuleOverrideValidationError(Exception):
     def __init__(self, detail: str) -> None:
         super().__init__(detail)
         self.detail = detail
+
+
+class PlanNotFoundError(Exception):
+    def __init__(self, plan_id: int) -> None:
+        super().__init__(f"Plan mit ID {plan_id} nicht gefunden")
+        self.plan_id = plan_id
+
+
+class PlanValidationError(Exception):
+    def __init__(self, detail: str) -> None:
+        super().__init__(detail)
+        self.detail = detail
+
+
+class RotationNotFoundError(Exception):
+    def __init__(self, rotation_id: int) -> None:
+        super().__init__(f"Rotationszuweisung mit ID {rotation_id} nicht gefunden")
+        self.rotation_id = rotation_id
+
+
+class RotationValidationError(Exception):
+    def __init__(self, detail: str) -> None:
+        super().__init__(detail)
+        self.detail = detail
+
+
+class ShiftNotFoundError(Exception):
+    def __init__(self, shift_id: int) -> None:
+        super().__init__(f"Schicht mit ID {shift_id} nicht gefunden")
+        self.shift_id = shift_id

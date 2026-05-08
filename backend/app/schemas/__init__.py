@@ -15,7 +15,14 @@ from app.schemas.employment_period import (
     EmploymentPeriodResponse,
     EmploymentPeriodUpdate,
 )
-from app.schemas.plan import PlanCreate, PlanResponse, PlanUpdate, PlanWithRelations
+from app.schemas.plan import (
+    CloneResult,
+    PlanClone,
+    PlanCreate,
+    PlanResponse,
+    PlanUpdate,
+    PlanWithRelations,
+)
 from app.schemas.plan_version import PlanVersionCreate, PlanVersionResponse
 from app.schemas.qualification import (
     QualificationCreate,
@@ -53,6 +60,8 @@ __all__ = [
     "EmploymentPeriodCreate",
     "EmploymentPeriodResponse",
     "EmploymentPeriodUpdate",
+    "CloneResult",
+    "PlanClone",
     "PlanCreate",
     "PlanResponse",
     "PlanUpdate",
