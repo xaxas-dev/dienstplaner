@@ -1,4 +1,5 @@
 from app.models.absence import Absence, AbsenceType
+from app.models.app_setting import AppSetting
 from app.models.department import Department
 from app.models.doctor import Doctor, DoctorType
 from app.models.doctor_qualification import DoctorQualification
@@ -16,6 +17,7 @@ from app.models.wish import Wish, WishType
 __all__ = [
     "Absence",
     "AbsenceType",
+    "AppSetting",
     "Department",
     "Doctor",
     "DoctorQualification",

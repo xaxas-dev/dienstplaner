@@ -244,15 +244,42 @@ in Meilenstein M2/M5 ergänzt.
 
 | Name | Kürzel | Werktag | Wochenende | Start | Ende |
 |------|--------|---------|------------|-------|------|
-| V-Dienst | V | Ja | Nein | – | – |
-| Tagdienst | T | Nein | Ja | – | – |
-| Nachtdienst | N | Ja | Ja | – | – |
+| V-Dienst | V | Ja | Nein | 15:00 | 20:15 |
+| Tagdienst | T | Nein | Ja | 07:30 | 19:30 |
+| Nachtdienst | N | Ja | Ja | 19:30 | 07:30 |
 | Tagdienst INA | T1 | Ja | Nein | 07:30 | 16:00 |
 
-Uhrzeiten für V, T, N sind vorerst `NULL` und werden später konfiguriert.
+Nachtdienst hat `start_time > end_time` (19:30 > 07:30), was Mitternachts-
+überschreitung bedeutet. Das Schema erlaubt dies explizit.
 T1 (Interdisziplinäre Notaufnahme) ist ein bereichsspezifischer Tagdienst,
 der global modelliert ist. Die Eingrenzung auf die INA als Bereich folgt
 in M8 als Solver-Constraint.
+
+## App-Einstellungen (app_settings)
+
+Key-Value-Tabelle für klinikweite Konfiguration. Settings werden über
+Alembic-Migrationen initial angelegt; die API erlaubt nur Update.
+
+```
+AppSetting:
+  id          int (PK)
+  key         str (unique, max 100)   – stabiler Bezeichner
+  value       str (max 1000)          – aktueller Wert als String
+  description str | None (max 500)    – Beschreibung für die UI
+  updated_at  datetime                – letzter Schreibzeitpunkt
+```
+
+Initiale Einstellungen (in Migration 0006 angelegt):
+
+| Key | Default-Wert | Beschreibung |
+|-----|-------------|-------------|
+| `clinic_name` | `Neurologie UKSH Lübeck` | Name der Klinik (wird im Header angezeigt) |
+
+Hinweis: Setting-Werte sind immer Strings. Für Zahlen oder Booleans muss
+der Client parsen (z.B. `parseInt(value)` oder `value === "true"`). Typisierung
+folgt bei Bedarf.
+
+Kein Create/Delete über die API – neue Settings kommen per Migration hinzu.
 
 ## Plan-Entitäten (ab M2)
 

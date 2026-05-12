@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { Users, Building2, Clock, Award, Settings, CalendarDays } from 'lucide-react'
+import { Users, Building2, Clock, Award, Settings, CalendarDays, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useClinicName } from '@/lib/useSettings'
 
 interface NavItem {
   label: string
@@ -18,14 +19,21 @@ const navItems: NavItem[] = [
   { label: 'Pläne', to: '/plans', icon: CalendarDays, disabled: true },
 ]
 
+const settingsItem: NavItem = { label: 'Einstellungen', to: '/settings', icon: SlidersHorizontal }
+
 export function AppShell() {
+  const { data: clinicNameSetting } = useClinicName()
+  const clinicName = clinicNameSetting?.value ?? null
+
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
       <aside className="w-60 shrink-0 border-r border-border bg-card flex flex-col">
         <div className="px-6 py-5 border-b border-border">
           <h1 className="text-lg font-semibold text-foreground">Dienstplaner</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Neurologie UKSH Lübeck</p>
+          {clinicName && (
+            <p className="text-xs text-muted-foreground mt-0.5">{clinicName}</p>
+          )}
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           {navItems.map((item) => {
@@ -61,6 +69,23 @@ export function AppShell() {
             )
           })}
         </nav>
+        {/* Settings am Ende der Sidebar */}
+        <div className="px-3 pb-4 border-t border-border pt-3">
+          <NavLink
+            to={settingsItem.to}
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
+                isActive
+                  ? 'bg-primary text-primary-foreground font-medium'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+              )
+            }
+          >
+            <SlidersHorizontal className="h-4 w-4 shrink-0" />
+            <span>{settingsItem.label}</span>
+          </NavLink>
+        </div>
       </aside>
 
       {/* Hauptbereich */}
