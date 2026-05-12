@@ -130,3 +130,9 @@ class INAExclusionValidationError(Exception):
     def __init__(self, detail: str) -> None:
         super().__init__(detail)
         self.detail = detail
+
+
+class SettingNotFoundError(Exception):
+    def __init__(self, key: str) -> None:
+        super().__init__(f"Einstellung '{key}' nicht gefunden")
+        self.key = key

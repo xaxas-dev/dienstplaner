@@ -20,6 +20,7 @@ from app.services.exceptions import (
     RotationValidationError,
     RuleOverrideNotFoundError,
     RuleOverrideValidationError,
+    SettingNotFoundError,
     ShiftNotFoundError,
     ShiftTypeNotFoundError,
     ShiftTypeValidationError,
@@ -116,3 +117,7 @@ def register_error_handlers(app: FastAPI) -> None:
         _: Request, exc: INAExclusionValidationError
     ) -> JSONResponse:
         return JSONResponse(status_code=422, content={"detail": exc.detail})
+
+    @app.exception_handler(SettingNotFoundError)
+    async def setting_not_found(_: Request, exc: SettingNotFoundError) -> JSONResponse:
+        return JSONResponse(status_code=404, content={"detail": str(exc)})

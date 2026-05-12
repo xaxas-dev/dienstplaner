@@ -7,6 +7,7 @@ import { DepartmentListPage } from '@/features/departments/DepartmentListPage'
 import { ShiftTypeListPage } from '@/features/shift-types/ShiftTypeListPage'
 import { QualificationListPage } from '@/features/qualifications/QualificationListPage'
 import { RuleOverrideListPage } from '@/features/rule-overrides/RuleOverrideListPage'
+import { SettingsPage } from '@/features/settings/SettingsPage'
 
 function NotFoundPage() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="/shift-types" element={<ShiftTypeListPage />} />
         <Route path="/qualifications" element={<QualificationListPage />} />
         <Route path="/rule-overrides" element={<RuleOverrideListPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

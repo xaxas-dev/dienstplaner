@@ -3,7 +3,10 @@
     "allow": [
       "Bash(*)",
       "PowerShell(cd d:\\\\Softwareprojekte\\\\Dienstplaner\\\\backend; Start-Process -NoNewWindow -FilePath \"uv\" -ArgumentList \"run\",\"uvicorn\",\"app.main:app\",\"--port\",\"8000\" -RedirectStandardOutput \"$env:TEMP\\\\backend.log\" -RedirectStandardError \"$env:TEMP\\\\backend_err.log\"; Start-Sleep -Seconds 4; Invoke-WebRequest -Uri \"http://localhost:8000/api/health\" -UseBasicParsing 2>&1)",
-      "PowerShell(Stop-Process -Name \"python\" -ErrorAction SilentlyContinue)"
+      "PowerShell(Stop-Process -Name \"python\" -ErrorAction SilentlyContinue)",
+      "PowerShell(Set-Location \"d:\\\\Softwareprojekte\\\\Dienstplaner\\\\backend\"; Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"Set-Location 'D:\\\\Softwareprojekte\\\\Dienstplaner\\\\backend'; uv run uvicorn app.main:app --port 8000\" -PassThru | Select-Object Id)",
+      "PowerShell(Invoke-WebRequest -Uri \"http://localhost:8000/api/health\" -UseBasicParsing 2>&1)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:8000/api/health\" -UseBasicParsing -ErrorAction Stop; $r.StatusCode } catch { \"Backend nicht erreichbar: $_\" })"
     ]
   }
 }

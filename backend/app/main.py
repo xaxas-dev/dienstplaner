@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.app_settings import router as app_settings_router
 from app.api.departments import router as departments_router
 from app.api.doctors import ep_router
 from app.api.doctors import router as doctors_router
@@ -48,4 +49,5 @@ app.include_router(plan_shifts_router, prefix="/api")
 app.include_router(plan_rotations_router, prefix="/api")
 app.include_router(rotations_router, prefix="/api")
 app.include_router(ina_exclusions_router, prefix="/api")
+app.include_router(app_settings_router, prefix="/api")
 register_error_handlers(app)
