@@ -14,6 +14,7 @@ export default {
     },
     extend: {
       colors: {
+        // shadcn/ui tokens (unverändert)
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
@@ -47,11 +48,42 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        // dp design tokens
+        paper:   '#F6F1E6',
+        ink: {
+          DEFAULT: '#26221C',
+          2:       '#5C544A',
+          3:       '#8A8275',
+        },
+        line: {
+          DEFAULT: '#E8E0CF',
+          2:       '#D6CCB6',
+        },
+        'dp-accent': {
+          DEFAULT: '#C66A3D',
+          2:       '#E69E66',
+        },
+        ok:      '#5A7A3A',
+        warn: {
+          DEFAULT: '#B85B22',
+          bg:      '#FBE5D6',
+          line:    '#F0C3A2',
+          ink:     '#7A3414',
+        },
+        today:   '#FAF0DC',
+        weekend: '#F3ECD8',
+      },
+      fontFamily: {
+        sans:  ['Geist', 'ui-sans-serif', 'system-ui'],
+        serif: ['Newsreader', 'ui-serif', 'Georgia'],
       },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        cell: '7px',
+        tile: '14px',
+        rail: '12px',
       },
       keyframes: {
         'accordion-down': {
