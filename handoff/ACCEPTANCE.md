@@ -16,12 +16,12 @@ Claude Code soll nach jedem Schritt diese Checkliste anhaken und stoppen, bis du
 
 ## ✅ Schritt 2 — Primitives
 
-- [ ] `frontend/src/components/dp/{Chip,ShiftChip,ShiftCell,Avatar,KpiTile,Sparkline}.tsx` existieren.
-- [ ] Playground-Route `/playground` (nur in dev) zeigt **alle Varianten** jeder Primitive.
-- [ ] `Chip` hat 5 Varianten (default, active, accent, muted, ok) — visuell unterscheidbar.
-- [ ] `ShiftChip` rendert für `code='F'` Pfirsich, für `code='N'` Pflaume — Farben aus Palette, nicht hardgecoded.
-- [ ] `Avatar` mit `name='Lena Hartmann'` zeigt „LH", deterministisch dieselbe Hue über Reloads.
-- [ ] Sparkline mit `values=[...]` rendert 14 Balken, Werte < 0.8 sind rot.
+- [x] `frontend/src/components/dp/{Chip,ShiftChip,ShiftCell,Avatar,KpiTile,Sparkline}.tsx` existieren.
+- [x] Playground-Route `/playground` (nur in dev) zeigt **alle Varianten** jeder Primitive.
+- [x] `Chip` hat 5 Varianten (default, active, accent, muted, ok) — visuell unterscheidbar.
+- [x] `ShiftChip` rendert für `code='V'` Pfirsich, für `code='N'` Pflaume — Farben aus Palette, nicht hardgecoded.
+- [x] `Avatar` mit `name='Lena Hartmann'` zeigt „LH", deterministisch dieselbe Hue über Reloads.
+- [x] Sparkline mit `values=[...]` rendert 14 Balken, Werte < 0.8 sind rot.
 
 ## ✅ Schritt 3 — Layout-Shell
 

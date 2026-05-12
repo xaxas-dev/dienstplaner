@@ -54,6 +54,21 @@ API-Dokumentation: http://localhost:8000/docs
 
 ## Entwicklung
 
+### Design-System
+Das Frontend verwendet ein token-basiertes Design-System unter `frontend/src/lib/design/`:
+- `tokens.ts` — Farben, Abstände, Fonts, Radien (Single Source of Truth)
+- `shift-palette.ts` — Pastell-Farbpalette für Schichttypen (V/T/N/T1)
+
+Tailwind-Klassen wie `bg-paper`, `text-ink`, `bg-warn-bg`, `rounded-cell` leiten aus diesen Tokens ab.
+Keine Hex-Codes direkt in Komponenten — immer über Tokens.
+
+Domänenspezifische UI-Primitives (Chip, ShiftChip, ShiftCell, Avatar, KpiTile, Sparkline) liegen in
+`frontend/src/components/dp/`.
+
+### Komponenten-Playground
+Im Entwicklungsmodus ist eine Vorschau aller UI-Primitives unter `http://localhost:5173/playground` erreichbar.
+Die Route ist im Production-Build deaktiviert.
+
 ### API-Typen aktualisieren
 Nach jeder Änderung an Backend-Endpunkten oder Schemas:
 ```powershell
