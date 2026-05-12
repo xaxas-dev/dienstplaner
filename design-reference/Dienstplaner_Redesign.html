@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<title>Dienstplaner — Redesign Exploration</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..600&family=Geist:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #f0eee9; }
+  body { font-family: 'Geist', system-ui, sans-serif; }
+  #root { height: 100vh; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="variants/data.js"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="variants/variant-a.jsx"></script>
+<script type="text/babel" src="variants/variant-ab-plan.jsx"></script>
+<script type="text/babel" src="variants/variant-b.jsx"></script>
+<script type="text/babel" src="variants/variant-c.jsx"></script>
+
+<script type="text/babel">
+const W = 1440, H = 900;
+
+function App() {
+  return (
+    <DesignCanvas>
+      <DCSection
+        id="intro"
+        title="Dienstplaner · Redesign-Exploration"
+        subtitle="Drei divergente Richtungen für eine modernere, warm-pastellige Oberfläche. Fokus: Plan-Ansicht & Dashboard. Mausweg minimieren, Tabellen entwirren, Charakter geben."
+      >
+        <DCPostIt>
+          <strong>Analyse Ist-Zustand:</strong><br/>
+          • Kernfeature „Pläne" deaktiviert — UI ist heute reine Stammdatenpflege<br/>
+          • Kein Dashboard / Einstieg<br/>
+          • Tabellen ohne Suche, Filter, Gruppierung<br/>
+          • Status-Badges uneinheitlich, flache Hierarchie<br/>
+          • Lange Mauswege (Sidebar → Page → Action → Dialog)<br/>
+          <strong>Pain Points lt. dir:</strong> weite Wege, unübersichtliche Tabellen, langweiliger Look
+        </DCPostIt>
+      </DCSection>
+
+      <DCSection
+        id="merged"
+        title="★ Empfohlene Richtung — A-Look durchgehend, Plan mit B-Struktur"
+        subtitle="Dashboard und Ärzte im Atelier-Look. Plan-Unteransicht übernimmt die Struktur aus B: Mini-Rail · Command-Bar · Filter-Chips · KPI-Sparkline · In-Cell-Konflikt · rechtes Kontext-Panel."
+      >
+        <DCArtboard id="x-dashboard" label="1 · Dashboard (A-Look)" width={W} height={H}>
+          <VariantA_Dashboard />
+        </DCArtboard>
+        <DCArtboard id="x-plan" label="2 · Plan (A-Look + B-Struktur)" width={W} height={H}>
+          <VariantAB_Plan />
+        </DCArtboard>
+        <DCArtboard id="x-doctors" label="3 · Ärzte (A-Look)" width={W} height={H}>
+          <VariantA_Doctors />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection
+        id="variant-a"
+        title="Alternativen aus dem ersten Vergleich (zum Nachschlagen)"
+        subtitle="Original-Varianten zur Referenz — falls einzelne Details (Monats-Plan, Magnet-Brett, dichte Cockpit-Variante) noch interessant sind."
+      >
+        <DCArtboard id="a-plan-original" label="A-Plan · Monatsansicht (original)" width={W} height={H}>
+          <VariantA_Plan />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection
+        id="variant-b"
+        title="B · Cockpit — Plan-zuerst, dicht, kommandiert"
+        subtitle="Plus Jakarta Sans + IBM Plex Mono. Mini-Rail links, Top-Command-Bar mit Filter-Chips, Right-Pane für Kontext der ausgewählten Person. Konflikte direkt im Plan markiert."
+      >
+        <DCArtboard id="b-cockpit" label="B · Plan · Cockpit (Wochen-Doppel)" width={W} height={H}>
+          <VariantB_Cockpit />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection
+        id="variant-c"
+        title="C · Magnetboard — Plan als haptisches Brett"
+        subtitle="DM Sans + DM Serif Display. Ärzt:innen sind Pillen, die man auf Tag×Schicht-Felder zieht. Pool rechts. Offene Slots als gestrichelte Felder. Spielerisch, klar, anders."
+      >
+        <DCArtboard id="c-board" label="C · Plan · Magnetboard (Woche)" width={W} height={H}>
+          <VariantC_MagnetBoard />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection
+        id="next"
+        title="Mögliche nächste Schritte"
+        subtitle="Mix-and-match: was funktioniert für dich, was bricht? Wir können einzelne Bausteine (z.B. Konflikt-Highlighting aus B + Pastell-Chips aus A) in einer Lieblings-Richtung kombinieren."
+      >
+        <DCPostIt>
+          <strong>Diskutieren:</strong><br/>
+          1. Topbar vs. Sidebar?<br/>
+          2. Monats- vs. Wochen-Default für Plan?<br/>
+          3. Konflikte sichtbar im Plan (B) oder im rechten Panel (A)?<br/>
+          4. Drag-Brett (C) als zusätzliche Ansicht oder Hauptmetapher?<br/>
+          5. Wie hart soll die Serif-Note sein?
+        </DCPostIt>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
