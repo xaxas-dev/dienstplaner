@@ -9,6 +9,10 @@ import { QualificationListPage } from '@/features/qualifications/QualificationLi
 import { RuleOverrideListPage } from '@/features/rule-overrides/RuleOverrideListPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
 
+import { PlaygroundPage } from '@/features/playground/PlaygroundPage'
+
+const isDev = import.meta.env.DEV
+
 function NotFoundPage() {
   return (
     <div className="flex flex-col items-center justify-center flex-1 gap-4 p-8">
@@ -31,6 +35,7 @@ export default function App() {
         <Route path="/qualifications" element={<QualificationListPage />} />
         <Route path="/rule-overrides" element={<RuleOverrideListPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        {isDev && <Route path="/playground" element={<PlaygroundPage />} />}
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
