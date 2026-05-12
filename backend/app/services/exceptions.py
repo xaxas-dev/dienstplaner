@@ -118,3 +118,15 @@ class ShiftNotFoundError(Exception):
     def __init__(self, shift_id: int) -> None:
         super().__init__(f"Schicht mit ID {shift_id} nicht gefunden")
         self.shift_id = shift_id
+
+
+class INAExclusionNotFoundError(Exception):
+    def __init__(self, exclusion_id: int) -> None:
+        super().__init__(f"INA-Ausschluss mit ID {exclusion_id} nicht gefunden")
+        self.exclusion_id = exclusion_id
+
+
+class INAExclusionValidationError(Exception):
+    def __init__(self, detail: str) -> None:
+        super().__init__(detail)
+        self.detail = detail

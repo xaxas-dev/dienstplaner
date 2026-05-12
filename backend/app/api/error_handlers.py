@@ -9,6 +9,8 @@ from app.services.exceptions import (
     DuplicateQualificationError,
     EmploymentPeriodNotFoundError,
     EmploymentPeriodOverlapError,
+    INAExclusionNotFoundError,
+    INAExclusionValidationError,
     PlanNotFoundError,
     PlanValidationError,
     QualificationInUseError,
@@ -104,3 +106,13 @@ def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(ShiftNotFoundError)
     async def shift_not_found(_: Request, exc: ShiftNotFoundError) -> JSONResponse:
         return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+    @app.exception_handler(INAExclusionNotFoundError)
+    async def ina_exclusion_not_found(_: Request, exc: INAExclusionNotFoundError) -> JSONResponse:
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+    @app.exception_handler(INAExclusionValidationError)
+    async def ina_exclusion_validation(
+        _: Request, exc: INAExclusionValidationError
+    ) -> JSONResponse:
+        return JSONResponse(status_code=422, content={"detail": exc.detail})

@@ -15,6 +15,34 @@ from app.models import Department  # noqa: E402
 _I = {"is_external": False, "is_shift_relevant": True}
 _E = {"is_external": True, "is_shift_relevant": False}
 
+# INA-Blockierungsdefaults: (blocks_ina_weekdays, blocks_ina_weekends)
+# Nur setzen wenn beide Felder False sind (Idempotenz)
+INA_BLOCKS_DEFAULTS: dict[str, tuple[bool, bool]] = {
+    "511/LBEST": (False, False),
+    "511": (False, False),
+    "ITS": (False, False),
+    "SU-Stationsarzt": (True, True),
+    "SU": (True, True),
+    "Duplex": (False, False),
+    "Poli": (False, False),
+    "Poli/EMG": (False, False),
+    "EMG": (False, False),
+    "Springer": (False, False),
+    "Parkinson Komplextherapie": (False, False),
+    "Tagesklinik": (False, False),
+    "Neuromotorik-TK": (False, False),
+    "Poli/Botox/THS": (False, False),
+    "Poli/Botox": (False, False),
+    "MS-Sprechstunde/Konsile": (False, False),
+    "Forschung": (False, False),
+    "Curschmann Klinik": (True, False),  # CK: WT blockiert, WE frei
+    "Intensiv Innere": (True, True),
+    "Psychiatrie": (True, True),
+    "ZIP": (True, True),
+    "Intensiv (NCH)": (True, True),
+    "Intensiv extern": (True, True),
+}
+
 DEPARTMENTS: list[dict] = [
     {"name": "511/LBEST", "short_name": "LBEST", "display_order": 1, **_I},
     {"name": "511", "short_name": "511", "display_order": 2, **_I},
@@ -124,6 +152,26 @@ def seed() -> None:
             f"{len(existing) - inserted - updated} bereits korrekt."
         )
         print(f"Sollbesetzung: {hc_set} gesetzt, {hc_skipped} übersprungen.")
+
+        # INA-Blockierungsflags setzen (nur wenn beide noch False sind)
+        ina_set = 0
+        ina_skipped = 0
+        for name, (wt, we) in INA_BLOCKS_DEFAULTS.items():
+            dept = existing.get(name)
+            if dept is None:
+                print(f"  Warnung: Bereich '{name}' nicht gefunden, übersprungen")
+                continue
+            if not dept.blocks_ina_weekdays and not dept.blocks_ina_weekends:
+                dept.blocks_ina_weekdays = wt
+                dept.blocks_ina_weekends = we
+                if wt or we:
+                    print(f"  INA-Block {name}: WT={wt}, WE={we} gesetzt")
+                ina_set += 1
+            else:
+                print(f"  INA-Block {name}: bereits gepflegt, übersprungen")
+                ina_skipped += 1
+        session.commit()
+        print(f"INA-Blöcke: {ina_set} gesetzt, {ina_skipped} übersprungen.")
 
 
 if __name__ == "__main__":

@@ -55,9 +55,7 @@ def test_create_version_snapshot_basic(client: TestClient) -> None:
 
 def test_create_version_snapshot_with_comment(client: TestClient) -> None:
     plan = _create_plan(client)
-    r = client.post(
-        f"/api/plans/{plan['id']}/versions", json={"comment": "Mein Kommentar"}
-    )
+    r = client.post(f"/api/plans/{plan['id']}/versions", json={"comment": "Mein Kommentar"})
     assert r.status_code == 201
     assert r.json()["comment"] == "Mein Kommentar"
 

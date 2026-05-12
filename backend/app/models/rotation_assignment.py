@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Integer, Text
+from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Integer, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -33,6 +33,7 @@ class RotationAssignment(Base):
     )
     valid_from: Mapped[date] = mapped_column(Date, nullable=False)
     valid_to: Mapped[date] = mapped_column(Date, nullable=False)
+    is_einarbeitung: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     plan: Mapped["Plan"] = relationship("Plan", back_populates="rotation_assignments")  # noqa: F821

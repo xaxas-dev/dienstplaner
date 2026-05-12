@@ -19,8 +19,9 @@ import { useDoctor, useDeleteDoctor } from './useDoctors'
 import { DoctorForm } from './DoctorForm'
 import { EmploymentPeriodList } from './EmploymentPeriodList'
 import { QualificationManager } from './QualificationManager'
+import { INAExclusionList } from './INAExclusionList'
 
-type Tab = 'stammdaten' | 'beschaeftigung' | 'qualifikationen'
+type Tab = 'stammdaten' | 'beschaeftigung' | 'qualifikationen' | 'ina-ausschluesse'
 
 export function DoctorDetailPage() {
   const { doctorId } = useParams<{ doctorId: string }>()
@@ -69,6 +70,7 @@ export function DoctorDetailPage() {
     { key: 'stammdaten', label: 'Stammdaten' },
     { key: 'beschaeftigung', label: 'Beschäftigung' },
     { key: 'qualifikationen', label: 'Qualifikationen' },
+    { key: 'ina-ausschluesse', label: 'INA-Ausschlüsse' },
   ]
 
   return (
@@ -156,6 +158,12 @@ export function DoctorDetailPage() {
               doctorId={doctor.id}
               assigned={doctor.qualifications}
             />
+          </div>
+        )}
+
+        {activeTab === 'ina-ausschluesse' && (
+          <div className="max-w-2xl">
+            <INAExclusionList doctorId={doctor.id} />
           </div>
         )}
       </div>

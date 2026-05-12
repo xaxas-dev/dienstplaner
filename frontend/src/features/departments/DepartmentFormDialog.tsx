@@ -36,6 +36,8 @@ const schema = z
     requires_full_time: z.boolean(),
     min_headcount: z.number().int().min(0).nullable().optional(),
     max_headcount: z.number().int().min(0).nullable().optional(),
+    blocks_ina_weekdays: z.boolean(),
+    blocks_ina_weekends: z.boolean(),
     active: z.boolean(),
     notes: z.string().nullable().optional(),
   })
@@ -75,6 +77,8 @@ export function DepartmentFormDialog({ open, onOpenChange, department }: Departm
       requires_full_time: department?.requires_full_time ?? false,
       min_headcount: department?.min_headcount ?? null,
       max_headcount: department?.max_headcount ?? null,
+      blocks_ina_weekdays: department?.blocks_ina_weekdays ?? false,
+      blocks_ina_weekends: department?.blocks_ina_weekends ?? false,
       active: department?.active ?? true,
       notes: department?.notes ?? null,
     },
@@ -91,6 +95,8 @@ export function DepartmentFormDialog({ open, onOpenChange, department }: Departm
         requires_full_time: department?.requires_full_time ?? false,
         min_headcount: department?.min_headcount ?? null,
         max_headcount: department?.max_headcount ?? null,
+        blocks_ina_weekdays: department?.blocks_ina_weekdays ?? false,
+        blocks_ina_weekends: department?.blocks_ina_weekends ?? false,
         active: department?.active ?? true,
         notes: department?.notes ?? null,
       })
@@ -212,6 +218,42 @@ export function DepartmentFormDialog({ open, onOpenChange, department }: Departm
                     <FormLabel className="cursor-pointer font-normal">Vollzeit erforderlich</FormLabel>
                     <FormDescription className="text-xs">
                       Diese Rotation kann nur von Vollzeit-Mitarbeitern besetzt werden.
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="blocks_ina_weekdays"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center gap-3 space-y-0 rounded-md border p-3">
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                  <div>
+                    <FormLabel className="cursor-pointer font-normal">INA-Dienste (Werktag) blockiert</FormLabel>
+                    <FormDescription className="text-xs">
+                      Wenn aktiviert: Ärzte auf dieser Rotation können Mo–Fr keine V/T/N-Dienste übernehmen.
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="blocks_ina_weekends"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center gap-3 space-y-0 rounded-md border p-3">
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                  <div>
+                    <FormLabel className="cursor-pointer font-normal">INA-Dienste (Wochenende) blockiert</FormLabel>
+                    <FormDescription className="text-xs">
+                      Wenn aktiviert: Ärzte auf dieser Rotation können Sa/So keine V/T/N-Dienste übernehmen.
                     </FormDescription>
                   </div>
                 </FormItem>

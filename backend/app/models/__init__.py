@@ -3,6 +3,7 @@ from app.models.department import Department
 from app.models.doctor import Doctor, DoctorType
 from app.models.doctor_qualification import DoctorQualification
 from app.models.employment_period import EmploymentPeriod
+from app.models.ina_exclusion import INAExclusion, INAExclusionReason
 from app.models.plan import Plan, PlanStatus
 from app.models.plan_version import PlanVersion
 from app.models.qualification import Qualification
@@ -20,6 +21,8 @@ __all__ = [
     "DoctorQualification",
     "DoctorType",
     "EmploymentPeriod",
+    "INAExclusion",
+    "INAExclusionReason",
     "OverrideScope",
     "Plan",
     "PlanStatus",

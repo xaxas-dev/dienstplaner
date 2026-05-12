@@ -24,4 +24,6 @@ class Department(Base):
     requires_full_time: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     min_headcount: Mapped[int | None] = mapped_column(Integer, nullable=True)
     max_headcount: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    blocks_ina_weekdays: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    blocks_ina_weekends: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)

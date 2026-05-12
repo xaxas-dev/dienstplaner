@@ -9,6 +9,7 @@ from app.api.doctors import ep_router
 from app.api.doctors import router as doctors_router
 from app.api.error_handlers import register_error_handlers
 from app.api.health import router as health_router
+from app.api.ina_exclusions import router as ina_exclusions_router
 from app.api.plan_shifts import router as plan_shifts_router
 from app.api.plan_versions import router as plan_versions_router
 from app.api.plans import router as plans_router
@@ -46,4 +47,5 @@ app.include_router(plan_versions_router, prefix="/api")
 app.include_router(plan_shifts_router, prefix="/api")
 app.include_router(plan_rotations_router, prefix="/api")
 app.include_router(rotations_router, prefix="/api")
+app.include_router(ina_exclusions_router, prefix="/api")
 register_error_handlers(app)

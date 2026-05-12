@@ -21,9 +21,7 @@ def list_versions(plan_id: int, db: Session = Depends(get_db)) -> list:
 
 
 @router.post("", response_model=PlanVersionResponse, status_code=status.HTTP_201_CREATED)
-def create_snapshot(
-    plan_id: int, body: VersionSnapshotRequest, db: Session = Depends(get_db)
-):
+def create_snapshot(plan_id: int, body: VersionSnapshotRequest, db: Session = Depends(get_db)):
     return plan_service.create_version_snapshot(db, plan_id, comment=body.comment)
 
 

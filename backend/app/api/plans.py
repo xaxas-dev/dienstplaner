@@ -60,9 +60,7 @@ def delete_plan(plan_id: int, db: Session = Depends(get_db)) -> None:
     db.commit()
 
 
-@router.post(
-    "/{plan_id}/clone", response_model=CloneResult, status_code=status.HTTP_201_CREATED
-)
+@router.post("/{plan_id}/clone", response_model=CloneResult, status_code=status.HTTP_201_CREATED)
 def clone_plan(plan_id: int, body: PlanClone, db: Session = Depends(get_db)):
     data = body.model_dump()
     new_plan, copied, skipped = plan_service.clone_plan(db, plan_id, data)

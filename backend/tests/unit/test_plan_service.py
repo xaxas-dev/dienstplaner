@@ -89,9 +89,7 @@ def test_clone_offset_calculation() -> None:
 
     old_from = date(2026, 4, 1)
     old_to = date(2026, 4, 15)
-    result = _apply_rotation_offset(
-        old_from, old_to, offset, date(2026, 6, 1), date(2026, 6, 30)
-    )
+    result = _apply_rotation_offset(old_from, old_to, offset, date(2026, 6, 1), date(2026, 6, 30))
     assert result is not None
     new_from, new_to = result
     assert new_from == date(2026, 6, 1)

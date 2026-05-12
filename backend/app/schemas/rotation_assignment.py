@@ -14,6 +14,7 @@ class RotationAssignmentBase(BaseModel):
     department_id: int
     valid_from: date
     valid_to: date
+    is_einarbeitung: bool = False
     notes: str | None = None
 
 
@@ -25,6 +26,7 @@ class RotationAssignmentUpdate(BaseModel):
     department_id: int | None = None
     valid_from: date | None = None
     valid_to: date | None = None
+    is_einarbeitung: bool | None = None
     notes: str | None = None
 
 

@@ -129,13 +129,18 @@ def test_clone_plan_different_length(client: TestClient) -> None:
     source = _create_plan(client)
     # Rotation von 20.-30. April
     _add_rotation(
-        client, source["id"], doctor["id"], dept["id"],
-        valid_from="2026-04-20", valid_to="2026-04-30"
+        client,
+        source["id"],
+        doctor["id"],
+        dept["id"],
+        valid_from="2026-04-20",
+        valid_to="2026-04-30",
     )
 
     # Klonen nach Mai (30-Tage-Offset)
     result = _clone(
-        client, source["id"],
+        client,
+        source["id"],
         name="Mai-Plan",
         valid_from="2026-05-01",
         valid_to="2026-05-31",
@@ -158,8 +163,12 @@ def test_clone_plan_rotation_outside_skipped(client: TestClient) -> None:
     source = _create_plan(client)
     # Rotation 1.-10. April
     _add_rotation(
-        client, source["id"], doctor["id"], dept["id"],
-        valid_from="2026-04-01", valid_to="2026-04-10"
+        client,
+        source["id"],
+        doctor["id"],
+        dept["id"],
+        valid_from="2026-04-01",
+        valid_to="2026-04-10",
     )
 
     # Klonen nach Juni: Offset ist 61 Tage
@@ -174,19 +183,23 @@ def test_clone_plan_rotation_outside_skipped(client: TestClient) -> None:
 
     # Erstelle einen extra Quell-Plan
     source2 = _create_plan(
-        client, name="Quell-Plan 2",
-        valid_from="2026-04-01", valid_to="2026-04-30"
+        client, name="Quell-Plan 2", valid_from="2026-04-01", valid_to="2026-04-30"
     )
     doctor2 = _create_doctor(client, "Dr. Außerhalb")
     dept2 = _create_department(client, "Bereich2")
     _add_rotation(
-        client, source2["id"], doctor2["id"], dept2["id"],
-        valid_from="2026-04-28", valid_to="2026-04-30"
+        client,
+        source2["id"],
+        doctor2["id"],
+        dept2["id"],
+        valid_from="2026-04-28",
+        valid_to="2026-04-30",
     )
 
     # Ziel-Plan: nur 1.-3. Mai → Rotation (28.5-30.5) wäre nach 3.5 → skip
     result = _clone(
-        client, source2["id"],
+        client,
+        source2["id"],
         name="Mini-Mai",
         valid_from="2026-05-01",
         valid_to="2026-05-03",

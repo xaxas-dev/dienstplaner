@@ -401,6 +401,59 @@ export interface paths {
         patch: operations["update_rotation_api_rotations__rotation_id__patch"];
         trace?: never;
     };
+    "/api/doctors/{doctor_id}/ina-exclusions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Ina Exclusions */
+        get: operations["list_ina_exclusions_api_doctors__doctor_id__ina_exclusions_get"];
+        put?: never;
+        /** Create Ina Exclusion */
+        post: operations["create_ina_exclusion_api_doctors__doctor_id__ina_exclusions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ina-exclusions/{exclusion_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Ina Exclusion */
+        delete: operations["delete_ina_exclusion_api_ina_exclusions__exclusion_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Ina Exclusion */
+        patch: operations["update_ina_exclusion_api_ina_exclusions__exclusion_id__patch"];
+        trace?: never;
+    };
+    "/api/doctors/{doctor_id}/ina-availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Ina Availability */
+        get: operations["get_ina_availability_api_doctors__doctor_id__ina_availability_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -448,6 +501,16 @@ export interface components {
             min_headcount?: number | null;
             /** Max Headcount */
             max_headcount?: number | null;
+            /**
+             * Blocks Ina Weekdays
+             * @default false
+             */
+            blocks_ina_weekdays: boolean;
+            /**
+             * Blocks Ina Weekends
+             * @default false
+             */
+            blocks_ina_weekends: boolean;
             /** Notes */
             notes?: string | null;
         };
@@ -486,6 +549,16 @@ export interface components {
             min_headcount?: number | null;
             /** Max Headcount */
             max_headcount?: number | null;
+            /**
+             * Blocks Ina Weekdays
+             * @default false
+             */
+            blocks_ina_weekdays: boolean;
+            /**
+             * Blocks Ina Weekends
+             * @default false
+             */
+            blocks_ina_weekends: boolean;
             /** Notes */
             notes?: string | null;
             /** Id */
@@ -521,6 +594,10 @@ export interface components {
             min_headcount?: number | null;
             /** Max Headcount */
             max_headcount?: number | null;
+            /** Blocks Ina Weekdays */
+            blocks_ina_weekdays?: boolean | null;
+            /** Blocks Ina Weekends */
+            blocks_ina_weekends?: boolean | null;
             /** Notes */
             notes?: string | null;
         };
@@ -759,6 +836,73 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** INAAvailabilityResponse */
+        INAAvailabilityResponse: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Available */
+            available: boolean;
+            /** Reasons */
+            reasons: string[];
+        };
+        /** INAExclusionCreate */
+        INAExclusionCreate: {
+            /**
+             * Valid From
+             * Format: date
+             */
+            valid_from: string;
+            /** Valid To */
+            valid_to?: string | null;
+            reason: components["schemas"]["INAExclusionReason"];
+            /** Notes */
+            notes?: string | null;
+        };
+        /**
+         * INAExclusionReason
+         * @enum {string}
+         */
+        INAExclusionReason: "SCHWANGERSCHAFT" | "EINARBEITUNG" | "SONSTIGES";
+        /** INAExclusionResponse */
+        INAExclusionResponse: {
+            /**
+             * Valid From
+             * Format: date
+             */
+            valid_from: string;
+            /** Valid To */
+            valid_to?: string | null;
+            reason: components["schemas"]["INAExclusionReason"];
+            /** Notes */
+            notes?: string | null;
+            /** Id */
+            id: number;
+            /** Doctor Id */
+            doctor_id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** INAExclusionUpdate */
+        INAExclusionUpdate: {
+            /** Valid From */
+            valid_from?: string | null;
+            /** Valid To */
+            valid_to?: string | null;
+            reason?: components["schemas"]["INAExclusionReason"] | null;
+            /** Notes */
+            notes?: string | null;
+        };
         /**
          * OverrideScope
          * @enum {string}
@@ -985,6 +1129,11 @@ export interface components {
              * Format: date
              */
             valid_to: string;
+            /**
+             * Is Einarbeitung
+             * @default false
+             */
+            is_einarbeitung: boolean;
             /** Notes */
             notes?: string | null;
         };
@@ -1006,6 +1155,11 @@ export interface components {
              * Format: date
              */
             valid_to: string;
+            /**
+             * Is Einarbeitung
+             * @default false
+             */
+            is_einarbeitung: boolean;
             /** Notes */
             notes?: string | null;
             /** Id */
@@ -1031,6 +1185,8 @@ export interface components {
             valid_from?: string | null;
             /** Valid To */
             valid_to?: string | null;
+            /** Is Einarbeitung */
+            is_einarbeitung?: boolean | null;
             /** Notes */
             notes?: string | null;
         };
@@ -1052,6 +1208,11 @@ export interface components {
              * Format: date
              */
             valid_to: string;
+            /**
+             * Is Einarbeitung
+             * @default false
+             */
+            is_einarbeitung: boolean;
             /** Notes */
             notes?: string | null;
             /** Id */
@@ -2748,6 +2909,171 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RotationAssignmentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_ina_exclusions_api_doctors__doctor_id__ina_exclusions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doctor_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["INAExclusionResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_ina_exclusion_api_doctors__doctor_id__ina_exclusions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doctor_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["INAExclusionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["INAExclusionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_ina_exclusion_api_ina_exclusions__exclusion_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exclusion_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_ina_exclusion_api_ina_exclusions__exclusion_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exclusion_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["INAExclusionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["INAExclusionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_ina_availability_api_doctors__doctor_id__ina_availability_get: {
+        parameters: {
+            query?: {
+                date?: string | null;
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path: {
+                doctor_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["INAAvailabilityResponse"][];
                 };
             };
             /** @description Validation Error */

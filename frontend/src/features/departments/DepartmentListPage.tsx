@@ -107,6 +107,7 @@ export function DepartmentListPage() {
                   <TableHead>Kurzname</TableHead>
                   <TableHead>Typ</TableHead>
                   <TableHead>Dienst-relevant</TableHead>
+                  <TableHead>INA-Block</TableHead>
                   <TableHead>Besetzung</TableHead>
                   <TableHead className="text-right">Reihenfolge</TableHead>
                   <TableHead>Status</TableHead>
@@ -129,6 +130,16 @@ export function DepartmentListPage() {
                       <Badge variant={dept.is_shift_relevant ? 'default' : 'secondary'}>
                         {dept.is_shift_relevant ? 'Ja' : 'Nein'}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        {dept.blocks_ina_weekdays && (
+                          <Badge variant="outline" className="text-xs">WT</Badge>
+                        )}
+                        {dept.blocks_ina_weekends && (
+                          <Badge variant="outline" className="text-xs">WE</Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {dept.min_headcount != null && dept.max_headcount != null

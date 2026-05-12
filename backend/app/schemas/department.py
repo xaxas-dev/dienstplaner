@@ -13,6 +13,8 @@ class DepartmentBase(BaseModel):
     requires_full_time: bool = False
     min_headcount: int | None = None
     max_headcount: int | None = None
+    blocks_ina_weekdays: bool = False
+    blocks_ina_weekends: bool = False
     notes: str | None = None
 
 
@@ -29,6 +31,8 @@ class DepartmentUpdate(BaseModel):
     requires_full_time: bool | None = None
     min_headcount: int | None = None
     max_headcount: int | None = None
+    blocks_ina_weekdays: bool | None = None
+    blocks_ina_weekends: bool | None = None
     notes: str | None = None
 
 

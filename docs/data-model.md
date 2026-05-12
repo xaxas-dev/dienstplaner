@@ -411,6 +411,57 @@ folgen in einem späteren Schema-Update.
 
 `priority`: 1 = hoch, 2 = mittel, 3 = niedrig.
 
+## INA-Verfügbarkeitsmodell (ab M2)
+
+### Überblick
+
+Drei Quellen können einen Arzt an einem Datum für INA-Dienste (V/T/N-Schichten)
+ausschließen:
+
+1. **Aktive Rotation in einem blockierenden Bereich** – `Department.blocks_ina_weekdays`
+   und `Department.blocks_ina_weekends` steuern, ob eine Rotation den Arzt
+   werktags oder am Wochenende ausschließt.
+
+2. **Manueller INA-Ausschluss (INAExclusion)** – arzt- und zeitraumbezogen,
+   mit Grund (Schwangerschaft, Einarbeitung, Sonstiges) und optionalen Notizen.
+
+3. **Aktive Abwesenheit** – Urlaub, Krankheit usw. blockieren pauschal.
+
+Die Service-Funktion `get_ina_availability(db, doctor_id, target_date)` liefert
+`INAAvailability(available, reasons)` mit deutschen Reason-Strings für die UI.
+
+### CK-Sonderfall
+
+Die Curschmann Klinik (CK) blockiert Ärzte nur **werktags** (`blocks_ina_weekdays=True`,
+`blocks_ina_weekends=False`). Am Wochenende stehen CK-Ärzte für INA-Tagdienste und
+Nachtdienste zur Verfügung.
+
+### Einarbeitung als Rotation
+
+`RotationAssignment.is_einarbeitung=True` blockiert den Arzt unabhängig vom
+`blocks_ina_*`-Wert des Departments. So kann z.B. eine EMG-Einarbeitung den Arzt
+ausschließen, obwohl EMG selbst keine INA-Blockierung hat.
+
+### INAExclusion
+
+```
+INAExclusionReason: SCHWANGERSCHAFT | EINARBEITUNG | SONSTIGES
+INAExclusion:
+  doctor_id FK doctors.id (CASCADE)
+  valid_from Date (not null)
+  valid_to   Date (nullable = unbefristet)
+  reason     INAExclusionReason
+  notes      Text (nullable)
+```
+
+Constraints: `valid_to IS NULL OR valid_from <= valid_to`
+
+### Department-Erweiterungen
+
+Zwei neue Boolean-Felder (Default `False`):
+- `blocks_ina_weekdays` – Rotation blockiert INA-Verfügbarkeit Mo–Fr
+- `blocks_ina_weekends` – Rotation blockiert INA-Verfügbarkeit Sa/So
+
 ### Cascade-Verhalten
 
 | Eltern-Entität gelöscht | Kaskadiert auf |

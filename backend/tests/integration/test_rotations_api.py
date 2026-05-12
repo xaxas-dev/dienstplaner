@@ -101,12 +101,10 @@ def test_overlapping_rotations_allowed(client: TestClient) -> None:
     dept = _create_department(client)
 
     _create_rotation(
-        client, plan["id"], doctor["id"], dept["id"],
-        valid_from="2026-04-01", valid_to="2026-04-15"
+        client, plan["id"], doctor["id"], dept["id"], valid_from="2026-04-01", valid_to="2026-04-15"
     )
     _create_rotation(
-        client, plan["id"], doctor["id"], dept["id"],
-        valid_from="2026-04-10", valid_to="2026-04-30"
+        client, plan["id"], doctor["id"], dept["id"], valid_from="2026-04-10", valid_to="2026-04-30"
     )
 
     r = client.get(f"/api/plans/{plan['id']}/rotations")

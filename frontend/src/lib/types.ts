@@ -27,3 +27,36 @@ export type RuleOverride = components['schemas']['RuleOverrideResponse']
 export type RuleOverrideCreate = components['schemas']['RuleOverrideCreate']
 export type RuleOverrideUpdate = components['schemas']['RuleOverrideUpdate']
 export type OverrideScope = components['schemas']['OverrideScope']
+
+export type INAExclusionReason = 'SCHWANGERSCHAFT' | 'EINARBEITUNG' | 'SONSTIGES'
+
+export interface INAExclusion {
+  id: number
+  doctor_id: number
+  valid_from: string
+  valid_to: string | null
+  reason: INAExclusionReason
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface INAExclusionCreate {
+  valid_from: string
+  valid_to?: string | null
+  reason: INAExclusionReason
+  notes?: string | null
+}
+
+export interface INAExclusionUpdate {
+  valid_from?: string
+  valid_to?: string | null
+  reason?: INAExclusionReason
+  notes?: string | null
+}
+
+export interface INAAvailability {
+  date: string
+  available: boolean
+  reasons: string[]
+}

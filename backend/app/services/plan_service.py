@@ -121,14 +121,9 @@ def validate_rotation_dates(rotation_data: dict, plan: Plan) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _get_applicable_shift_types(
-    db: Session, shift_type_ids: list[int] | None
-) -> list[ShiftType]:
+def _get_applicable_shift_types(db: Session, shift_type_ids: list[int] | None) -> list[ShiftType]:
     if shift_type_ids:
-        types = [
-            shift_type_repo.get_shift_type(db, sid)
-            for sid in shift_type_ids
-        ]
+        types = [shift_type_repo.get_shift_type(db, sid) for sid in shift_type_ids]
         return [t for t in types if t is not None and t.active]
     # Default: alle aktiven außer T1
     all_active = shift_type_repo.list_shift_types(db, include_inactive=False)
@@ -141,23 +136,17 @@ def create_plan_with_shifts(
     validate_plan_data(data)
     shift_types = _get_applicable_shift_types(db, shift_type_ids)
     if not shift_types:
-        raise PlanValidationError(
-            "Keine aktiven Schichttypen für die Schichtgenerierung verfügbar"
-        )
+        raise PlanValidationError("Keine aktiven Schichttypen für die Schichtgenerierung verfügbar")
 
     plan = plan_repo.create_plan(db, data)
-    shift_dicts = _generate_shift_dicts(
-        plan.id, plan.valid_from, plan.valid_to, shift_types
-    )
+    shift_dicts = _generate_shift_dicts(plan.id, plan.valid_from, plan.valid_to, shift_types)
     shift_repo.bulk_create_shifts(db, shift_dicts)
 
     db.commit()
     return plan_repo.get_plan(db, plan.id)  # type: ignore[return-value]
 
 
-def clone_plan(
-    db: Session, source_plan_id: int, new_plan_data: dict
-) -> tuple[Plan, int, int]:
+def clone_plan(db: Session, source_plan_id: int, new_plan_data: dict) -> tuple[Plan, int, int]:
     """Klont einen Plan. Gibt (neuer Plan, kopierte Rotationen, übersprungene) zurück."""
     source = plan_repo.get_plan(db, source_plan_id)
     if source is None:
@@ -222,9 +211,7 @@ def _build_snapshot_json(
 
     return {
         "plan": PlanResponse.model_validate(plan).model_dump(mode="json"),
-        "shifts": [
-            ShiftWithDetails.model_validate(s).model_dump(mode="json") for s in shifts
-        ],
+        "shifts": [ShiftWithDetails.model_validate(s).model_dump(mode="json") for s in shifts],
         "rotation_assignments": [
             RotationAssignmentWithDetails.model_validate(r).model_dump(mode="json")
             for r in rotations
@@ -233,9 +220,7 @@ def _build_snapshot_json(
     }
 
 
-def create_version_snapshot(
-    db: Session, plan_id: int, comment: str | None = None
-) -> object:
+def create_version_snapshot(db: Session, plan_id: int, comment: str | None = None) -> object:
     plan = (
         db.query(Plan)
         .options(
@@ -275,9 +260,7 @@ def update_plan_status(db: Session, plan_id: int, data: dict) -> Plan:
     return plan_repo.get_plan(db, plan_id)  # type: ignore[return-value]
 
 
-def create_rotation_with_validation(
-    db: Session, plan_id: int, data: dict
-) -> RotationAssignment:
+def create_rotation_with_validation(db: Session, plan_id: int, data: dict) -> RotationAssignment:
     plan = db.get(Plan, plan_id)
     if plan is None:
         raise PlanNotFoundError(plan_id)
