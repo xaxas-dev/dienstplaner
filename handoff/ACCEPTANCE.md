@@ -7,12 +7,12 @@ Claude Code soll nach jedem Schritt diese Checkliste anhaken und stoppen, bis du
 
 ## ✅ Schritt 1 — Tokens & Fonts
 
-- [ ] `frontend/src/lib/design/tokens.ts` existiert, exportiert `COLORS`, `RADII`, `SPACING`, `FONTS`, `TYPE_SCALE`, `hueFromId()`.
-- [ ] `frontend/src/lib/design/shift-palette.ts` existiert, exportiert `SHIFT_PALETTE`, `SHIFT_TYPE_COLOR_MAP`, `colorForShiftType()`.
-- [ ] `tailwind.config.ts` extended um die Farben + fontFamilies aus `handoff/tailwind.merge.ts`.
-- [ ] `index.css`: Google-Fonts-Imports für Geist + Newsreader oben.
-- [ ] `body` rendert mit `bg-paper`, `font-sans`, `text-ink`.
-- [ ] Screenshot der bestehenden Ärzte-Liste zeigt: warmes Papier-Hintergrund, Geist-UI-Font, sonst unverändert.
+- [x] `frontend/src/lib/design/tokens.ts` existiert, exportiert `COLORS`, `RADII`, `SPACING`, `FONTS`, `TYPE_SCALE`, `hueFromId()`.
+- [x] `frontend/src/lib/design/shift-palette.ts` existiert, exportiert `SHIFT_PALETTE`, `SHIFT_TYPE_COLOR_MAP`, `colorForShiftType()`.
+- [x] `tailwind.config.ts` extended um die Farben + fontFamilies aus `handoff/tailwind.merge.ts`.
+- [x] `index.css`: Google-Fonts-Imports für Geist + Newsreader oben.
+- [x] `body` rendert mit `bg-paper`, `font-sans`, `text-ink`.
+- [x] Screenshot der bestehenden Ärzte-Liste zeigt: warmes Papier-Hintergrund, Geist-UI-Font, sonst unverändert.
 
 ## ✅ Schritt 2 — Primitives
 
