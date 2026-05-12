@@ -26,7 +26,7 @@ export function AppShell() {
   const clinicName = clinicNameSetting?.value ?? null
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-paper">
       {/* Sidebar */}
       <aside className="w-60 shrink-0 border-r border-border bg-card flex flex-col">
         <div className="px-6 py-5 border-b border-border">
