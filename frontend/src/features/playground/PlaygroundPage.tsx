@@ -3,6 +3,7 @@ import { ShiftChip } from '@/components/dp/ShiftChip'
 import { ShiftCell } from '@/components/dp/ShiftCell'
 import { Avatar } from '@/components/dp/Avatar'
 import { KpiTile } from '@/components/dp/KpiTile'
+import { KpiBar } from '@/components/dp/KpiBar'
 import { Sparkline } from '@/components/dp/Sparkline'
 import { MOCK_COVERAGE_14D } from '@/lib/mock/dp-mock'
 
@@ -117,6 +118,30 @@ export function PlaygroundPage() {
         <KpiTile value="87%" label="Abdeckung" sub="Mai 2026" />
         <KpiTile value="3"   label="Konflikte" sub="Regelverstoß" tone="warn" />
         <KpiTile value="12"  label="Dienste geplant" sub="diese Woche" tone="ok" />
+      </Section>
+
+      {/* KpiBar */}
+      <Section title="KpiBar">
+        <div className="w-full space-y-4">
+          <div>
+            <span className="text-[10px] text-ink-3 block mb-2">Variante 1 — drei Tiles (default)</span>
+            <KpiBar tiles={[
+              { label: 'Abdeckung',      value: '87%',  sub: 'Mai 2026' },
+              { label: 'Dienste geplant',value: 42,     sub: 'diese Woche' },
+              { label: 'Im Urlaub',      value: 3,      sub: 'aktuell' },
+            ]} />
+          </div>
+          <div>
+            <span className="text-[10px] text-ink-3 block mb-2">Variante 2 — fünf Tiles mit gemischten Tones</span>
+            <KpiBar tiles={[
+              { label: 'Abdeckung',      value: '91%',  sub: 'Mai 2026',    tone: 'ok' },
+              { label: 'Dienste geplant',value: 58,     sub: 'diese Woche' },
+              { label: 'Konflikte',      value: 4,      sub: 'Regelverstoß', tone: 'warn' },
+              { label: 'Im Urlaub',      value: 2,      sub: 'aktuell' },
+              { label: 'Offene Dienste', value: 7,      sub: 'unbesetzt',   tone: 'warn' },
+            ]} />
+          </div>
+        </div>
       </Section>
 
       {/* Sparkline */}
