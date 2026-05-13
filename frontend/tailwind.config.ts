@@ -73,6 +73,7 @@ export default {
         },
         today:   '#FAF0DC',
         weekend: '#F3ECD8',
+        sand:    '#F3ECD8',
       },
       fontFamily: {
         sans:  ['Geist', 'ui-sans-serif', 'system-ui'],

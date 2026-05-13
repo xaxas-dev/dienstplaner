@@ -25,6 +25,7 @@ export const COLORS = {
   warnInk:  '#7A3414', // warning text
   todayBg:  '#FAF0DC', // selected row / today highlight
   weekendBg:'#F3ECD8', // weekend column tint
+  sand:     '#F3ECD8', // beige-sand for pills, quals etc.
 } as const
 
 export type ColorToken = keyof typeof COLORS

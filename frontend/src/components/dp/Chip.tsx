@@ -2,7 +2,7 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 type ChipProps = {
-  variant?: 'default' | 'active' | 'accent' | 'muted' | 'ok'
+  variant?: 'default' | 'active' | 'accent' | 'muted' | 'ok' | 'soft'
   dot?: boolean
   className?: string
   children: React.ReactNode
@@ -15,6 +15,7 @@ export function Chip({ variant = 'default', dot, className, children, ...rest }:
     accent:  'bg-warn-bg text-warn-ink border-warn-line',
     muted:   'bg-paper text-ink-3 border-line',
     ok:      'bg-[#E5EAD5] text-ok border-[#C8D6A8]',
+    soft:    'bg-sand text-ink-2 border-line',
   }[variant]
   return (
     <button
