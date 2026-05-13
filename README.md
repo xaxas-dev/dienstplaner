@@ -62,12 +62,24 @@ Das Frontend verwendet ein token-basiertes Design-System unter `frontend/src/lib
 Tailwind-Klassen wie `bg-paper`, `text-ink`, `bg-warn-bg`, `rounded-cell` leiten aus diesen Tokens ab.
 Keine Hex-Codes direkt in Komponenten — immer über Tokens.
 
-Domänenspezifische UI-Primitives (Chip, ShiftChip, ShiftCell, Avatar, KpiTile, Sparkline) liegen in
-`frontend/src/components/dp/`.
+Domänenspezifische UI-Primitives (Chip, ShiftChip, ShiftCell, Avatar, KpiTile, Sparkline, CommandBar,
+KpiBar) liegen in `frontend/src/components/dp/`.
+
+### Shell-Struktur
+Die App verwendet `AtelierShell` als Layout-Wrapper (ersetzt die alte `AppShell`):
+- **MiniRail** (60 px links): Icon-Navigation mit Tooltips, Avatar und clinic_name Sub-Label
+- **Content-Bereich** (rechts): Outlet für page-spezifischen Inhalt
+- **CommandBar**: Page-spezifische Komponente, jede Seite rendert ihre eigene mit Props
+  (Titel mit optionalem italic-Akzent, Breadcrumb, Filter-Chips, Suchfeld, Primärbutton)
+
+Aktuelle Seiten-Status:
+- `/heute` und `/plans`: Platzhalter-Seiten (werden in M2-003 implementiert)
+- Stammdaten-Pages (Ärzte, Stationen, Schichttypen, Qualifikationen, Sonderregelungen):
+  laufen in neuer Shell, erhalten CommandBar in M1-011
 
 ### Komponenten-Playground
-Im Entwicklungsmodus ist eine Vorschau aller UI-Primitives unter `http://localhost:5173/playground` erreichbar.
-Die Route ist im Production-Build deaktiviert.
+Im Entwicklungsmodus ist eine Vorschau aller UI-Primitives (inkl. KpiBar-Varianten) unter
+`http://localhost:5173/playground` erreichbar. Die Route ist im Production-Build deaktiviert.
 
 ### API-Typen aktualisieren
 Nach jeder Änderung an Backend-Endpunkten oder Schemas:

@@ -68,8 +68,8 @@ export function MiniRail() {
         return (
           <Tooltip key={item.to} delayDuration={300}>
             <TooltipTrigger asChild>
-              <NavLink to={item.to} className={railItemClass(active)}>
-                <Icon className="size-[18px]" />
+              <NavLink to={item.to} className={railItemClass(active)} aria-label={item.label}>
+                <Icon className="size-[18px]" aria-hidden />
               </NavLink>
             </TooltipTrigger>
             <TooltipContent side="right">{item.label}</TooltipContent>
@@ -83,8 +83,8 @@ export function MiniRail() {
       {/* Einstellungen */}
       <Tooltip delayDuration={300}>
         <TooltipTrigger asChild>
-          <NavLink to="/settings" className={railItemClass(isActive('/settings'))}>
-            <Settings className="size-[18px]" />
+          <NavLink to="/settings" className={railItemClass(isActive('/settings'))} aria-label="Einstellungen">
+            <Settings className="size-[18px]" aria-hidden />
           </NavLink>
         </TooltipTrigger>
         <TooltipContent side="right">Einstellungen</TooltipContent>
