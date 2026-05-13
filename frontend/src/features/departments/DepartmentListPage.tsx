@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { PlusCircle, Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -11,8 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { InactiveToggle } from '@/components/inactive-toggle'
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog'
+import { CommandBar } from '@/components/dp/CommandBar'
 import { useDepartments, useDeleteDepartment } from './useDepartments'
 import { DepartmentFormDialog } from './DepartmentFormDialog'
 import type { Department } from '@/lib/types'
@@ -26,27 +26,14 @@ export function DepartmentListPage() {
   const { data: departments, isLoading, isError, refetch } = useDepartments(includeInactive)
   const deleteMutation = useDeleteDepartment()
 
-  const handleEdit = (dept: Department) => {
-    setEditDepartment(dept)
-    setFormOpen(true)
-  }
-
-  const handleNewClick = () => {
-    setEditDepartment(undefined)
-    setFormOpen(true)
-  }
+  const handleEdit = (dept: Department) => { setEditDepartment(dept); setFormOpen(true) }
+  const handleNewClick = () => { setEditDepartment(undefined); setFormOpen(true) }
 
   const handleDelete = () => {
     if (!deleteTarget) return
     deleteMutation.mutate(deleteTarget.id, {
-      onSuccess: () => {
-        toast.success(`„${deleteTarget.name}" wurde gelöscht`)
-        setDeleteTarget(null)
-      },
-      onError: (err) => {
-        toast.error(err instanceof Error ? err.message : 'Löschen fehlgeschlagen')
-        setDeleteTarget(null)
-      },
+      onSuccess: () => { toast.success(`„${deleteTarget.name}" wurde gelöscht`); setDeleteTarget(null) },
+      onError: (err) => { toast.error(err instanceof Error ? err.message : 'Löschen fehlgeschlagen'); setDeleteTarget(null) },
     })
   }
 
@@ -54,52 +41,40 @@ export function DepartmentListPage() {
     (a, b) => a.display_order - b.display_order || a.name.localeCompare(b.name, 'de'),
   )
 
+  const filterChips = [{
+    label: includeInactive ? 'Inaktive ausblenden' : 'Inaktive anzeigen',
+    active: includeInactive,
+    onClick: () => setIncludeInactive((v) => !v),
+  }]
+
   return (
     <div className="flex flex-col h-full">
-      <div className="border-b border-border px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Stationen</h1>
-        <Button onClick={handleNewClick}>
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Neue Station
-        </Button>
-      </div>
+      <CommandBar
+        title="Stationen"
+        filters={filterChips}
+        showSearch={false}
+        primaryAction={{ label: '+ Neue Station', onClick: handleNewClick }}
+      />
 
-      <div className="px-6 py-3 border-b border-border">
-        <InactiveToggle
-          id="dept-inactive"
-          checked={includeInactive}
-          onCheckedChange={setIncludeInactive}
-        />
-      </div>
-
-      <div className="flex-1 px-6 py-4">
-        {isLoading && (
-          <div className="flex items-center justify-center py-16 text-muted-foreground">
-            Laden…
-          </div>
-        )}
+      <div className="flex-1 px-10 py-6 overflow-y-auto">
+        {isLoading && <div className="flex items-center justify-center py-16 text-ink-3">Laden…</div>}
 
         {isError && (
           <div className="flex flex-col items-center justify-center py-16 gap-4">
             <p className="text-destructive">Daten konnten nicht geladen werden.</p>
-            <Button variant="outline" onClick={() => void refetch()}>
-              Erneut versuchen
-            </Button>
+            <Button variant="outline" onClick={() => void refetch()}>Erneut versuchen</Button>
           </div>
         )}
 
         {!isLoading && !isError && sorted.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 gap-4 text-muted-foreground">
-            <p>Noch keine Stationen angelegt.</p>
-            <Button onClick={handleNewClick}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Neue Station
-            </Button>
+          <div className="flex flex-col items-center justify-center py-16 gap-3 text-ink-3">
+            <p className="text-sm">Noch keine Stationen angelegt.</p>
+            <Button variant="accent" size="sm" onClick={handleNewClick}>+ Neue Station</Button>
           </div>
         )}
 
         {!isLoading && !isError && sorted.length > 0 && (
-          <div className="rounded-md border border-border overflow-hidden">
+          <div className="rounded-2xl border border-line bg-card overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -117,31 +92,25 @@ export function DepartmentListPage() {
               <TableBody>
                 {sorted.map((dept) => (
                   <TableRow key={dept.id}>
-                    <TableCell className="font-medium">{dept.name}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {dept.short_name ?? '–'}
-                    </TableCell>
+                    <TableCell className="font-medium text-ink">{dept.name}</TableCell>
+                    <TableCell className="text-ink-2">{dept.short_name ?? '–'}</TableCell>
                     <TableCell>
-                      <Badge variant={dept.is_external ? 'outline' : 'secondary'}>
+                      <Badge variant={dept.is_external ? 'muted' : 'ok'}>
                         {dept.is_external ? 'Extern' : 'Intern'}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={dept.is_shift_relevant ? 'default' : 'secondary'}>
+                      <Badge variant={dept.is_shift_relevant ? 'ok' : 'muted'}>
                         {dept.is_shift_relevant ? 'Ja' : 'Nein'}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        {dept.blocks_ina_weekdays && (
-                          <Badge variant="outline" className="text-xs">WT</Badge>
-                        )}
-                        {dept.blocks_ina_weekends && (
-                          <Badge variant="outline" className="text-xs">WE</Badge>
-                        )}
+                        {dept.blocks_ina_weekdays && <Badge variant="muted" className="text-xs">WT</Badge>}
+                        {dept.blocks_ina_weekends && <Badge variant="muted" className="text-xs">WE</Badge>}
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-ink-2">
                       {dept.min_headcount != null && dept.max_headcount != null
                         ? `${dept.min_headcount} – ${dept.max_headcount}`
                         : dept.min_headcount != null
@@ -150,30 +119,18 @@ export function DepartmentListPage() {
                             ? `≤ ${dept.max_headcount}`
                             : '—'}
                     </TableCell>
-                    <TableCell className="text-right text-muted-foreground">
-                      {dept.display_order}
-                    </TableCell>
+                    <TableCell className="text-right text-ink-2">{dept.display_order}</TableCell>
                     <TableCell>
-                      <Badge variant={dept.active ? 'default' : 'secondary'}>
+                      <Badge variant={dept.active ? 'ok' : 'muted'}>
                         {dept.active ? 'Aktiv' : 'Inaktiv'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          aria-label="Bearbeiten"
-                          onClick={() => handleEdit(dept)}
-                        >
+                        <Button variant="ghost" size="sm" aria-label="Bearbeiten" onClick={() => handleEdit(dept)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          aria-label="Löschen"
-                          onClick={() => setDeleteTarget(dept)}
-                        >
+                        <Button variant="ghost" size="sm" aria-label="Löschen" onClick={() => setDeleteTarget(dept)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -188,10 +145,7 @@ export function DepartmentListPage() {
 
       <DepartmentFormDialog
         open={formOpen}
-        onOpenChange={(open) => {
-          setFormOpen(open)
-          if (!open) setEditDepartment(undefined)
-        }}
+        onOpenChange={(open) => { setFormOpen(open); if (!open) setEditDepartment(undefined) }}
         department={editDepartment}
       />
 

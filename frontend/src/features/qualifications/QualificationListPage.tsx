@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { PlusCircle, Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -11,9 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { InactiveToggle } from '@/components/inactive-toggle'
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog'
 import { ApiError } from '@/lib/api'
+import { CommandBar } from '@/components/dp/CommandBar'
 import { useQualifications, useDeleteQualification } from './useQualifications'
 import { QualificationFormDialog } from './QualificationFormDialog'
 import type { Qualification } from '@/lib/types'
@@ -32,86 +32,57 @@ export function QualificationListPage() {
   const { data: qualifications, isLoading, isError, refetch } = useQualifications(includeInactive)
   const deleteMutation = useDeleteQualification()
 
-  const handleEdit = (qual: Qualification) => {
-    setEditQual(qual)
-    setFormOpen(true)
-  }
-
-  const handleNewClick = () => {
-    setEditQual(undefined)
-    setFormOpen(true)
-  }
+  const handleEdit = (qual: Qualification) => { setEditQual(qual); setFormOpen(true) }
+  const handleNewClick = () => { setEditQual(undefined); setFormOpen(true) }
 
   const handleDelete = () => {
     if (!deleteTarget) return
     deleteMutation.mutate(deleteTarget.id, {
-      onSuccess: () => {
-        toast.success(`„${deleteTarget.name}" wurde gelöscht`)
-        setDeleteTarget(null)
-      },
+      onSuccess: () => { toast.success(`„${deleteTarget.name}" wurde gelöscht`); setDeleteTarget(null) },
       onError: (err) => {
-        const msg =
-          err instanceof ApiError
-            ? err.detail
-            : err instanceof Error
-              ? err.message
-              : 'Löschen fehlgeschlagen'
+        const msg = err instanceof ApiError ? err.detail : err instanceof Error ? err.message : 'Löschen fehlgeschlagen'
         toast.error(msg)
         setDeleteTarget(null)
       },
     })
   }
 
-  const sorted = [...(qualifications ?? [])].sort((a, b) =>
-    a.name.localeCompare(b.name, 'de'),
-  )
+  const sorted = [...(qualifications ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'de'))
+
+  const filterChips = [{
+    label: includeInactive ? 'Inaktive ausblenden' : 'Inaktive anzeigen',
+    active: includeInactive,
+    onClick: () => setIncludeInactive((v) => !v),
+  }]
 
   return (
     <div className="flex flex-col h-full">
-      <div className="border-b border-border px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Qualifikationen</h1>
-        <Button onClick={handleNewClick}>
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Neue Qualifikation
-        </Button>
-      </div>
+      <CommandBar
+        title="Qualifikationen"
+        filters={filterChips}
+        showSearch={false}
+        primaryAction={{ label: '+ Neue Qualifikation', onClick: handleNewClick }}
+      />
 
-      <div className="px-6 py-3 border-b border-border">
-        <InactiveToggle
-          id="qual-inactive"
-          checked={includeInactive}
-          onCheckedChange={setIncludeInactive}
-        />
-      </div>
-
-      <div className="flex-1 px-6 py-4">
-        {isLoading && (
-          <div className="flex items-center justify-center py-16 text-muted-foreground">
-            Laden…
-          </div>
-        )}
+      <div className="flex-1 px-10 py-6 overflow-y-auto">
+        {isLoading && <div className="flex items-center justify-center py-16 text-ink-3">Laden…</div>}
 
         {isError && (
           <div className="flex flex-col items-center justify-center py-16 gap-4">
             <p className="text-destructive">Daten konnten nicht geladen werden.</p>
-            <Button variant="outline" onClick={() => void refetch()}>
-              Erneut versuchen
-            </Button>
+            <Button variant="outline" onClick={() => void refetch()}>Erneut versuchen</Button>
           </div>
         )}
 
         {!isLoading && !isError && sorted.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 gap-4 text-muted-foreground">
-            <p>Noch keine Qualifikationen angelegt.</p>
-            <Button onClick={handleNewClick}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Neue Qualifikation
-            </Button>
+          <div className="flex flex-col items-center justify-center py-16 gap-3 text-ink-3">
+            <p className="text-sm">Noch keine Qualifikationen angelegt.</p>
+            <Button variant="accent" size="sm" onClick={handleNewClick}>+ Neue Qualifikation</Button>
           </div>
         )}
 
         {!isLoading && !isError && sorted.length > 0 && (
-          <div className="rounded-md border border-border overflow-hidden">
+          <div className="rounded-2xl border border-line bg-card overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -125,34 +96,20 @@ export function QualificationListPage() {
               <TableBody>
                 {sorted.map((qual) => (
                   <TableRow key={qual.id}>
-                    <TableCell className="font-medium">{qual.name}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {qual.short_name ?? '–'}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-xs">
-                      {truncate(qual.description, 100)}
-                    </TableCell>
+                    <TableCell className="font-medium text-ink">{qual.name}</TableCell>
+                    <TableCell className="text-ink-2">{qual.short_name ?? '–'}</TableCell>
+                    <TableCell className="text-sm text-ink-2 max-w-xs">{truncate(qual.description, 100)}</TableCell>
                     <TableCell>
-                      <Badge variant={qual.active ? 'default' : 'secondary'}>
+                      <Badge variant={qual.active ? 'ok' : 'muted'}>
                         {qual.active ? 'Aktiv' : 'Inaktiv'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          aria-label="Bearbeiten"
-                          onClick={() => handleEdit(qual)}
-                        >
+                        <Button variant="ghost" size="sm" aria-label="Bearbeiten" onClick={() => handleEdit(qual)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          aria-label="Löschen"
-                          onClick={() => setDeleteTarget(qual)}
-                        >
+                        <Button variant="ghost" size="sm" aria-label="Löschen" onClick={() => setDeleteTarget(qual)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -167,10 +124,7 @@ export function QualificationListPage() {
 
       <QualificationFormDialog
         open={formOpen}
-        onOpenChange={(open) => {
-          setFormOpen(open)
-          if (!open) setEditQual(undefined)
-        }}
+        onOpenChange={(open) => { setFormOpen(open); if (!open) setEditQual(undefined) }}
         qualification={editQual}
       />
 
