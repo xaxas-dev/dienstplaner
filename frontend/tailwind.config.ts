@@ -61,6 +61,7 @@ export default {
         },
         'dp-accent': {
           DEFAULT: '#C66A3D',
+          hover:   '#B45B30',
           2:       '#E69E66',
         },
         ok:      '#5A7A3A',

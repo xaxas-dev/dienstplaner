@@ -15,8 +15,9 @@ export const COLORS = {
   ink3:     '#8A8275', // tertiary / labels
   line:     '#E8E0CF', // hairline borders
   line2:    '#D6CCB6', // emphasized borders
-  accent:   '#C66A3D', // terracotta — primary CTA, brand glyph
-  accent2:  '#E69E66', // lighter terracotta — sparklines, hover
+  accent:      '#C66A3D', // terracotta — primary CTA, brand glyph
+  accentHover: '#B45B30', // darker terracotta — hover state for accent buttons
+  accent2:     '#E69E66', // lighter terracotta — sparklines, hover
   ok:       '#5A7A3A', // success
   warn:     '#B85B22', // warning / conflict
   warnBg:   '#FBE5D6', // warning surface

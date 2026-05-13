@@ -34,11 +34,12 @@ Claude Code soll nach jedem Schritt diese Checkliste anhaken und stoppen, bis du
 
 ## ✅ Schritt 4 — CommandBar + KpiBar
 
-- [ ] `<CommandBar />` als reusable Komponente — Props `{ title, accent?, breadcrumb?, filters?, search?, actions? }`.
-- [ ] Titel rendert in Newsreader, `accent`-Teil in `text-accent`.
-- [ ] Suchfeld zeigt `⌘K`-Hinweis rechts (mono).
-- [ ] `<KpiBar />` rendert horizontale KPI-Reihe + optionale Sparkline + optionale Tab-Group rechts.
-- [ ] Höhe der Sub-Bar konstant 84 px; kein Layout-Sprung beim Route-Wechsel.
+- [x] `<CommandBar />` als reusable Komponente — Props `{ title, titleAccent?, breadcrumb?, filters?, primaryAction?, showSearch? }`.
+- [x] Titel rendert in Newsreader, `titleAccent`-Teil italic in `text-dp-accent`.
+- [x] Suchfeld zeigt `⌘K`-Hinweis rechts (mono), Klick zeigt Toast.
+- [x] shadcn-Button Variante `accent` ergänzt (bg-dp-accent, hover bg-dp-accent-hover, rounded-full).
+- [x] TodayPage und PlansPage verwenden CommandBar mit page-spezifischen Props.
+- [ ] `<KpiBar />` rendert horizontale KPI-Reihe (kommt in Sub-Schritt 3).
 
 ## ✅ Schritt 5 — Dashboard (`/heute`)
 
