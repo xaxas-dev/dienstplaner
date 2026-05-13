@@ -75,7 +75,10 @@ Die App verwendet `AtelierShell` als Layout-Wrapper (ersetzt die alte `AppShell`
 Aktuelle Seiten-Status:
 - `/heute` und `/plans`: Platzhalter-Seiten (werden in M2-003 implementiert)
 - Stammdaten-Pages (Ärzte, Stationen, Schichttypen, Qualifikationen, Sonderregelungen):
-  laufen in neuer Shell, erhalten CommandBar in M1-011
+  vollständig auf Atelier-Look migriert (M1-011):
+  - **Ärzte-Liste**: 3-spaltiges Card-Grid mit Avatar, Qualifikations-Chips, 14-Tage-Heatmap
+  - **Übrige Listen**: CommandBar + gerundeter Tabellen-Container mit ok/muted-Badges
+  - **Einstellungen**: CommandBar + card-umrahmter Inhaltsbereich
 
 ### Komponenten-Playground
 Im Entwicklungsmodus ist eine Vorschau aller UI-Primitives (inkl. KpiBar-Varianten) unter
