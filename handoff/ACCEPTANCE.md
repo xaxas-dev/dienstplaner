@@ -25,12 +25,12 @@ Claude Code soll nach jedem Schritt diese Checkliste anhaken und stoppen, bis du
 
 ## ✅ Schritt 3 — Layout-Shell
 
-- [ ] Alte Sidebar (240 px) entfernt.
-- [ ] `MiniRail` (60 px) auf allen Routes sichtbar — auch Dashboard.
-- [ ] Aktiver Route-Tab hat `bg-ink text-paper`.
-- [ ] Hover auf Icon zeigt Tooltip mit deutschem Label.
-- [ ] Logo-Tile oben hat `bg-accent`, Newsreader-Italic „D" in Papierfarbe.
-- [ ] Avatar-Tile unten zeigt Initialen des Users (Mock: „MD" = Maria Dienstplaner).
+- [x] Alte Sidebar (240 px) entfernt (AtelierShell ersetzt AppShell, kein 240px-Layout mehr).
+- [x] `MiniRail` (60 px) auf allen Routes sichtbar — auch Dashboard.
+- [x] Aktiver Route-Tab hat `bg-ink text-paper`.
+- [x] Hover auf Icon zeigt Tooltip mit deutschem Label.
+- [x] Logo-Tile oben hat `bg-dp-accent` (terracotta), Newsreader-Italic „D" in Papierfarbe.
+- [x] Avatar-Tile unten zeigt Initialen „PL" (Mock: „Planer"), clinic_name als Sub-Label.
 
 ## ✅ Schritt 4 — CommandBar + KpiBar
 

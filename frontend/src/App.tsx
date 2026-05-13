@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { AppShell } from '@/components/layout/AppShell'
+import { AtelierShell } from '@/components/layout/AtelierShell'
 import { DoctorListPage } from '@/features/doctors/DoctorListPage'
 import { DoctorCreatePage } from '@/features/doctors/DoctorCreatePage'
 import { DoctorDetailPage } from '@/features/doctors/DoctorDetailPage'
@@ -8,6 +8,8 @@ import { ShiftTypeListPage } from '@/features/shift-types/ShiftTypeListPage'
 import { QualificationListPage } from '@/features/qualifications/QualificationListPage'
 import { RuleOverrideListPage } from '@/features/rule-overrides/RuleOverrideListPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
+import { TodayPage } from '@/features/today/TodayPage'
+import { PlansPage } from '@/features/plans/PlansPage'
 
 import { PlaygroundPage } from '@/features/playground/PlaygroundPage'
 
@@ -25,8 +27,10 @@ function NotFoundPage() {
 export default function App() {
   return (
     <Routes>
-      <Route element={<AppShell />}>
-        <Route index element={<Navigate to="/doctors" replace />} />
+      <Route element={<AtelierShell />}>
+        <Route index element={<Navigate to="/heute" replace />} />
+        <Route path="/heute" element={<TodayPage />} />
+        <Route path="/plans" element={<PlansPage />} />
         <Route path="/doctors" element={<DoctorListPage />} />
         <Route path="/doctors/new" element={<DoctorCreatePage />} />
         <Route path="/doctors/:doctorId" element={<DoctorDetailPage />} />
