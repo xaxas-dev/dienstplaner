@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { PlusCircle, Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -11,8 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { InactiveToggle } from '@/components/inactive-toggle'
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog'
+import { CommandBar } from '@/components/dp/CommandBar'
+import { ShiftChip } from '@/components/dp/ShiftChip'
 import { useShiftTypes, useDeleteShiftType } from './useShiftTypes'
 import { ShiftTypeFormDialog } from './ShiftTypeFormDialog'
 import type { ShiftType } from '@/lib/types'
@@ -60,57 +61,48 @@ export function ShiftTypeListPage() {
     (a, b) => a.display_order - b.display_order || a.name.localeCompare(b.name, 'de'),
   )
 
+  const filterChips = [
+    {
+      label: includeInactive ? 'Inaktive ausblenden' : 'Inaktive anzeigen',
+      active: includeInactive,
+      onClick: () => setIncludeInactive((v) => !v),
+    },
+  ]
+
   return (
     <div className="flex flex-col h-full">
-      <div className="border-b border-border px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Schichttypen</h1>
-        <Button onClick={handleNewClick}>
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Neuer Schichttyp
-        </Button>
-      </div>
+      <CommandBar
+        title="Schichttypen"
+        filters={filterChips}
+        showSearch={false}
+        primaryAction={{ label: '+ Neuer Schichttyp', onClick: handleNewClick }}
+      />
 
-      <div className="px-6 py-3 border-b border-border">
-        <InactiveToggle
-          id="st-inactive"
-          checked={includeInactive}
-          onCheckedChange={setIncludeInactive}
-        />
-      </div>
-
-      <div className="flex-1 px-6 py-4">
+      <div className="flex-1 px-10 py-6 overflow-y-auto">
         {isLoading && (
-          <div className="flex items-center justify-center py-16 text-muted-foreground">
-            Laden…
-          </div>
+          <div className="flex items-center justify-center py-16 text-ink-3">Laden…</div>
         )}
 
         {isError && (
           <div className="flex flex-col items-center justify-center py-16 gap-4">
             <p className="text-destructive">Daten konnten nicht geladen werden.</p>
-            <Button variant="outline" onClick={() => void refetch()}>
-              Erneut versuchen
-            </Button>
+            <Button variant="outline" onClick={() => void refetch()}>Erneut versuchen</Button>
           </div>
         )}
 
         {!isLoading && !isError && sorted.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 gap-4 text-muted-foreground">
-            <p>Noch keine Schichttypen angelegt.</p>
-            <Button onClick={handleNewClick}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Neuer Schichttyp
-            </Button>
+          <div className="flex flex-col items-center justify-center py-16 gap-3 text-ink-3">
+            <p className="text-sm">Noch keine Schichttypen angelegt.</p>
+            <Button variant="accent" size="sm" onClick={handleNewClick}>+ Neuer Schichttyp</Button>
           </div>
         )}
 
         {!isLoading && !isError && sorted.length > 0 && (
-          <div className="rounded-md border border-border overflow-hidden">
+          <div className="rounded-2xl border border-line bg-card overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Kurzname</TableHead>
                   <TableHead>Werktag</TableHead>
                   <TableHead>Wochenende</TableHead>
                   <TableHead>Uhrzeit</TableHead>
@@ -121,42 +113,36 @@ export function ShiftTypeListPage() {
               <TableBody>
                 {sorted.map((st) => (
                   <TableRow key={st.id}>
-                    <TableCell className="font-medium">{st.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{st.short_name}</TableCell>
                     <TableCell>
-                      <Badge variant={st.applies_on_weekdays ? 'default' : 'secondary'}>
+                      <div className="flex items-center gap-2">
+                        <ShiftChip code={st.short_name} shiftTypeId={st.id} size="sm" />
+                        <span className="font-medium text-ink">{st.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={st.applies_on_weekdays ? 'ok' : 'muted'}>
                         {st.applies_on_weekdays ? 'Ja' : 'Nein'}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={st.applies_on_weekend ? 'default' : 'secondary'}>
+                      <Badge variant={st.applies_on_weekend ? 'ok' : 'muted'}>
                         {st.applies_on_weekend ? 'Ja' : 'Nein'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-sm text-ink-2">
                       {formatTime(st.start_time, st.end_time)}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={st.active ? 'default' : 'secondary'}>
+                      <Badge variant={st.active ? 'ok' : 'muted'}>
                         {st.active ? 'Aktiv' : 'Inaktiv'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          aria-label="Bearbeiten"
-                          onClick={() => handleEdit(st)}
-                        >
+                        <Button variant="ghost" size="sm" aria-label="Bearbeiten" onClick={() => handleEdit(st)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          aria-label="Löschen"
-                          onClick={() => setDeleteTarget(st)}
-                        >
+                        <Button variant="ghost" size="sm" aria-label="Löschen" onClick={() => setDeleteTarget(st)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -171,10 +157,7 @@ export function ShiftTypeListPage() {
 
       <ShiftTypeFormDialog
         open={formOpen}
-        onOpenChange={(open) => {
-          setFormOpen(open)
-          if (!open) setEditShiftType(undefined)
-        }}
+        onOpenChange={(open) => { setFormOpen(open); if (!open) setEditShiftType(undefined) }}
         shiftType={editShiftType}
       />
 
