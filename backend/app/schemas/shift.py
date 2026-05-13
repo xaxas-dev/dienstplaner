@@ -21,11 +21,14 @@ class ShiftCreate(ShiftBase): ...
 
 
 class ShiftUpdate(BaseModel):
-    shift_date: date | None = None
-    shift_type_id: int | None = None
+    # Alle Felder optional. Im Service MUSS model_dump(exclude_unset=True) verwendet werden:
+    # - Feld fehlt im Request → unverändert lassen
+    # - Feld explizit auf None → doctor_id wird gelöscht (Zuweisung aufheben)
     doctor_id: int | None = None
     is_pinned: bool | None = None
     notes: str | None = None
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class ShiftResponse(ShiftBase):
