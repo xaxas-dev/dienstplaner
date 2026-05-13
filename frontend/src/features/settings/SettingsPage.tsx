@@ -3,60 +3,45 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CommandBar } from '@/components/dp/CommandBar'
 import { useSettings, useUpdateSetting, type AppSettingResponse } from '@/lib/useSettings'
 
-function SettingCard({ setting }: { setting: AppSettingResponse }) {
+function SettingRow({ setting }: { setting: AppSettingResponse }) {
   const [value, setValue] = useState(setting.value)
   const [error, setError] = useState<string | null>(null)
   const update = useUpdateSetting(setting.key)
 
   function handleSave() {
     const trimmed = value.trim()
-    if (!trimmed) {
-      setError('Wert darf nicht leer sein.')
-      return
-    }
-    if (trimmed.length > 1000) {
-      setError('Wert darf maximal 1000 Zeichen lang sein.')
-      return
-    }
+    if (!trimmed) { setError('Wert darf nicht leer sein.'); return }
+    if (trimmed.length > 1000) { setError('Wert darf maximal 1000 Zeichen lang sein.'); return }
     setError(null)
     update.mutate(trimmed, {
-      onSuccess: () => {
-        toast.success('Einstellung gespeichert')
-      },
-      onError: () => {
-        toast.error('Fehler beim Speichern')
-      },
+      onSuccess: () => toast.success('Einstellung gespeichert'),
+      onError: () => toast.error('Fehler beim Speichern'),
     })
   }
 
   const label = setting.description ?? setting.key
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">{label}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Label htmlFor={`setting-${setting.key}`} className="sr-only">
-          {label}
-        </Label>
-        <div className="flex gap-2">
-          <Input
-            id={`setting-${setting.key}`}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className="flex-1"
-          />
-          <Button onClick={handleSave} disabled={update.isPending}>
-            Speichern
-          </Button>
-        </div>
-        {error && <p className="text-sm text-destructive mt-1">{error}</p>}
-      </CardContent>
-    </Card>
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor={`setting-${setting.key}`} className="text-sm font-medium text-ink">
+        {label}
+      </Label>
+      <div className="flex gap-2">
+        <Input
+          id={`setting-${setting.key}`}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className="flex-1"
+        />
+        <Button onClick={handleSave} disabled={update.isPending} variant="outline" size="sm">
+          {update.isPending ? 'Speichern…' : 'Speichern'}
+        </Button>
+      </div>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+    </div>
   )
 }
 
@@ -64,17 +49,24 @@ export function SettingsPage() {
   const { data: settings, isLoading, isError } = useSettings()
 
   return (
-    <div className="p-8 max-w-2xl">
-      <h2 className="text-2xl font-semibold mb-6">Einstellungen</h2>
-      {isLoading && <p className="text-muted-foreground">Lade Einstellungen…</p>}
-      {isError && <p className="text-destructive">Fehler beim Laden der Einstellungen.</p>}
-      {settings && (
-        <div className="space-y-4">
-          {settings.map((setting) => (
-            <SettingCard key={setting.key} setting={setting} />
-          ))}
+    <div className="flex flex-col h-full">
+      <CommandBar title="Einstellungen" showSearch={false} />
+
+      <div className="flex-1 px-10 py-6 overflow-y-auto">
+        <div className="max-w-xl">
+          <div className="rounded-2xl bg-card border border-line p-5">
+            {isLoading && <p className="text-sm text-ink-3">Lade Einstellungen…</p>}
+            {isError && <p className="text-sm text-destructive">Fehler beim Laden der Einstellungen.</p>}
+            {settings && (
+              <div className="space-y-5">
+                {settings.map((setting) => (
+                  <SettingRow key={setting.key} setting={setting} />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

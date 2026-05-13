@@ -254,7 +254,7 @@ export function ShiftTypeFormDialog({ open, onOpenChange, shiftType }: ShiftType
                       />
                     </FormControl>
                     {isMidnightShift && (
-                      <FormDescription className="text-xs text-blue-600">
+                      <FormDescription className="text-xs text-ink-2">
                         Schicht über Mitternacht, z.B. 21:00 bis 07:00
                       </FormDescription>
                     )}
