@@ -1,8 +1,34 @@
 from sqlalchemy import asc
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.models.shift import Shift
 from app.models.shift_type import ShiftType
+
+
+def get_shift(db: Session, shift_id: int) -> Shift | None:
+    """Holt eine einzelne Shift mit eager-loaded shift_type und doctor."""
+    return (
+        db.query(Shift)
+        .options(joinedload(Shift.shift_type), joinedload(Shift.doctor))
+        .filter(Shift.id == shift_id)
+        .first()
+    )
+
+
+def update_shift(db: Session, shift_id: int, data: dict) -> Shift | None:
+    """Aktualisiert spezifische Felder einer Shift.
+
+    data enthält nur die zu setzenden Felder (Ergebnis von exclude_unset).
+    Returns None wenn Shift nicht existiert.
+    """
+    shift = db.query(Shift).filter(Shift.id == shift_id).first()
+    if shift is None:
+        return None
+    for key, value in data.items():
+        setattr(shift, key, value)
+    db.flush()
+    db.refresh(shift)
+    return shift
 
 
 def list_shifts_for_plan(db: Session, plan_id: int) -> list[Shift]:
