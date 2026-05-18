@@ -9,7 +9,8 @@ import { QualificationListPage } from '@/features/qualifications/QualificationLi
 import { RuleOverrideListPage } from '@/features/rule-overrides/RuleOverrideListPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
 import { TodayPage } from '@/features/today/TodayPage'
-import { PlansPage } from '@/features/plans/PlansPage'
+import { PlanListPage } from '@/features/plans/PlanListPage'
+import { PlanPage } from '@/features/plans/PlanPage'
 
 import { PlaygroundPage } from '@/features/playground/PlaygroundPage'
 
@@ -30,7 +31,8 @@ export default function App() {
       <Route element={<AtelierShell />}>
         <Route index element={<Navigate to="/heute" replace />} />
         <Route path="/heute" element={<TodayPage />} />
-        <Route path="/plans" element={<PlansPage />} />
+        <Route path="/plans" element={<PlanListPage />} />
+        <Route path="/plans/:planId" element={<PlanPage />} />
         <Route path="/doctors" element={<DoctorListPage />} />
         <Route path="/doctors/new" element={<DoctorCreatePage />} />
         <Route path="/doctors/:doctorId" element={<DoctorDetailPage />} />
