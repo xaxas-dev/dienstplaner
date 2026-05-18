@@ -33,6 +33,14 @@ export function DoctorAssignPopover({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [onClose])
 
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   function assign(shiftId: number, newDoctorId: number | null) {
     mutate(
       { shiftId, data: { doctor_id: newDoctorId } },

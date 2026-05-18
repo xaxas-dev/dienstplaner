@@ -141,4 +141,20 @@ describe('DoctorAssignPopover', () => {
     await user.click(document.body)
     expect(onClose).toHaveBeenCalledOnce()
   })
+
+  it('schließt bei Escape-Taste', async () => {
+    const user = userEvent.setup()
+    const onClose = vi.fn()
+    render(
+      <Wrapper>
+        <DoctorAssignPopover
+          planId={1} doctorId={1} day="2026-05-15"
+          currentShift={null} openShiftsForDay={[]}
+          onClose={onClose}
+        />
+      </Wrapper>
+    )
+    await user.keyboard('{Escape}')
+    expect(onClose).toHaveBeenCalledOnce()
+  })
 })
