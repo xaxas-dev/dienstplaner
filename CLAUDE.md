@@ -6,9 +6,22 @@ in einer neurologischen Universitätsklinik (UKSH Lübeck).
 Tarifvertrag: TV-Ärzte/TdL.
 Output: Excel-Schnittstellendatei für ein internes Klinik-Tool.
 
+## Phasen-Modell (Rahmen für alle Aufgaben)
+- **Phase A — Manueller Planungsassistent (aktuell):** Der User
+  weist Schichten manuell zu. Das System unterstützt durch
+  Verfügbarkeitsinfo und read-only Konflikt-Erkennung, blockiert
+  aber nichts.
+- **Phase B — Solver (später):** timefold-solver optimiert
+  automatisch. Das Datenmodell ist von Anfang an solver-ready
+  gebaut.
+
+Konsequenz: Bis Phase B existiert keine harte Constraint-Prüfung im
+Schreibpfad. Funktionen werden so gebaut, dass sie ohne Solver
+funktionieren und der Solver später additiv aufsetzt.
+
 ## Tech-Stack
 - **Backend:** Python 3.12, FastAPI, SQLAlchemy, SQLite, pydantic v2,
-  timefold-solver, openpyxl, alembic
+  timefold-solver (Phase B), openpyxl, alembic
 - **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui,
   dnd-kit, TanStack Query, Zustand
 - **Tooling:** uv (Python), pnpm (Node), ruff (lint+format), pytest, vitest
@@ -22,14 +35,18 @@ Backend (FastAPI, Port 8000)
   repositories/ → Datenzugriff (SQLAlchemy)
   models/       → ORM-Modelle
   schemas/      → Pydantic DTOs
-  solver/       → Timefold-Integration (isoliert, Adapter-Pattern)
+  solver/       → Timefold-Integration (Phase B, isoliert, Adapter)
 
 Frontend (Vite, Port 5173)
   features/     → fachliche Module (plan-grid, doctors, absences, ...)
-  components/   → wiederverwendbare UI-Bausteine (shadcn/ui-Basis)
+  components/   → wiederverwendbare UI-Bausteine
+    ui/         → shadcn/ui-Basis
+    dp/         → Design-Primitives (Atelier-Look, ab M1-009)
+    layout/     → Shell (MiniRail, AtelierShell, ab M1-010)
   hooks/        → TanStack Query Hooks
   stores/       → Zustand-Stores
   lib/          → API-Client (typisiert aus OpenAPI)
+    design/     → Design-Tokens
 ```
 
 Details: docs/architecture.md
@@ -43,10 +60,28 @@ Details: docs/architecture.md
 - **Zeitabhängiger Beschäftigungsumfang:** Teilzeit-Prozentsatz ist nicht
   statisch, sondern per Zeitraum am Arzt hinterlegt (siehe EmploymentPeriod)
 - **Geteilte Rotationen:** Zwei Teilzeit-Ärzte können sich eine Rotation teilen
+- **INA-Verfügbarkeitsmodell:** Ob ein Arzt an einem Datum für
+  INA-Dienste (V/T/N/T1) verfügbar ist, ergibt sich aus drei
+  blockierenden Quellen: aktive Rotation in einem blockierenden
+  Bereich, manueller INA-Ausschluss (INAExclusion), aktive
+  Abwesenheit. Zentrale Funktion:
+  `get_ina_availability(db, doctor_id, target_date)`. Diese Logik
+  NICHT neu implementieren — immer den Service nutzen. CK ist
+  Sonderfall (blockiert nur werktags).
+- **Konflikt-Engine (M2-005):** `conflict_service.detect_conflicts(db, plan_id)`
+  berechnet NOT_AVAILABLE und DOUBLE_BOOKED read-only pro Plan. Einmal pro
+  Request aufrufen, Ergebnisse nach shift_id verteilen — nicht pro Shift
+  einzeln neu berechnen. Consumer: GET /plans/{id}/conflicts und GET /plans/{id}/shifts.
 - **Pin-Konzept:** Manuelle Zuweisungen sind automatisch gepinnt.
   Gepinnte Zuweisungen werden vom Solver nicht überschrieben.
   Pin ist pro Zuweisung lösbar (Variante C)
-- **Constraint-Klassen:**
+- **Weiche Validierung (Phase A):** Beim Schreiben einer
+  Schicht-Zuweisung wird NUR Datenkonsistenz hart geprüft (Entität
+  existiert, Doctor aktiv). Semantische Constraints (Verfügbarkeit,
+  Doppelbuchung) blockieren NICHT. Sie werden read-only durch die
+  Konflikt-Engine berechnet und im Frontend markiert. Claude Code
+  darf hier KEINE harte Validierung "zur Sicherheit" einbauen.
+- **Constraint-Klassen (Phase B):**
   1. Logisch hart (nie overridebar): Doppelbelegung, Einsatz bei Abwesenheit
   2. Regulatorisch hart (overridebar): Tarif, ArbZG
   3. Soft (Optimierungsziele): Fairness, Wünsche, Schichtfolgen
@@ -59,6 +94,7 @@ Details: docs/data-model.md, docs/constraints.md
 
 ### Python
 - ruff für Lint und Format (Konfiguration in pyproject.toml)
+- Enums immer als `enum.StrEnum` — nie als `(str, Enum)` (ruff UP042)
 - Type Hints überall, keine ungetypten Funktionen
 - snake_case für alles außer Klassen
 - Docstrings nur für nicht-offensichtliche Funktionen
@@ -73,27 +109,43 @@ Details: docs/data-model.md, docs/constraints.md
 ### Tests
 - pytest für Backend: Pflicht für alle services/ und solver/ Module
 - Jeder Constraint braucht mindestens einen positiven und einen negativen Test
+- Shift hat UNIQUE-Constraint `(plan_id, shift_date, shift_type_id)`:
+  bei mehreren Test-Shifts am selben Plan+Tag → verschiedene ShiftTypes verwenden
 - vitest für Frontend: Pflicht für komplexe Komponenten (PlanGrid, etc.)
 - Tests laufen lokal grün vor jedem Merge
 
 ### Git
 - Conventional Commits: feat:, fix:, refactor:, docs:, test:, chore:
-- Ein Feature-Branch pro Aufgabe (tasks/open/)
-- Branch-Name entspricht Aufgaben-ID: task/M0-001-repo-setup
+- Ein Feature-Branch pro Aufgabe, Branch-Name entspricht
+  Aufgaben-ID: task/M0-001-repo-setup
+- Aufgaben-Briefings liegen in tasks/open/, nach Abschluss
+  verschoben nach tasks/done/
+- Aufgaben werden in Sub-Schritten mit Stop-Gates abgearbeitet:
+  nach jedem Sub-Schritt Commit und auf Review warten
 
 ### API
 - REST/JSON, snake_case
+- GET /api/plans/{id}/shifts liefert 404 für unbekannte plan_id (seit M2-005,
+  vorher: 200 + [])
 - Datumsangaben als ISO 8601
 - Fehler nach RFC 9457 (Problem Details)
 - Keine Auth (Single-User, lokal)
+- Read-collection nested unter Parent (/api/plans/{id}/shifts),
+  update-single per globaler ID (/api/shifts/{id})
 
 ## Was Claude Code NICHT tun soll
 - Keine neuen Bibliotheken ohne explizite Rückfrage einführen
 - Keine Bibliotheksfunktionen verwenden, die nicht in der Doku existieren
   (timefold-solver-python ist jung, halluzinationsgefährdet)
 - Keine Annahmen über Klinikdaten oder Tarif-Werte erfinden
+- Keine harte Validierung von semantischen Constraints in den
+  Schreibpfad einbauen (siehe "Weiche Validierung")
+- Die INA-Verfügbarkeitslogik nicht duplizieren — immer
+  get_ina_availability nutzen
 - Keine Tests überspringen wenn die Aufgabe Tests fordert
 - Keine Mock-Daten oder Testdaten in Produktions-Code einchecken
+- Bewusste Abweichungen von docs/design-implementation.md nur,
+  wenn sie im Aufgaben-Briefing explizit dokumentiert sind
 - Bei Unklarheit: in der Aufgabe nachsehen oder stoppen und nachfragen
 - Keine Änderungen außerhalb des in der Aufgabe definierten Scope
 
