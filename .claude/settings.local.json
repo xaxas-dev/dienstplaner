@@ -7,13 +7,10 @@
       "PowerShell(Set-Location \"d:\\\\Softwareprojekte\\\\Dienstplaner\\\\backend\"; Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"Set-Location 'D:\\\\Softwareprojekte\\\\Dienstplaner\\\\backend'; uv run uvicorn app.main:app --port 8000\" -PassThru | Select-Object Id)",
       "PowerShell(Invoke-WebRequest -Uri \"http://localhost:8000/api/health\" -UseBasicParsing 2>&1)",
       "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:8000/api/health\" -UseBasicParsing -ErrorAction Stop; $r.StatusCode } catch { \"Backend nicht erreichbar: $_\" })",
-      "Skill(superpowers:executing-plans)",
-      "Skill(superpowers:executing-plans:*)",
-      "Skill(superpowers:finishing-a-development-branch)",
-      "Skill(superpowers:finishing-a-development-branch:*)",
-      "Skill(claude-md-management:revise-claude-md)",
-      "Skill(claude-md-management:revise-claude-md:*)",
+      "Skill(claude-md-management:*)",
+      "Skill(superpowers:*)",
       "mcp__plugin_claude-mem_mcp-search__observation_add"
+
     ]
   }
 }
