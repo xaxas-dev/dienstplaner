@@ -8,6 +8,7 @@ export function ShiftCell({
   weekend,
   today,
   onClick,
+  onConflictDotClick,
 }: {
   code?: string
   shiftTypeId?: number
@@ -15,6 +16,7 @@ export function ShiftCell({
   weekend?: boolean
   today?: boolean
   onClick?: () => void
+  onConflictDotClick?: () => void
 }) {
   if (!code) {
     return (
@@ -43,7 +45,10 @@ export function ShiftCell({
     >
       {code}
       {conflict && (
-        <span className="absolute -right-1 -top-1 grid size-3 place-items-center rounded-full bg-warn text-[8px] font-bold text-paper">
+        <span
+          onClick={(e) => { e.stopPropagation(); onConflictDotClick?.() }}
+          className="absolute -right-1 -top-1 grid size-3 place-items-center rounded-full bg-warn text-[8px] font-bold text-paper"
+        >
           !
         </span>
       )}
