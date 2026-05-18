@@ -18,6 +18,7 @@ from app.api.qualifications import router as qualifications_router
 from app.api.rotations import plan_rotations_router, rotations_router
 from app.api.rule_overrides import router as rule_overrides_router
 from app.api.shift_types import router as shift_types_router
+from app.api.shifts import router as shifts_router
 from app.config import BASE_DIR
 
 
@@ -46,6 +47,7 @@ app.include_router(rule_overrides_router, prefix="/api")
 app.include_router(plans_router, prefix="/api")
 app.include_router(plan_versions_router, prefix="/api")
 app.include_router(plan_shifts_router, prefix="/api")
+app.include_router(shifts_router, prefix="/api")
 app.include_router(plan_rotations_router, prefix="/api")
 app.include_router(rotations_router, prefix="/api")
 app.include_router(ina_exclusions_router, prefix="/api")
