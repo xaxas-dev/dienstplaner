@@ -98,4 +98,26 @@ describe('PlanGrid', () => {
     expect(screen.getByText('1')).toBeInTheDocument()
     expect(screen.getByText('31')).toBeInTheDocument()
   })
+
+  it('ruft onConflictDotClick mit shift auf bei Warn-Dot-Click', async () => {
+    const user = userEvent.setup()
+    const onConflictDotClick = vi.fn()
+    const shift = makeShift({
+      id: 42, doctor_id: 1, shift_date: '2026-05-01',
+      conflicts: [{
+        shift_id: 42, conflict_type: 'not_available', message: 'Im Urlaub',
+        doctor_id: 1, doctor_name: 'Müller, Anna',
+        shift_date: '2026-05-01', shift_type_short_name: 'F',
+      }],
+    })
+    render(
+      <PlanGrid
+        shifts={[shift]} doctors={[doctor]}
+        validFrom="2026-05-01" validTo="2026-05-31"
+        onCellClick={vi.fn()} onConflictDotClick={onConflictDotClick}
+      />
+    )
+    await user.click(screen.getByText('!'))
+    expect(onConflictDotClick).toHaveBeenCalledWith(shift)
+  })
 })
