@@ -120,6 +120,12 @@ class ShiftNotFoundError(Exception):
         self.shift_id = shift_id
 
 
+class ShiftValidationError(Exception):
+    def __init__(self, detail: str) -> None:
+        super().__init__(detail)
+        self.detail = detail
+
+
 class INAExclusionNotFoundError(Exception):
     def __init__(self, exclusion_id: int) -> None:
         super().__init__(f"INA-Ausschluss mit ID {exclusion_id} nicht gefunden")
