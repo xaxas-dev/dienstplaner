@@ -4,6 +4,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
 
+from app.schemas.conflict import ShiftConflict
 from app.schemas.doctor import DoctorResponse
 from app.schemas.shift_type import ShiftTypeResponse
 
@@ -42,3 +43,6 @@ class ShiftResponse(ShiftBase):
 class ShiftWithDetails(ShiftResponse):
     shift_type: ShiftTypeResponse | None = None
     doctor: DoctorResponse | None = None
+    # Bewusst leer per Default – PATCH-Response bleibt entkoppelt (M2-005 ADR).
+    # Frontend refetcht Konflikte nach Zuweisung separat.
+    conflicts: list[ShiftConflict] = []
