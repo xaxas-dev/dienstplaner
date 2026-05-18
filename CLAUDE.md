@@ -133,6 +133,24 @@ Details: docs/data-model.md, docs/constraints.md
 - Read-collection nested unter Parent (/api/plans/{id}/shifts),
   update-single per globaler ID (/api/shifts/{id})
 
+### Frontend — Plan-Feature (M2-003)
+- TanStack-Query-Hooks co-located in `features/plans/`: `usePlans`, `usePlanShifts`,
+  `usePlanConflicts`, `useAssignShift`. Query-Key-Objekte (`planKeys`, `shiftQueryKeys`,
+  `conflictQueryKeys`) exportieren, damit andere Consumer invalidieren können.
+- `planGridUtils.ts` ist eine pure Transformationsfunktion (kein React) — Grid-Logik
+  dort isolieren, nicht in PlanGrid.tsx einbetten. Macht sie voll testbar ohne Rendering.
+- `useAssignShift` invalidiert nach onSuccess beide Queries (shifts + conflicts):
+  Konfliktberechnung ist server-seitig, kein optimistic update.
+- Click-outside-Handler: `useEffect + document.addEventListener('mousedown', ...)` statt
+  Backdrop-Div. Backdrop-Div-Ansatz funktioniert in jsdom-Tests nicht
+  (`user.click(document.body)` traversiert nicht in den React-Component-Tree).
+- Stub-Komponenten während Entwicklung: `export function X(_props: unknown) { return null }`
+  erlaubt TypeScript-Kompilierung bevor Abhängigkeiten fertig sind.
+- CSS-Grid-Zeilen in PlanGrid: `<Fragment key="row-{id}">` statt `<>` — bare Fragments
+  können keinen key tragen, was React-Warnings erzeugt.
+- Warn-Dot in ShiftCell: `e.stopPropagation()` im onClick des Dots trennt Dot-Klick
+  (→ ContextPanel) von Zell-Klick (→ DoctorAssignPopover).
+
 ## Was Claude Code NICHT tun soll
 - Keine neuen Bibliotheken ohne explizite Rückfrage einführen
 - Keine Bibliotheksfunktionen verwenden, die nicht in der Doku existieren

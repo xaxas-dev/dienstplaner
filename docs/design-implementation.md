@@ -298,7 +298,8 @@ Tastenkürzel: `cmd/ctrl + K` öffnet, `esc` schließt.
 |---|---|---|
 | `/` | Redirect → `/heute` | NEU |
 | `/heute` | `DashboardPage` | NEU |
-| `/plans` | `PlanPage` (PlanGrid + Kontext-Panel) | aktivieren |
+| `/plans` | `PlanListPage` (Kachel-Grid, Plan anlegen) | ✅ M2-003 |
+| `/plans/:id` | `PlanPage` (PlanGrid + ContextPanel, Schichtzuweisung) | ✅ M2-003 |
 | `/doctors` | `DoctorListPage` → Karten-Grid | umbauen |
 | `/doctors/new` | bleibt | nur Styling anpassen |
 | `/doctors/:id` | bleibt | nur Styling anpassen |
@@ -320,7 +321,10 @@ Pro Schritt bitte committen und Screenshots zeigen.
 3. **Layout-Shell:** `MiniRail` ersetzt Sidebar. Navigation funktioniert weiter.
 4. **CommandBar + KpiBar** als reusable Frame.
 5. **Dashboard** (`/heute`). Statisches Mock-Data zuerst, später `useDashboard()`-Hook.
-6. **PlanGrid + PlanPage** mit Mock-Data. Konflikte als Inline-Markup. ContextPanel rechts.
+6. ✅ **PlanGrid + PlanPage** — umgesetzt in M2-003 mit echten API-Daten (nicht Mock).
+   PlanListPage (`/plans`), PlanPage (`/plans/:id`), PlanGrid, DoctorAssignPopover,
+   ContextPanel + ConflictCard, Konflikt-Warn-Dot. Hooks: usePlans, usePlanShifts,
+   usePlanConflicts, useAssignShift. Utility: planGridUtils.buildGridData.
 7. **DoctorList** auf Karten umstellen.
 8. **Restliche Listen** in neuen Frame setzen, Badges vereinheitlichen.
 9. **⌘K Command Palette.**
