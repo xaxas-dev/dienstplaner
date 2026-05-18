@@ -313,6 +313,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plans/{plan_id}/conflicts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Plan Conflicts */
+        get: operations["get_plan_conflicts_api_plans__plan_id__conflicts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plans/{plan_id}/versions": {
         parameters: {
             query?: never;
@@ -537,6 +554,11 @@ export interface components {
             /** Rotations Skipped */
             rotations_skipped: number;
         };
+        /**
+         * ConflictType
+         * @enum {string}
+         */
+        ConflictType: "not_available" | "double_booked";
         /** DepartmentCreate */
         DepartmentCreate: {
             /** Name */
@@ -974,6 +996,18 @@ export interface components {
             /** Notes */
             notes?: string | null;
         };
+        /** OpenShift */
+        OpenShift: {
+            /** Shift Id */
+            shift_id: number;
+            /**
+             * Shift Date
+             * Format: date
+             */
+            shift_date: string;
+            /** Shift Type Short Name */
+            shift_type_short_name: string;
+        };
         /**
          * OverrideScope
          * @enum {string}
@@ -995,6 +1029,19 @@ export interface components {
             valid_to: string;
             /** Notes */
             notes?: string | null;
+        };
+        /** PlanConflicts */
+        PlanConflicts: {
+            /** Plan Id */
+            plan_id: number;
+            /** Conflicts */
+            conflicts: components["schemas"]["ShiftConflict"][];
+            /** Conflict Count */
+            conflict_count: number;
+            /** Open Shifts */
+            open_shifts: components["schemas"]["OpenShift"][];
+            /** Open Shift Count */
+            open_shift_count: number;
         };
         /** PlanCreate */
         PlanCreate: {
@@ -1363,6 +1410,25 @@ export interface components {
             /** Reason */
             reason?: string | null;
         };
+        /** ShiftConflict */
+        ShiftConflict: {
+            /** Shift Id */
+            shift_id: number;
+            conflict_type: components["schemas"]["ConflictType"];
+            /** Message */
+            message: string;
+            /** Doctor Id */
+            doctor_id: number;
+            /** Doctor Name */
+            doctor_name: string;
+            /**
+             * Shift Date
+             * Format: date
+             */
+            shift_date: string;
+            /** Shift Type Short Name */
+            shift_type_short_name: string;
+        };
         /** ShiftResponse */
         ShiftResponse: {
             /** Plan Id */
@@ -1538,6 +1604,11 @@ export interface components {
             updated_at: string;
             shift_type?: components["schemas"]["ShiftTypeResponse"] | null;
             doctor?: components["schemas"]["DoctorResponse"] | null;
+            /**
+             * Conflicts
+             * @default []
+             */
+            conflicts: components["schemas"]["ShiftConflict"][];
         };
         /** ValidationError */
         ValidationError: {
@@ -2730,6 +2801,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CloneResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_plan_conflicts_api_plans__plan_id__conflicts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanConflicts"];
                 };
             };
             /** @description Validation Error */

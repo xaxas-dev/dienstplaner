@@ -462,6 +462,8 @@ ausschließen:
 
 Die Service-Funktion `get_ina_availability(db, doctor_id, target_date)` liefert
 `INAAvailability(available, reasons)` mit deutschen Reason-Strings für die UI.
+Die Konflikt-Engine (M2-005) nutzt diese Funktion als Read-Consumer, um
+`NOT_AVAILABLE`-Konflikte in `GET /api/plans/{plan_id}/conflicts` zu erkennen.
 
 ### CK-Sonderfall
 
