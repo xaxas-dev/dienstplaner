@@ -38,4 +38,6 @@ def update_shift(db: Session, shift_id: int, update: ShiftUpdate) -> Shift:
     if shift is None:
         raise ShiftNotFoundError(shift_id)
 
+    db.commit()
+    db.refresh(shift)
     return shift
