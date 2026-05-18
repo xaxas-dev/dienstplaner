@@ -206,5 +206,6 @@ def test_delete_plan_cascade(client: TestClient) -> None:
     assert r_del.status_code == 204
 
     assert client.get(f"/api/plans/{plan_id}").status_code == 404
-    assert client.get(f"/api/plans/{plan_id}/shifts").json() == []
+    # Seit M2-005: Shifts-Endpunkt prüft Plan-Existenz → 404 (vorher: 200 mit [])
+    assert client.get(f"/api/plans/{plan_id}/shifts").status_code == 404
     assert client.get(f"/api/plans/{plan_id}/versions").json() == []

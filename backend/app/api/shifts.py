@@ -14,4 +14,7 @@ def patch_shift(
     update: ShiftUpdate,
     db: Session = Depends(get_db),
 ) -> ShiftWithDetails:
+    # conflicts bleibt leer (Default). Bewusste Entkopplung (ADR M2-005):
+    # Ein Einzel-PATCH müsste sonst Doppelbuchungs-Logik über andere Shifts
+    # mitziehen. Das Frontend refetcht GET /conflicts nach jeder Zuweisung.
     return shift_service.update_shift(db, shift_id, update)
