@@ -365,6 +365,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/shifts/{shift_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Shift */
+        patch: operations["patch_shift_api_shifts__shift_id__patch"];
+        trace?: never;
+    };
     "/api/plans/{plan_id}/rotations": {
         parameters: {
             query?: never;
@@ -1475,6 +1492,15 @@ export interface components {
             display_order?: number | null;
             /** Active */
             active?: boolean | null;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** ShiftUpdate */
+        ShiftUpdate: {
+            /** Doctor Id */
+            doctor_id?: number | null;
+            /** Is Pinned */
+            is_pinned?: boolean | null;
             /** Notes */
             notes?: string | null;
         };
@@ -2833,6 +2859,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ShiftWithDetails"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_shift_api_shifts__shift_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shift_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftWithDetails"];
                 };
             };
             /** @description Validation Error */

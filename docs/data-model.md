@@ -378,6 +378,12 @@ zum Zeitpunkt der Schicht. Dieses Hybrid-Modell hat zwei Vorteile:
 
 Die Bereichszuordnung wird im Service-Layer und später im Solver berechnet.
 
+Eine Schicht-Zuweisung (doctor_id, is_pinned, notes) kann manuell per
+`PATCH /api/shifts/{id}` geändert werden (implementiert in M2-004).
+Semantische Validierung (INA-Verfügbarkeit, Qualifikation, Doppelbuchung)
+erfolgt **nicht** im Schreib-Pfad – diese Konflikte werden read-only durch
+die Konflikt-Engine (M2-005) zurückgegeben und im Frontend markiert.
+
 ### Plan-Status und Editierbarkeit
 
 `PlanStatus` kennt drei Zustände: `DRAFT`, `RELEASED`, `ARCHIVED`.
