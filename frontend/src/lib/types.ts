@@ -60,3 +60,13 @@ export interface INAAvailability {
   available: boolean
   reasons: string[]
 }
+
+export type Plan = components['schemas']['PlanResponse']
+export type PlanCreate = components['schemas']['PlanCreate']
+export type PlanWithRelations = components['schemas']['PlanWithRelations']
+export type PlanStatus = components['schemas']['PlanStatus']
+export type ShiftWithDetails = components['schemas']['ShiftWithDetails']
+export type ShiftUpdate = components['schemas']['ShiftUpdate']
+export type PlanConflicts = components['schemas']['PlanConflicts']
+export type ShiftConflict = components['schemas']['ShiftConflict']
+export type ConflictType = components['schemas']['ConflictType']
