@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -13,6 +13,7 @@ from app.schemas.plan import (
     PlanUpdate,
     PlanWithRelations,
 )
+from app.schemas.solve import SolveResult
 from app.services import conflict_service, plan_service
 from app.services.exceptions import PlanNotFoundError
 
@@ -71,3 +72,15 @@ def clone_plan(plan_id: int, body: PlanClone, db: Session = Depends(get_db)):
 @router.get("/{plan_id}/conflicts", response_model=PlanConflicts)
 def get_plan_conflicts(plan_id: int, db: Session = Depends(get_db)) -> PlanConflicts:
     return conflict_service.detect_conflicts(db, plan_id)
+
+
+@router.post("/{plan_id}/solve", response_model=SolveResult)
+def solve_plan(plan_id: int, db: Session = Depends(get_db)) -> SolveResult:
+    plan = plan_repo.get_plan(db, plan_id)
+    if plan is None:
+        raise PlanNotFoundError(plan_id)
+    try:
+        from app.solver import solver_service  # Lazy: JVM startet erst beim ersten Aufruf
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Solver nicht verfügbar: {exc}")
+    return solver_service.solve_plan(db, plan_id)
