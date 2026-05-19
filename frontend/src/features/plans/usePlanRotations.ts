@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost, apiPatch, apiDelete } from '@/lib/api'
 import type {
   RotationAssignment,
@@ -11,6 +11,12 @@ import { shiftQueryKeys } from './usePlanShifts'
 
 export const rotationQueryKeys = {
   byPlan: (planId: number) => ['rotations', 'plan', planId] as const,
+}
+
+function invalidateRotationRelated(qc: QueryClient, planId: number) {
+  void qc.invalidateQueries({ queryKey: rotationQueryKeys.byPlan(planId) })
+  void qc.invalidateQueries({ queryKey: conflictQueryKeys.byPlan(planId) })
+  void qc.invalidateQueries({ queryKey: shiftQueryKeys.byPlan(planId) })
 }
 
 export function usePlanRotations(planId: number) {
@@ -26,9 +32,7 @@ export function useCreateRotation(planId: number) {
     mutationFn: (data: RotationAssignmentCreate) =>
       apiPost<RotationAssignment>(`/api/plans/${planId}/rotations`, data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: rotationQueryKeys.byPlan(planId) })
-      void qc.invalidateQueries({ queryKey: conflictQueryKeys.byPlan(planId) })
-      void qc.invalidateQueries({ queryKey: shiftQueryKeys.byPlan(planId) })
+      invalidateRotationRelated(qc, planId)
     },
   })
 }
@@ -39,9 +43,7 @@ export function useUpdateRotation(planId: number) {
     mutationFn: ({ rotationId, data }: { rotationId: number; data: RotationAssignmentUpdate }) =>
       apiPatch<RotationAssignment>(`/api/rotations/${rotationId}`, data),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: rotationQueryKeys.byPlan(planId) })
-      void qc.invalidateQueries({ queryKey: conflictQueryKeys.byPlan(planId) })
-      void qc.invalidateQueries({ queryKey: shiftQueryKeys.byPlan(planId) })
+      invalidateRotationRelated(qc, planId)
     },
   })
 }
@@ -51,9 +53,7 @@ export function useDeleteRotation(planId: number) {
   return useMutation({
     mutationFn: (rotationId: number) => apiDelete(`/api/rotations/${rotationId}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: rotationQueryKeys.byPlan(planId) })
-      void qc.invalidateQueries({ queryKey: conflictQueryKeys.byPlan(planId) })
-      void qc.invalidateQueries({ queryKey: shiftQueryKeys.byPlan(planId) })
+      invalidateRotationRelated(qc, planId)
     },
   })
 }
