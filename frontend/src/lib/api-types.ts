@@ -330,6 +330,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plans/{plan_id}/solve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Solve Plan */
+        post: operations["solve_plan_api_plans__plan_id__solve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plans/{plan_id}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply Plan */
+        post: operations["apply_plan_api_plans__plan_id__apply_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plans/{plan_id}/versions": {
         parameters: {
             query?: never;
@@ -545,6 +579,20 @@ export interface components {
         AppSettingUpdate: {
             /** Value */
             value: string;
+        };
+        /** ApplyRequest */
+        ApplyRequest: {
+            /** Proposed Assignments */
+            proposed_assignments: components["schemas"]["ProposedAssignment"][];
+        };
+        /** ApplyResult */
+        ApplyResult: {
+            /** Plan Id */
+            plan_id: number;
+            /** Applied */
+            applied: number[];
+            /** Skipped Pinned */
+            skipped_pinned: number[];
         };
         /** CloneResult */
         CloneResult: {
@@ -1178,6 +1226,13 @@ export interface components {
              */
             rotation_assignments: components["schemas"]["RotationAssignmentResponse"][];
         };
+        /** ProposedAssignment */
+        ProposedAssignment: {
+            /** Shift Id */
+            shift_id: number;
+            /** Doctor Id */
+            doctor_id: number | null;
+        };
         /** QualificationCreate */
         QualificationCreate: {
             /** Name */
@@ -1609,6 +1664,19 @@ export interface components {
              * @default []
              */
             conflicts: components["schemas"]["ShiftConflict"][];
+        };
+        /** SolveResult */
+        SolveResult: {
+            /** Plan Id */
+            plan_id: number;
+            /** Proposed Assignments */
+            proposed_assignments: components["schemas"]["ProposedAssignment"][];
+            /** Hard Score */
+            hard_score: number;
+            /** Soft Score */
+            soft_score: number;
+            /** Feasible */
+            feasible: boolean;
         };
         /** ValidationError */
         ValidationError: {
@@ -2832,6 +2900,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlanConflicts"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    solve_plan_api_plans__plan_id__solve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SolveResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_plan_api_plans__plan_id__apply_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplyResult"];
                 };
             };
             /** @description Validation Error */

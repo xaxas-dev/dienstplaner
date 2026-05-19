@@ -13,7 +13,7 @@ from app.schemas.plan import (
     PlanUpdate,
     PlanWithRelations,
 )
-from app.schemas.solve import SolveResult
+from app.schemas.solve import ApplyRequest, ApplyResult, SolveResult
 from app.services import conflict_service, plan_service
 from app.services.exceptions import PlanNotFoundError
 
@@ -84,3 +84,10 @@ def solve_plan(plan_id: int, db: Session = Depends(get_db)) -> SolveResult:
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"Solver nicht verfügbar: {exc}")
     return solver_service.solve_plan(db, plan_id)
+
+
+@router.post("/{plan_id}/apply", response_model=ApplyResult)
+def apply_plan(plan_id: int, body: ApplyRequest, db: Session = Depends(get_db)) -> ApplyResult:
+    from app.solver import solver_service  # kein JVM-Import, aber konsistenter Importpfad
+
+    return solver_service.apply_solution(db, plan_id, body.proposed_assignments)
