@@ -129,9 +129,9 @@ export function RotationGrid({
                     <button
                       onClick={() => onCellClick(dept.id, dayKey, null)}
                       className={[
-                        'aspect-square w-full rounded-cell border border-line bg-paper/50 transition',
+                        'aspect-square w-full rounded-cell border border-line transition',
                         'hover:bg-card hover:border-line-2',
-                        isWe ? 'bg-weekend/40' : '',
+                        isWe ? 'bg-weekend/40' : 'bg-paper/50',
                         isTod ? 'ring-2 ring-warn-line' : '',
                       ].join(' ')}
                     />
