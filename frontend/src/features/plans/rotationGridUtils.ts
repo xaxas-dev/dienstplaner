@@ -4,7 +4,7 @@ import type { Department, RotationAssignmentWithDetails } from '@/lib/types'
 export interface RotationGridCell {
   assignment: RotationAssignmentWithDetails
   isEinarbeitung: boolean
-  overlap: boolean
+  overlap: boolean // mehrere Assignments überlappen sich für diese Bereich/Tag-Kombination
 }
 
 export interface RotationGridRow {
