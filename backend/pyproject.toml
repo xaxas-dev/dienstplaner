@@ -8,6 +8,7 @@ dependencies = [
     "sqlalchemy>=2.0.0",
     "alembic>=1.13.0",
     "pydantic-settings>=2.0.0",
+    "timefold>=1.24.0b0",
 ]
 
 [dependency-groups]
