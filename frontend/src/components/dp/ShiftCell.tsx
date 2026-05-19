@@ -23,8 +23,8 @@ export function ShiftCell({
       <button
         onClick={onClick}
         className={cn(
-          'aspect-square w-full rounded-cell border border-dashed border-line/60 transition',
-          'hover:border-ink-3/40 hover:bg-card',
+          'aspect-square w-full rounded-cell border border-line bg-paper/50 transition',
+          'hover:bg-card hover:border-line-2',
           weekend && 'bg-weekend/40',
           today && 'ring-2 ring-warn-line',
         )}
