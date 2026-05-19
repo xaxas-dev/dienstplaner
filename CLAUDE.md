@@ -139,6 +139,23 @@ Details: docs/data-model.md, docs/constraints.md
 - Aufgaben werden in Sub-Schritten mit Stop-Gates abgearbeitet:
   nach jedem Sub-Schritt Commit und auf Review warten
 
+### Milestone-Abschluss-Checkliste (letzter Sub-Schritt / F-Schritt)
+Am Ende jedes Milestones **muss** Claude Code folgende Dateien aktualisieren,
+bevor der Abschluss-Commit erstellt wird:
+1. `tasks/done/M{X}-{YYY}-*.md` — alle `[ ]` → `[x]`; Abschnitt „Abschluss"
+   anhängen: Datum, Branch-Name, Commit-Liste, Testergebnis, ggf. offene
+   Voraussetzungen (z. B. JVM, externe Deps).
+2. `docs/open-questions.md` — während des Milestones beantwortete Fragen auf
+   Status „Entschieden" setzen (inkl. Datum); neue offene Fragen eintragen.
+3. `docs/decisions.md` — neue ADRs für alle bindenden Entscheidungen des
+   Milestones (Architektur, Technologiewahl, bewusste Scope-Grenzen).
+4. `docs/constraints.md` — implementierte Constraints dokumentieren /
+   Platzhalter ausbauen.
+5. `CLAUDE.md` — neue Konventionen oder verifizierten API-Wissen eintragen,
+   das für Folge-Milestones relevant ist.
+Diese Checkliste gilt auch wenn Sub-Schritt F im Briefing nicht explizit alle
+Punkte nennt.
+
 ### API
 - REST/JSON, snake_case
 - GET /api/plans/{id}/shifts liefert 404 für unbekannte plan_id (seit M2-005,

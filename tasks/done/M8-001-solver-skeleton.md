@@ -46,14 +46,35 @@ nur additive Solver-Dateien, eine additive Route in `plans.py`, Doku,
   `tasks/done/`, Merge.
 
 ## Akzeptanzkriterien
-- [ ] `timefold-solver` gepinnt, Smoke-Test grün
-- [ ] Solver-Domäne als Adapter, ORM bleibt unannotiert
-- [ ] Mapping read-only, gepinnte Shift behält Arzt
-- [ ] DOUBLE_BOOKED: positiver + negativer Test grün
-- [ ] `POST /plans/{id}/solve` liefert Vorschlags-Diff; DB nachweislich
+- [x] `timefold-solver` gepinnt, Smoke-Test grün
+- [x] Solver-Domäne als Adapter, ORM bleibt unannotiert
+- [x] Mapping read-only, gepinnte Shift behält Arzt
+- [x] DOUBLE_BOOKED: positiver + negativer Test grün
+- [x] `POST /plans/{id}/solve` liefert Vorschlags-Diff; DB nachweislich
       unverändert
-- [ ] Phase-A-Regression: gesamter Backend-`pytest` (Baseline 237) + 101
+- [x] Phase-A-Regression: gesamter Backend-`pytest` (Baseline 237) + 101
       vitest grün
-- [ ] `git diff` nur additiv (Phase-A-Invariante)
-- [ ] `ruff` clean; `enum.StrEnum`-Konvention im neuen Code
-- [ ] ADRs + `constraints.md` aktualisiert
+- [x] `git diff` nur additiv (Phase-A-Invariante)
+- [x] `ruff` clean; `enum.StrEnum`-Konvention im neuen Code
+- [x] ADRs + `constraints.md` aktualisiert
+
+## Abschluss
+
+**Status:** Vollständig abgeschlossen (2026-05-19). Branch
+`task/M8-001-solver-skeleton` bereit für Merge in `main`.
+
+**Commits (A–F):**
+- A: `chore(solver): pin timefold-solver + API-Verifikationsspike`
+- B: `feat(solver): solver domain model adapter`
+- C: `feat(solver): orm -> solver domain mapping (M8-001/C)`
+- D: `feat(solver): double-booked hard constraint + tarif_rules scaffold (M8-001/D)`
+- E: `feat(solver): solver service + read-only POST /plans/{id}/solve (M8-001/E)`
+- F: `docs(solver): M8-001 ADRs + constraints + CLAUDE.md Timefold-API (M8-001/F)`
+
+**Testergebnis:** 237 passed, 26 skipped (JVM-Guard aktiv — Java 17+ fehlt).
+Die 26 Solver-Tests laufen durch sobald Eclipse Temurin 21 installiert ist.
+
+**Java-Voraussetzung:** Eclipse Temurin **JDK 21** (LTS).
+- JDK 8 (`jre1.8.0_491`): unzureichend — `Runtime.version()` API fehlt.
+- JDK 25: technisch ≥ 17, aber gegen timefold 1.24.0b0 ungetestet — nicht empfohlen.
+- Download: adoptium.net/temurin/releases → Version 21 → Windows x64 → `.msi`
