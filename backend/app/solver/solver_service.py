@@ -1,6 +1,9 @@
-"""Solver-Service: solve_plan(db, plan_id) → SolveResult.
+"""Solver-Service: solve_plan und apply_solution.
 
-Kein FastAPI-Import. Kein DB-Write — gibt nur einen Vorschlags-Diff zurück.
+Kein FastAPI-Import.
+
+solve_plan: Kein DB-Write — gibt nur einen Vorschlags-Diff zurück.
+apply_solution: Schreibt Vorschläge in die DB — kein timefold/JVM nötig.
 
 Alle timefold-Importe sind lazy (innerhalb von solve_plan), damit dieses Modul
 importierbar ist ohne Java 17+ JVM. Die Phase-A-Invariante bleibt gewahrt:
@@ -15,7 +18,11 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Session
 
-from app.schemas.solve import ProposedAssignment, SolveResult
+from app.models.doctor import Doctor
+from app.repositories import plan_repository as plan_repo
+from app.repositories import shift_repository as shift_repo
+from app.schemas.solve import ApplyResult, ProposedAssignment, SolveResult
+from app.services.exceptions import PlanNotFoundError, ShiftValidationError
 
 if TYPE_CHECKING:
     from app.solver.domain import SolverShift
@@ -65,6 +72,58 @@ def solve_plan(db: Session, plan_id: int) -> SolveResult:
         soft_score=solution.score.soft_score,
         feasible=solution.score.hard_score >= 0,
     )
+
+
+def apply_solution(
+    db: Session,
+    plan_id: int,
+    proposed: list[ProposedAssignment],
+) -> ApplyResult:
+    """Schreibt Solver-Vorschläge in den Plan. Kein timefold/JVM-Import nötig.
+
+    Weiche Validierung (Phase A): nur Datenkonsistenz wird hart geprüft.
+    Gepinnte Shifts werden übersprungen (nicht überschrieben).
+    is_pinned wird nicht verändert — Solver-Apply ist nicht manuell.
+
+    Raises:
+        PlanNotFoundError: plan_id existiert nicht.
+        ShiftValidationError: Shift gehört nicht zu plan_id, oder
+            doctor_id verweist auf nicht-existierenden/inaktiven Doctor.
+    """
+    if plan_repo.get_plan(db, plan_id) is None:
+        raise PlanNotFoundError(plan_id)
+
+    applied: list[int] = []
+    skipped_pinned: list[int] = []
+
+    for assignment in proposed:
+        shift = shift_repo.get_shift(db, assignment.shift_id)
+
+        if shift is None or shift.plan_id != plan_id:
+            raise ShiftValidationError(
+                f"Schicht mit ID {assignment.shift_id} gehört nicht zu Plan {plan_id}"
+            )
+
+        if shift.is_pinned:
+            skipped_pinned.append(shift.id)
+            continue
+
+        if assignment.doctor_id is not None:
+            doctor = db.query(Doctor).filter(Doctor.id == assignment.doctor_id).first()
+            if doctor is None:
+                raise ShiftValidationError(
+                    f"Arzt mit ID {assignment.doctor_id} existiert nicht"
+                )
+            if not doctor.active:
+                raise ShiftValidationError(
+                    f"Arzt {doctor.name} ist inaktiv und kann nicht zugewiesen werden"
+                )
+
+        shift_repo.update_shift(db, shift.id, {"doctor_id": assignment.doctor_id})
+        applied.append(shift.id)
+
+    db.commit()
+    return ApplyResult(plan_id=plan_id, applied=applied, skipped_pinned=skipped_pinned)
 
 
 def _compute_diff(

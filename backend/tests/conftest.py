@@ -28,6 +28,11 @@ def db(engine):
     with Session(engine) as session:
         yield session
         session.rollback()
+    # Isolierung: Alle committeten Daten nach jedem Test löschen.
+    # Nötig für Services, die db.commit() aufrufen (z. B. apply_solution).
+    with engine.begin() as conn:
+        for table in reversed(Base.metadata.sorted_tables):
+            conn.execute(table.delete())
 
 
 @pytest.fixture
