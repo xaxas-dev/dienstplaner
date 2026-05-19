@@ -206,11 +206,21 @@ Datei: `frontend/src/features/plans/PlanGrid.tsx`. Reines CSS-Grid, keine Tabell
 grid-template-columns: 210px repeat(N_DAYS, 44px) 1fr
 ```
 
-- Header-Zeile: Wochentag (10 px) + Tageszahl (16 px Newsreader). Heute = `bg-warn-bg text-warn-ink`. Wochenende = `bg-[#F3ECD8]` (sandiger).
+**Surface-Container (M2-006):** Das Grid lebt in einem
+`rounded-2xl border border-line bg-card overflow-hidden`-Wrapper in `PlanPage.tsx`
+(analog §10-Tabellen-Konvention). Sticky-Header- und Arzt-Label-Zellen sind `bg-card`
+(nicht `bg-paper`) — sonst entsteht eine papierfarbene Naht beim Horizontal-Scroll.
+Künftige Schritte (4-Wochen-Ansicht, Virtualisierung) müssen diesen Surface-Container
+beibehalten.
+
+**Leere Zellen:** `border border-line bg-paper/50` (solide Raster-Linie, leichte Eintiefung
+gegen die Card-Fläche). Kein `border-dashed`. Hover: `bg-card hover:border-line-2`.
+
+- Header-Zeile: Wochentag (10 px) + Tageszahl (16 px Newsreader). Heute = `bg-warn-bg text-warn-ink`. Wochenende = `bg-weekend` (Token, nicht Hex).
 - Body-Zeilen: 42 px Höhe.
   - Linke Spalte: Avatar (26 px) + Name (13 px / 500) + role-line (10 px `text-ink3`).
   - Tageszellen: 3 px Padding, drinnen `<ShiftCell />`.
-  - Selektierte Zeile (Person fokussiert): `bg-[#FAF0DC]`.
+  - Selektierte Zeile (Person fokussiert): `bg-today`.
 - Footer: Legende mit allen Schichttypen.
 
 **View-Switching:**

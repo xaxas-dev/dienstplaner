@@ -150,6 +150,12 @@ Details: docs/data-model.md, docs/constraints.md
   können keinen key tragen, was React-Warnings erzeugt.
 - Warn-Dot in ShiftCell: `e.stopPropagation()` im onClick des Dots trennt Dot-Klick
   (→ ContextPanel) von Zell-Klick (→ DoctorAssignPopover).
+- Grid-Surface-Konvention (M2-006): PlanGrid lebt in einem
+  `rounded-2xl border border-line bg-card overflow-hidden`-Wrapper in PlanPage.tsx.
+  Sticky-Spalten müssen `bg-card` sein (nicht `bg-paper`) — sonst papierfarbene Naht
+  beim Horizontal-Scroll. `bg-card` = Weiß via shadcn-Variable `hsl(var(--card))`,
+  nicht der dp-Surface-Wert #FFFCF5 — das ist gewollt, keinen neuen Token einführen.
+  Leere Zellen: solide `border-line` + `bg-paper/50` (kein `border-dashed`).
 
 ## Was Claude Code NICHT tun soll
 - Keine neuen Bibliotheken ohne explizite Rückfrage einführen
