@@ -38,7 +38,7 @@ export function PlanGrid({
               key={format(day, 'yyyy-MM-dd')}
               className={[
                 'h-10 flex flex-col items-center justify-center border-b border-line',
-                isWe ? 'bg-[#F3ECD8]' : '',
+                isWe ? 'bg-weekend' : '',
                 isTod ? 'bg-warn-bg text-warn-ink' : '',
               ].join(' ')}
             >
@@ -79,7 +79,7 @@ export function PlanGrid({
                   key={`cell-${doctor.id}-${dayKey}`}
                   className={[
                     'h-[42px] flex items-center justify-center p-0.5 border-b border-line/30',
-                    isWeekend(day) ? 'bg-[#F3ECD8]/40' : '',
+                    isWeekend(day) ? 'bg-weekend/40' : '',
                   ].join(' ')}
                 >
                   <ShiftCell
