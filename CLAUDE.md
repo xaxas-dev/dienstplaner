@@ -87,6 +87,22 @@ Details: docs/architecture.md
   3. Soft (Optimierungsziele): Fairness, Wünsche, Schichtfolgen
 - **Override-Ebenen:** A (global/Plan), B (Arzt+Regel+Zeitraum), C (Einzelverstoß)
 - **Tarifregeln:** Zentral in solver/tarif_rules.py, nie verstreut
+- **Solver-Vorschlags-Diff (M8-001):** `POST /api/plans/{id}/solve` liefert
+  `SolveResult` (proposed_assignments, hard_score, soft_score, feasible) —
+  **KEIN DB-Write**. Gepinnte Shifts erscheinen nie im Diff. Das Anwenden ist
+  ein separater Folge-Schritt. Die Phase-A-App startet ohne JVM (lazy imports).
+- **Timefold-Python-API (empirisch verifiziert, timefold==1.24.0b0):**
+  - Dekoratoren: `@planning_entity`, `@planning_solution`, `@constraint_provider`
+  - Felder: `Annotated[Type, PlanningVariable(allows_unassigned=True)]`,
+    `Annotated[bool, PlanningPin]`, `Annotated[int, PlanningId]`
+  - Solution-Collections: `Annotated[list[T], ProblemFactCollectionProperty, ValueRangeProvider]`,
+    `Annotated[list[E], PlanningEntityCollectionProperty]`
+  - Score: `Annotated[HardSoftScore, PlanningScore]`
+  - Constraint-Streams: `cf.for_each_unique_pair(..., Joiners.equal(...)).filter(...).penalize(...).as_constraint(name)`
+  - Config: `SolverConfig(solution_class=..., entity_class_list=[...], score_director_factory_config=ScoreDirectorFactoryConfig(constraint_provider_function=fn), termination_config=TerminationConfig(spent_limit=Duration(seconds=N)))`
+  - Solve: `SolverFactory.create(config).build_solver().solve(problem)`
+  - JVM-Prerequisite: Java 17+ (empfohlen: Eclipse Temurin 21)
+  - NICHT aus dem Gedächtnis ergänzen — immer gegen Spike/Doku verifizieren
 
 Details: docs/data-model.md, docs/constraints.md
 
