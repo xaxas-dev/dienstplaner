@@ -78,19 +78,21 @@ export function PlanPage() {
         <KpiBar tiles={kpiTiles} />
       </div>
       <div className="flex flex-1 overflow-hidden gap-4 px-6 pb-6">
-        {plan && (
-          <PlanGrid
-            shifts={shifts}
-            doctors={doctors}
-            validFrom={plan.valid_from}
-            validTo={plan.valid_to}
-            onCellClick={handleCellClick}
-            onConflictDotClick={(shift) => {
-              setActiveCell(null)
-              setContextShift(shift)
-            }}
-          />
-        )}
+        <div className="flex flex-1 min-w-0 overflow-hidden rounded-2xl border border-line bg-card">
+          {plan && (
+            <PlanGrid
+              shifts={shifts}
+              doctors={doctors}
+              validFrom={plan.valid_from}
+              validTo={plan.valid_to}
+              onCellClick={handleCellClick}
+              onConflictDotClick={(shift) => {
+                setActiveCell(null)
+                setContextShift(shift)
+              }}
+            />
+          )}
+        </div>
         {contextShift && (
           <ContextPanel
             shift={contextShift}
