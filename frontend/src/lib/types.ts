@@ -70,3 +70,8 @@ export type ShiftUpdate = components['schemas']['ShiftUpdate']
 export type PlanConflicts = components['schemas']['PlanConflicts']
 export type ShiftConflict = components['schemas']['ShiftConflict']
 export type ConflictType = components['schemas']['ConflictType']
+
+export type RotationAssignment = components['schemas']['RotationAssignmentResponse']
+export type RotationAssignmentWithDetails = components['schemas']['RotationAssignmentWithDetails']
+export type RotationAssignmentCreate = components['schemas']['RotationAssignmentCreate']
+export type RotationAssignmentUpdate = components['schemas']['RotationAssignmentUpdate']
