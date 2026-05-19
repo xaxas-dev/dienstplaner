@@ -89,8 +89,14 @@ Details: docs/architecture.md
 - **Tarifregeln:** Zentral in solver/tarif_rules.py, nie verstreut
 - **Solver-Vorschlags-Diff (M8-001):** `POST /api/plans/{id}/solve` liefert
   `SolveResult` (proposed_assignments, hard_score, soft_score, feasible) —
-  **KEIN DB-Write**. Gepinnte Shifts erscheinen nie im Diff. Das Anwenden ist
-  ein separater Folge-Schritt. Die Phase-A-App startet ohne JVM (lazy imports).
+  **KEIN DB-Write**. Gepinnte Shifts erscheinen nie im Diff. Die Phase-A-App
+  startet ohne JVM (lazy imports).
+- **Solver-Apply (M8-002):** `POST /api/plans/{id}/apply` nimmt
+  `{proposed_assignments: [{shift_id, doctor_id}]}` im Body und schreibt
+  `doctor_id` in die DB — **kein timefold/JVM nötig**. Gepinnte Shifts werden
+  übersprungen (`skipped_pinned`), nicht überschrieben. `is_pinned` wird nicht
+  gesetzt (Solver-Apply ≠ manuell). Konflikte nicht in der Response —
+  Client invalidiert `shifts`+`conflicts` und refetcht. Einzelne Transaktion.
 - **Timefold-Python-API (empirisch verifiziert, timefold==1.24.0b0):**
   - Dekoratoren: `@planning_entity`, `@planning_solution`, `@constraint_provider`
   - Felder: `Annotated[Type, PlanningVariable(allows_unassigned=True)]`,

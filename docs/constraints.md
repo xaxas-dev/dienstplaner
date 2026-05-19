@@ -42,6 +42,17 @@ cf.for_each_unique_pair(SolverShift,
 Offene Shifts (doctor=None) werden durch den Filter ausgeschlossen.
 Penalty: −1 Hard pro verletztem Paar.
 
+## Apply-Endpoint (M8-002)
+
+`POST /api/plans/{id}/apply` schreibt Solver-Vorschläge in die DB — prüft
+**keine** semantischen Constraints. Weiche Validierung wie Phase A:
+
+- Datenkonsistenz hart: Plan existiert, Shift gehört zum Plan, Doctor aktiv.
+- Gepinnte Shifts übersprungen (kein Fehler, in `skipped_pinned`).
+- `is_pinned` wird nicht verändert.
+- Konflikte werden **nicht** im Apply berechnet; Client refetcht
+  `GET /plans/{id}/shifts` (Decoupling per ADR-038/ADR-051).
+
 ### Folge-Milestones (noch nicht implementiert)
 
 | Constraint-ID | Klasse | Beschreibung |
