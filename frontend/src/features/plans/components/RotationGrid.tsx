@@ -64,12 +64,7 @@ function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, is
             cell.overlap ? 'ring-[1.5px] ring-warn' : '',
           ].join(' ')}
         >
-          <div className="flex items-center gap-1 w-full min-w-0 px-1">
-            <Avatar name={doctor.name} id={cell.assignment.doctor_id} size={18} />
-            <span className="text-[11px] font-medium leading-none truncate">
-              {(doctor.short_name ?? doctor.name).slice(0, 8)}
-            </span>
-          </div>
+          <Avatar name={doctor.name} id={cell.assignment.doctor_id} size={22} />
           <div className="flex items-center gap-0.5 mt-0.5">
             {cell.isEinarbeitung && (
               <span className="text-[8px] font-bold bg-accent text-paper px-0.5 rounded leading-tight">

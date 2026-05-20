@@ -46,9 +46,8 @@ interface DoctorDragOverlayTokenProps {
 
 export function DoctorDragOverlayToken({ name, id }: DoctorDragOverlayTokenProps) {
   return (
-    <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-card border border-line shadow-lg cursor-grabbing">
-      <Avatar name={name} id={id} size={24} />
-      <span className="text-sm text-ink truncate">{name}</span>
+    <div className="p-1.5 rounded-full bg-card shadow-lg cursor-grabbing">
+      <Avatar name={name} id={id} size={28} />
     </div>
   )
 }
