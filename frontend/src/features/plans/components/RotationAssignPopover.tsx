@@ -11,7 +11,6 @@ interface Props {
   departmentId: number
   departmentName: string
   day: string
-  validFrom: string
   validTo: string
   existingAssignment: RotationAssignmentWithDetails | null
   blocksIna: boolean
@@ -23,7 +22,6 @@ export function RotationAssignPopover({
   departmentId,
   departmentName,
   day,
-  validFrom: _validFrom,
   validTo,
   existingAssignment,
   blocksIna,

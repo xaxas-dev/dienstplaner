@@ -170,7 +170,6 @@ export function PlanPage() {
             departmentId={activeRotationCell.departmentId}
             departmentName={dept.name}
             day={activeRotationCell.day}
-            validFrom={plan!.valid_from}
             validTo={plan!.valid_to}
             existingAssignment={existing}
             blocksIna={dept.blocks_ina_weekdays || dept.blocks_ina_weekends}
