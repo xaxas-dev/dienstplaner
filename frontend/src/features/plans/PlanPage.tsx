@@ -5,11 +5,13 @@ import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import {
   DndContext,
+  DragOverlay,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
 } from '@dnd-kit/core'
 import { CommandBar } from '@/components/dp/CommandBar'
 import { KpiBar } from '@/components/dp/KpiBar'
@@ -22,7 +24,7 @@ import { useDepartments } from '@/features/departments/useDepartments'
 import { PlanGrid } from './components/PlanGrid'
 import { ContextPanel } from './components/ContextPanel'
 import { DoctorAssignPopover } from './components/DoctorAssignPopover'
-import { DoctorDragSource, parseDoctorDragId } from './components/DoctorDragSource'
+import { DoctorDragSource, DoctorDragOverlayToken, parseDoctorDragId } from './components/DoctorDragSource'
 import { RotationGrid, parseRotationDropId } from './components/RotationGrid'
 import { RotationAssignPopover } from './components/RotationAssignPopover'
 import type { ShiftWithDetails } from '@/lib/types'
@@ -47,6 +49,7 @@ export function PlanPage() {
     assignmentId: number | null
   } | null>(null)
   const [preselectedDragDoctorId, setPreselectedDragDoctorId] = useState<number | null>(null)
+  const [activeDragDoctor, setActiveDragDoctor] = useState<{ id: number; name: string } | null>(null)
 
   const { data: plan } = usePlan(id)
   const { data: shifts = [], isError: shiftsError } = usePlanShifts(id)
@@ -102,7 +105,15 @@ export function PlanPage() {
     useSensor(KeyboardSensor),
   )
 
+  function handleDragStart(event: DragStartEvent) {
+    const doctorId = parseDoctorDragId(String(event.active.id))
+    if (doctorId === null) return
+    const name = (event.active.data.current as { doctorName?: string } | undefined)?.doctorName ?? ''
+    setActiveDragDoctor({ id: doctorId, name })
+  }
+
   function handleDragEnd(event: DragEndEvent) {
+    setActiveDragDoctor(null)
     const { active, over } = event
     if (!over) return
     const doctorId = parseDoctorDragId(String(active.id))
@@ -113,10 +124,16 @@ export function PlanPage() {
     setActiveRotationCell({ departmentId: target.departmentId, day: target.day, assignmentId: null })
   }
 
+  function handleDragCancel() {
+    setActiveDragDoctor(null)
+  }
+
   return (
     <DndContext
       sensors={sensors}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
       accessibility={{
         announcements: {
           onDragStart({ active }) {
@@ -245,6 +262,11 @@ export function PlanPage() {
         ) : null
       })()}
     </div>
+      <DragOverlay>
+        {activeDragDoctor && (
+          <DoctorDragOverlayToken name={activeDragDoctor.name} id={activeDragDoctor.id} />
+        )}
+      </DragOverlay>
     </DndContext>
   )
 }

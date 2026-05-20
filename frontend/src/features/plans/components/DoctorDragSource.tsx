@@ -39,6 +39,20 @@ export function DoctorDragSource({ doctors }: DoctorDragSourceProps) {
   )
 }
 
+interface DoctorDragOverlayTokenProps {
+  name: string
+  id: number
+}
+
+export function DoctorDragOverlayToken({ name, id }: DoctorDragOverlayTokenProps) {
+  return (
+    <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-card border border-line shadow-lg cursor-grabbing">
+      <Avatar name={name} id={id} size={24} />
+      <span className="text-sm text-ink truncate">{name}</span>
+    </div>
+  )
+}
+
 interface DoctorTokenProps {
   doctor: Doctor
 }
