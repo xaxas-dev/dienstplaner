@@ -3,6 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
 import { CommandBar } from '@/components/dp/CommandBar'
 import { KpiBar } from '@/components/dp/KpiBar'
 import { usePlan } from './usePlans'
@@ -14,6 +22,7 @@ import { useDepartments } from '@/features/departments/useDepartments'
 import { PlanGrid } from './components/PlanGrid'
 import { ContextPanel } from './components/ContextPanel'
 import { DoctorAssignPopover } from './components/DoctorAssignPopover'
+import { DoctorDragSource } from './components/DoctorDragSource'
 import { RotationGrid } from './components/RotationGrid'
 import { RotationAssignPopover } from './components/RotationAssignPopover'
 import type { ShiftWithDetails } from '@/lib/types'
@@ -86,7 +95,17 @@ export function PlanPage() {
     setActiveCell({ shiftId, doctorId, day })
   }
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor),
+  )
+
+  function handleDragEnd(_event: DragEndEvent) {
+    // Drop-Bindung an useAssignShift folgt in Sub-Schritt B (M3-001).
+  }
+
   return (
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
     <div className="flex flex-col flex-1 overflow-hidden">
       <CommandBar
         title={planTitle}
@@ -112,6 +131,9 @@ export function PlanPage() {
         ))}
       </div>
       <div className="flex flex-1 overflow-hidden gap-4 px-6 pb-6">
+        {view === 'dienste' && (
+          <DoctorDragSource doctors={doctors} />
+        )}
         <div className="flex flex-1 min-w-0 overflow-hidden rounded-2xl border border-line bg-card">
           {view === 'dienste' && plan && (
             <PlanGrid
@@ -178,5 +200,6 @@ export function PlanPage() {
         ) : null
       })()}
     </div>
+    </DndContext>
   )
 }
