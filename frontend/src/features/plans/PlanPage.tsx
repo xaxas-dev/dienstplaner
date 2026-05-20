@@ -114,7 +114,39 @@ export function PlanPage() {
   }
 
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      onDragEnd={handleDragEnd}
+      accessibility={{
+        announcements: {
+          onDragStart({ active }) {
+            const name = (active.data.current as { doctorName?: string } | undefined)?.doctorName ?? 'Arzt'
+            return `${name} wird gezogen.`
+          },
+          onDragOver({ active, over }) {
+            if (!over) return
+            const name = (active.data.current as { doctorName?: string } | undefined)?.doctorName ?? 'Arzt'
+            const dept = (over.data.current as { departmentName?: string } | undefined)?.departmentName ?? 'Bereich'
+            return `${name} über ${dept}.`
+          },
+          onDragEnd({ active, over }) {
+            const name = (active.data.current as { doctorName?: string } | undefined)?.doctorName ?? 'Arzt'
+            if (over) {
+              const dept = (over.data.current as { departmentName?: string } | undefined)?.departmentName ?? 'Bereich'
+              return `${name} auf ${dept} abgelegt.`
+            }
+            return `${name}-Drag abgebrochen.`
+          },
+          onDragCancel({ active }) {
+            const name = (active.data.current as { doctorName?: string } | undefined)?.doctorName ?? 'Arzt'
+            return `${name}-Drag abgebrochen.`
+          },
+        },
+        screenReaderInstructions: {
+          draggable: 'Zum Ziehen: Leertaste oder Enter. Pfeiltasten navigieren. Leertaste oder Enter legt ab. Escape bricht ab.',
+        },
+      }}
+    >
     <div className="flex flex-col flex-1 overflow-hidden">
       <CommandBar
         title={planTitle}

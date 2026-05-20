@@ -25,6 +25,7 @@ const WEEKDAY_ABBR = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 
 interface RotationDropCellProps {
   departmentId: number
+  departmentName: string
   dayKey: string
   cell: {
     assignment: RotationAssignmentWithDetails
@@ -36,8 +37,11 @@ interface RotationDropCellProps {
   onCellClick: (departmentId: number, day: string, assignmentId: number | null) => void
 }
 
-function RotationDropCell({ departmentId, dayKey, cell, isWe, isTod, onCellClick }: RotationDropCellProps) {
-  const { setNodeRef, isOver } = useDroppable({ id: makeRotationDropId(departmentId, dayKey) })
+function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, isTod, onCellClick }: RotationDropCellProps) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: makeRotationDropId(departmentId, dayKey),
+    data: { departmentName, dayKey },
+  })
   const doctor = cell?.assignment.doctor ?? null
 
   return (
@@ -82,6 +86,7 @@ function RotationDropCell({ departmentId, dayKey, cell, isWe, isTod, onCellClick
       ) : (
         <button
           onClick={() => onCellClick(departmentId, dayKey, null)}
+          aria-label={`${departmentName}, ${dayKey}, leer – Zuweisung hinzufügen`}
           className={[
             'aspect-square w-full rounded-cell border border-line transition',
             'hover:bg-card hover:border-line-2',
@@ -171,6 +176,7 @@ export function RotationGrid({
                 <RotationDropCell
                   key={`cell-${dept.id}-${dayKey}`}
                   departmentId={dept.id}
+                  departmentName={dept.name}
                   dayKey={dayKey}
                   cell={cells[dayKey]}
                   isWe={isWeekend(day)}
