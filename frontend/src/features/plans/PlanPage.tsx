@@ -38,7 +38,7 @@ export function PlanPage() {
   const navigate = useNavigate()
   const id = Number(planId)
 
-  const [view, setView] = useState<'dienste' | 'bereiche'>('dienste')
+  const [view, setView] = useState<'bereiche' | 'dienste'>('bereiche')
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null)
   const [contextShift, setContextShift] = useState<ShiftWithDetails | null>(null)
   const [activeRotationCell, setActiveRotationCell] = useState<{
@@ -115,14 +115,14 @@ export function PlanPage() {
         <KpiBar tiles={kpiTiles} />
       </div>
       <div className="px-6 pb-2 flex gap-1">
-        {(['dienste', 'bereiche'] as const).map((v) => (
+        {(['bereiche', 'dienste'] as const).map((v) => (
           <button
             key={v}
             onClick={() => setView(v)}
             className={[
               'px-3 py-1 rounded-lg text-xs font-medium transition capitalize',
               view === v
-                ? 'bg-accent text-white'
+                ? 'border-b-2 border-accent text-ink'
                 : 'text-ink-3 hover:bg-paper',
             ].join(' ')}
           >
@@ -131,7 +131,7 @@ export function PlanPage() {
         ))}
       </div>
       <div className="flex flex-1 overflow-hidden gap-4 px-6 pb-6">
-        {view === 'dienste' && (
+        {view === 'bereiche' && (
           <DoctorDragSource doctors={doctors} />
         )}
         <div className="flex flex-1 min-w-0 overflow-hidden rounded-2xl border border-line bg-card">
