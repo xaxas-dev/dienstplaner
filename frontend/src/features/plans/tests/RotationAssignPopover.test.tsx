@@ -228,4 +228,27 @@ describe('RotationAssignPopover', () => {
       screen.queryByText(/Rotation in diesem Bereich sperrt INA-Dienste/),
     ).not.toBeInTheDocument()
   })
+
+  it('preselectedDoctorId aktiviert Speichern direkt ohne manuelle Auswahl', () => {
+    render(
+      <Wrapper>
+        <RotationAssignPopover {...defaultProps} preselectedDoctorId={1} />
+      </Wrapper>,
+    )
+    expect(screen.getByText('Speichern')).not.toBeDisabled()
+  })
+
+  it('preselectedDoctorId übermittelt vorausgewählten Arzt beim Speichern', async () => {
+    const user = userEvent.setup()
+    render(
+      <Wrapper>
+        <RotationAssignPopover {...defaultProps} preselectedDoctorId={2} />
+      </Wrapper>,
+    )
+    await user.click(screen.getByText('Speichern'))
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ doctor_id: 2 }),
+      expect.anything(),
+    )
+  })
 })
