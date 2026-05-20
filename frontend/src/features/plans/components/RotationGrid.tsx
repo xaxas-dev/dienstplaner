@@ -50,7 +50,7 @@ function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, is
       className={[
         'h-[42px] flex items-center justify-center p-0.5 border-b border-line/30',
         isWe ? 'bg-weekend/40' : '',
-        isOver ? 'ring-2 ring-inset ring-accent' : '',
+        isOver ? 'bg-accent/25 ring-[3px] ring-inset ring-accent' : '',
       ].join(' ')}
     >
       {cell && doctor ? (
