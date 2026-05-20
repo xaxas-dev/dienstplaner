@@ -122,12 +122,12 @@ Tab-Reorder + Underline + DoctorDragSource nach Bereiche)
 - Klick-Pfad (bestehender `onCellClick`) bleibt unverändert
 
 **Akzeptanzkriterien:**
-- [ ] Doctor-Token → RotationGrid-Zelle: `RotationAssignPopover` öffnet
+- [x] Doctor-Token → RotationGrid-Zelle: `RotationAssignPopover` öffnet
       sich mit vorausgewähltem Arzt
-- [ ] Vorausgewählter Arzt kann im Popover überschrieben werden
-- [ ] Klick-Pfad (ohne DnD) funktioniert weiterhin unverändert
-- [ ] Drop-Hover-State sichtbar, kein Layout-Riss
-- [ ] `pnpm typecheck` + vitest clean
+- [x] Vorausgewählter Arzt kann im Popover überschrieben werden
+- [x] Klick-Pfad (ohne DnD) funktioniert weiterhin unverändert
+- [x] Drop-Hover-State sichtbar, kein Layout-Riss
+- [x] `pnpm typecheck` + vitest clean
 
 **Stop-Gate:** Commit `feat(plan): M3-001/B RotationGrid Drop-Target + Popover-Preselect`,
 auf Review warten.
@@ -149,10 +149,10 @@ auf Review warten.
 - Popover bleibt 100% bedienbar; DnD ist additiv
 
 **Akzeptanzkriterien:**
-- [ ] Tastatur-Drag funktioniert (manueller Test, im Stop-Gate-Review
+- [x] Tastatur-Drag funktioniert (manueller Test, im Stop-Gate-Review
       protokolliert)
-- [ ] `aria-roledescription` an Source und Target gesetzt
-- [ ] Keine Konsolen-Warnung aus dnd-kit-Announcer
+- [x] `aria-roledescription` an Source und Target gesetzt
+- [x] Keine Konsolen-Warnung aus dnd-kit-Announcer
 
 **Stop-Gate:** Commit `feat(plan): M3-001/C Tastatur + a11y`, auf
 Review warten.
@@ -172,10 +172,10 @@ Review warten.
 - Keine neuen Farben/Schatten — nur dp-Tokens
 
 **Akzeptanzkriterien:**
-- [ ] Drag-Overlay sichtbar, kein Layout-Sprung in der Doctor-Liste
-- [ ] Cursor wechselt korrekt
-- [ ] Grid-Surface (`rounded-2xl border border-line bg-card`) unverändert
-- [ ] Keine neuen Tokens in `tokens.ts`
+- [x] Drag-Overlay sichtbar, kein Layout-Sprung in der Doctor-Liste
+- [x] Cursor wechselt korrekt
+- [x] Grid-Surface (`rounded-2xl border border-line bg-card`) unverändert
+- [x] Keine neuen Tokens in `tokens.ts`
 
 **Stop-Gate:** Commit `feat(plan): M3-001/D DragOverlay + Cursor-States`,
 auf Review warten.
@@ -201,10 +201,10 @@ auf Review warten.
   - Drop mit ungültiger Doctor-ID: Handler wirft nicht
 
 **Akzeptanzkriterien:**
-- [ ] Mindestens ein positiver und ein negativer Test pro Drop-Pfad
+- [x] Mindestens ein positiver und ein negativer Test pro Drop-Pfad
       (CLAUDE.md-Konvention)
-- [ ] Bestehende RotationAssignPopover-Tests bleiben grün (117 baseline)
-- [ ] `pnpm test` (vitest) grün — erweitert
+- [x] Bestehende RotationAssignPopover-Tests bleiben grün (117 baseline)
+- [x] `pnpm test` (vitest) grün — erweitert
 
 **Stop-Gate:** Commit `test(plan): M3-001/E DnD Drop-Handler-Tests`, auf
 Review warten.
@@ -238,18 +238,18 @@ Review warten.
 
 - [x] `@dnd-kit/core` installiert und in `package.json` festgehalten
 - [x] `DoctorDragSource` rendert ziehbare Tokens in Bereiche-Ansicht
-- [ ] RotationGrid-Zelle als Drop-Target; Drop öffnet
+- [x] RotationGrid-Zelle als Drop-Target; Drop öffnet
       `RotationAssignPopover` mit vorausgewähltem Arzt
-- [ ] Bestehender RotationGrid-Klick-Pfad (ohne Preselect) unverändert
-- [ ] Tastatur-Pfad funktional; `aria-*` an Source und Target
-- [ ] `DragOverlay` ohne Layout-Spring; nur dp-Tokens, keine neuen
+- [x] Bestehender RotationGrid-Klick-Pfad (ohne Preselect) unverändert
+- [x] Tastatur-Pfad funktional; `aria-*` an Source und Target
+- [x] `DragOverlay` ohne Layout-Spring; nur dp-Tokens, keine neuen
       Tokens
-- [ ] vitest grün (alte + neue Tests); pytest unverändert grün
+- [x] vitest grün (alte + neue Tests); pytest unverändert grün
       (Baseline 278)
-- [ ] `pnpm typecheck`, `pnpm lint` clean; kein `any`, keine
+- [x] `pnpm typecheck`, `pnpm lint` clean; kein `any`, keine
       `ts-ignore`
-- [ ] Backend-Quellcode unverändert (nur Frontend + Doku im Diff)
-- [ ] Milestone-Abschluss-Checkliste (Sub-Schritt F) vollständig
+- [x] Backend-Quellcode unverändert (nur Frontend + Doku im Diff)
+- [x] Milestone-Abschluss-Checkliste (Sub-Schritt F) vollständig
 
 ## Out of Scope
 
@@ -331,5 +331,27 @@ git push origin main
 
 ## Abschluss
 
-_(Wird beim Milestone-Abschluss in Sub-Schritt F befüllt: Datum,
-Branch, Commits A–F, Testergebnis, Nebeneffekte.)_
+**Datum:** 2026-05-20  
+**Branch:** `task/M3-001-plan-editor-v2-dnd`
+
+**Commits:**
+- `0ae69e6` feat(plan): M3-001/A DnD-Setup + Doctor-Source
+- `1ac6fdb` feat(plan): M3-001/A' Reparatur — DnD-Source in Bereiche, Tab-Reorder + Underline
+- `9f67c42` feat(plan): M3-001/B RotationGrid Drop-Target + Popover-Preselect
+- `c1be96d` feat(plan): M3-001/C Tastatur-a11y + Screenreader-Announcements
+- `5898e57` feat(plan): M3-001/D DragOverlay + Cursor-States
+- `0772820` test(plan): M3-001/E DnD Drop-Handler-Tests
+- _(F-Commit folgt)_
+
+**Testergebnis:**
+- vitest: 131 passed (25 Dateien), kein Fehler
+- pytest: unverändert (Baseline 278 passed, kein Backend-Change)
+- pnpm typecheck: clean, kein `any`, keine `ts-ignore`
+
+**Scope-Anmerkungen:**
+- Sub-Schritt A wurde durch A' korrigiert: DoctorDragSource gehört in
+  die Bereiche-Ansicht, nicht Dienste (visuelle Review nach Commit A).
+- Scope-Shift nach Plan-Modus: Drop-Target ist RotationGrid-Zelle (statt
+  ShiftCell). Dienste-DnD ist explizit out of scope.
+- `preselectedDoctorId`-Prop an RotationAssignPopover ist der zentrale
+  Integrationspunkt zwischen DnD und bestehendem Popover-Pfad.
