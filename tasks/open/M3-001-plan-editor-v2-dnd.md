@@ -1,39 +1,44 @@
-# Task M3-001: Plan-Editor v2 — Drag & Drop
+# Task M3-001: Plan-Editor v2 — Rotations-Zuweisung per Drag & Drop
 
 ## Ziel
 
-Schichten im Plan-Grid per Drag & Drop einem Arzt zuweisen. Eine
-Doctor-Liste (sidebar/source) hält ziehbare Tokens; eine Zell-Drop-Zone
-im Plan-Grid übernimmt die Zuweisung. Der bestehende
-`DoctorAssignPopover` bleibt als a11y-Fallback erhalten (Klick öffnet
-weiterhin den Popover; DnD ist additiv).
+Rotations-Zuweisungen (Arzt → Bereich) in der **Bereiche-Ansicht** per
+Drag & Drop erfassen. Eine Doctor-Liste (sidebar/source) hält ziehbare
+Tokens; eine RotationGrid-Zelle (Bereich × Tag) ist Drop-Zone. Der Drop
+öffnet den bestehenden `RotationAssignPopover` mit vorausgewähltem Arzt —
+der User bestätigt `valid_from`/`valid_to` (Rotationszeitraum). Der
+bestehende Klick-Pfad am RotationGrid bleibt als a11y-Fallback
+vollständig erhalten.
 
-Backend bleibt unverändert. Der Drop-Handler ruft den bestehenden
-`useAssignShift`-Hook (PATCH `/api/shifts/{id}`). Konflikte werden wie
-bisher read-only über die Konflikt-Engine angezeigt — der Drop blockiert
-nicht.
+Backend bleibt unverändert. Der Drop-Handler verwendet
+`useCreateRotation`/`useUpdateRotation` aus `usePlanRotations` —
+identisch zum bestehenden Popover-Pfad. Konflikte werden wie bisher
+read-only über die Konflikt-Engine angezeigt; der Drop blockiert nicht.
+
+**Dienste-Ansicht** (Schicht-Zuweisung per Klick-Popover) bleibt
+unverändert. DnD in Dienste ist explizit out of scope (separater
+Folge-Milestone).
 
 ## Bindende Entscheidungen
 
 1. **DnD-Library:** `dnd-kit` (im CLAUDE.md-Stack genannt). Kein
    alternativer Vorschlag ohne Rückfrage.
 2. **Drop-Pfad ist weich:** Keine semantische Validierung im
-   Drop-Handler. Nicht-verfügbare oder doppelt-buchende Drops gehen
-   durch und werden anschließend durch die Konflikt-Engine markiert
-   (ADR-033, ADR-038).
-3. **Popover bleibt:** `DoctorAssignPopover` wird nicht entfernt;
-   Klick öffnet ihn weiterhin. Tastatur-Nutzer haben damit einen
-   vollständigen Fallback.
-4. **Source = Doctor-Tokens:** Drag-Source ist eine Liste aktiver
-   Ärzte (analog der Avatar-/Chip-Optik aus `components/dp/`); Drop ist
-   die Schichtzelle. **Reassign per Zell-zu-Zell-Drag ist out of scope**
-   (separates Folge-Milestone, kein M3-002 in diesem Briefing).
-5. **Keine neuen Design-Tokens.** Hover-/Drop-Indicator nutzt
-   bestehende dp-Tokens (`bg-card`, `border-line`, Accent für aktives
-   Drop-Target). M2-006-Grid-Surface-Konvention bleibt unangetastet.
-6. **useAssignShift unverändert.** Drop-Handler ruft den Hook 1:1 wie
-   der bestehende Popover-Pfad — keine Änderung am Hook, keine
-   optimistic update (ADR-043).
+   Drop-Handler (ADR-033). Der Drop öffnet nur den `RotationAssignPopover`
+   mit vorausgewähltem Arzt — die Validierung geschieht im Popover-Formular
+   (identisch zum Klick-Pfad).
+3. **RotationAssignPopover bleibt:** Klick auf eine RotationGrid-Zelle
+   öffnet den Popover weiterhin ohne vorausgewählten Arzt (bestehender
+   Pfad). DnD ist additiv — der Popover bekommt einen optionalen
+   `preselectedDoctorId`-Prop, der im Drop-Pfad gesetzt wird.
+4. **Source = Doctor-Tokens in Bereiche-Sidebar:** `DoctorDragSource`
+   rendert in der Bereiche-Ansicht (seit Commit A/A'). Drop-Ziel ist die
+   RotationGrid-Zelle (Bereich × Tag), nicht die ShiftCell.
+5. **Keine neuen Design-Tokens.** Hover-/Drop-Indicator nutzt bestehende
+   dp-Tokens (`bg-card`, `border-line`, Accent). Keine neuen Tokens.
+6. **usePlanRotations unverändert.** Der Popover-Pfad (useCreateRotation,
+   useUpdateRotation) wird über `preselectedDoctorId` ausgelöst — keine
+   Änderung an den Hooks selbst, keine optimistic updates.
 7. **Kein Backend-Change.** `git diff` zeigt nur Frontend-Änderungen
    (additiv) plus Doku.
 
@@ -43,84 +48,88 @@ nicht.
    Frontend-Plan-Feature-Konventionen (M2-003 Abschnitt), M2-006
    Grid-Surface
 2. [docs/decisions.md](../../docs/decisions.md) — ADR-033 (weiche
-   Validierung), ADR-038 (PATCH ohne Konflikt-Response), ADR-040
-   (Zeilen=Ärzte, Spalten=Tage), ADR-041 (Warn-Dot vs. Popover),
-   ADR-043 (kein optimistic update), ADR-052 (M3-Cut)
+   Validierung), ADR-043 (kein optimistic update), ADR-052 (M3-Cut)
 3. [docs/roadmap.md](../../docs/roadmap.md) — Position M3-001 in M3–M7
-4. [frontend/src/features/plans/components/PlanGrid.tsx](../../frontend/src/features/plans/components/PlanGrid.tsx) —
-   Grid-Struktur, Zell-Klick-Handler
-5. [frontend/src/features/plans/components/DoctorAssignPopover.tsx](../../frontend/src/features/plans/components/DoctorAssignPopover.tsx) —
-   bestehender Zuweisungspfad (bleibt!)
-6. [frontend/src/features/plans/useAssignShift.ts](../../frontend/src/features/plans/useAssignShift.ts) —
-   wird vom Drop-Handler aufgerufen
-7. [frontend/src/features/plans/planGridUtils.ts](../../frontend/src/features/plans/planGridUtils.ts) —
-   pure Grid-Logik, **nicht anfassen**
+4. [frontend/src/features/plans/components/RotationGrid.tsx](../../frontend/src/features/plans/components/RotationGrid.tsx) —
+   Drop-Target-Grid (Bereich × Tag), Zell-Klick-Handler
+5. [frontend/src/features/plans/components/RotationAssignPopover.tsx](../../frontend/src/features/plans/components/RotationAssignPopover.tsx) —
+   bestehender Zuweisungspfad; bekommt `preselectedDoctorId`-Prop
+6. [frontend/src/features/plans/usePlanRotations.ts](../../frontend/src/features/plans/usePlanRotations.ts) —
+   `useCreateRotation`, `useUpdateRotation` (Drop-Handler nutzt diesen Pfad)
+7. [frontend/src/features/plans/components/DoctorDragSource.tsx](../../frontend/src/features/plans/components/DoctorDragSource.tsx) —
+   `makeDoctorDragId`, `parseDoctorDragId` (generische Helpers)
 8. [frontend/src/features/plans/PlanPage.tsx](../../frontend/src/features/plans/PlanPage.tsx) —
-   Page-Wrapper, hier Doctor-Source einhängen
+   Page-Wrapper mit DndContext, Tab-Routing, `activeRotationCell`-State
 9. dnd-kit-Docs via `mcp__plugin_context7_context7__resolve-library-id`
    + `query-docs` (Stack-Konvention: Doku frisch holen, nicht aus dem
    Gedächtnis ergänzen)
 
 ## Phase-A-Invariante
 
-Keine Backend-Änderung. Keine Änderung an `useAssignShift`,
-`usePlanShifts`, `usePlanConflicts`, `planGridUtils.ts`. Kein neuer
-Design-Token. `git diff` darf nur additiv im Frontend sein
-(neue Komponenten + Anpassungen an PlanGrid/PlanPage zur Einbettung).
+Keine Backend-Änderung. Keine Änderung an `usePlanRotations`-Hooks selbst,
+`rotationGridUtils.ts`, `planGridUtils.ts`. Kein neuer Design-Token.
+`git diff` darf nur additiv im Frontend sein: neue `preselectedDoctorId`-Prop
+an `RotationAssignPopover`, Drop-Target-Logik in `RotationGrid`,
+`onDragEnd`-Handler in `PlanPage`. Dienste-Ansicht (`PlanGrid`,
+`DoctorAssignPopover`, `useAssignShift`) bleibt vollständig unverändert.
 
 ## Sub-Schritte (Stop-Gate: nach jedem Schritt Commit + Review)
 
-### Sub-Schritt A — DnD-Setup + Doctor-Source
+### Sub-Schritt A — DnD-Setup + Doctor-Source ✅
 
-**Dateien:**
-- `frontend/package.json` — `@dnd-kit/core` (+ ggf. `@dnd-kit/sortable`
-  falls nötig) hinzufügen, `pnpm install`
-- `frontend/src/features/plans/components/DoctorDragSource.tsx` (neu) —
-  Liste aktiver Ärzte als ziehbare Tokens
-- `frontend/src/features/plans/PlanPage.tsx` — `DndContext` als Wrapper
-  über Grid + Source einhängen
+**Commits:** `0ae69e6` (Setup + DoctorDragSource), `1ac6fdb` (A' Reparatur:
+Tab-Reorder + Underline + DoctorDragSource nach Bereiche)
 
-**Logik:**
-- `DndContext` mit `PointerSensor` und `KeyboardSensor`
-- Doctor-Tokens nutzen `useDraggable({ id: \`doctor-${doctor.id}\` })`
-- Optik: nutzt bestehende `Avatar`/`Chip` aus `components/dp/`
+**Was wurde gemacht:**
+- `@dnd-kit/core 6.3.1` installiert
+- `DoctorDragSource.tsx` mit `useDraggable`, `makeDoctorDragId`,
+  `parseDoctorDragId` erstellt
+- `DndContext` + `PointerSensor` (distance: 4) + `KeyboardSensor` in
+  `PlanPage.tsx` eingehängt
+- Reparatur A': DoctorDragSource in Bereiche-Ansicht verschoben, Tab-Reihenfolge
+  (Bereiche zuerst), aktiver Tab jetzt Underline-Style
 
 **Akzeptanzkriterien:**
-- [ ] `@dnd-kit/core` in `package.json`, `pnpm install` lief grün
-- [ ] `DoctorDragSource` rendert aktive Ärzte
-- [ ] DndContext rendert ohne Konsolen-Warnung
-- [ ] `pnpm typecheck` + `pnpm lint` clean
-
-**Stop-Gate:** Commit `feat(plan): M3-001/A DnD-Setup + Doctor-Source`,
-auf Review warten.
+- [x] `@dnd-kit/core` in `package.json`, `pnpm install` lief grün
+- [x] `DoctorDragSource` rendert aktive Ärzte in Bereiche-Ansicht
+- [x] DndContext rendert ohne Konsolen-Warnung
+- [x] `pnpm typecheck` clean, vitest 117 passed
 
 ---
 
-### Sub-Schritt B — ShiftCell als Drop-Target
+### Sub-Schritt B — RotationGrid-Zelle als Drop-Target
 
 **Dateien:**
-- `frontend/src/features/plans/components/PlanGrid.tsx` —
-  Zell-Wrapper erweitern um `useDroppable`
-- ggf. neue Hilfskomponente `frontend/src/features/plans/components/ShiftDropCell.tsx`,
-  falls die ShiftCell-Komponente sonst zu komplex wird
+- `frontend/src/features/plans/components/RotationGrid.tsx` —
+  Zell-Wrapper erweitern um `useDroppable`; Drop-ID kodiert
+  `rotation-${departmentId}-${day}`
+- `frontend/src/features/plans/components/RotationAssignPopover.tsx` —
+  neuer optionaler Prop `preselectedDoctorId?: number`; wenn gesetzt,
+  wird der Arzt in der Doctor-Auswahl vorausgewählt
+- `frontend/src/features/plans/PlanPage.tsx` — `onDragEnd` implementieren:
+  `parseDoctorDragId` + Drop-Target-Parse → `setActiveRotationCell` mit
+  vorausgewähltem `doctorId`
 
 **Logik:**
-- Drop-Zone-ID kodiert `shift-${shift.id}` oder
-  `open-${plan_id}-${date}-${shift_type_id}` für unbesetzte Zellen
-- `onDragEnd` im `DndContext`: parse Source (Doctor) + Target (Shift) →
-  `useAssignShift.mutate({ shiftId, doctorId })`
-- Hover-State (`isOver`): leichter Accent-Border, **keine** neuen Tokens
-- Klick-Pfad (Popover) bleibt unverändert
+- Drop-Zone-ID: `rotation-${departmentId}-${day}` (analog zu
+  `makeDoctorDragId`-Pattern)
+- `onDragEnd`: wenn `active.id` → `parseDoctorDragId` liefert `doctorId`
+  und `over.id` matcht `rotation-${deptId}-${day}` → `setActiveRotationCell`
+  mit `{ departmentId, day, assignmentId: null, preselectedDoctorId }`
+- `RotationAssignPopover` öffnet sich wie beim Klick-Pfad; Doctor-Select
+  ist mit `preselectedDoctorId` vorausgewählt (User kann überschreiben)
+- Hover-State (`isOver`): leichter Accent-Border via dp-Token, kein neuer Token
+- Klick-Pfad (bestehender `onCellClick`) bleibt unverändert
 
 **Akzeptanzkriterien:**
-- [ ] Doctor-Token → besetzte Zelle: doctor_id wird per
-      `useAssignShift` geschrieben (Netzwerk-Tab zeigt PATCH)
-- [ ] Doctor-Token → leere Zelle: identisches Verhalten
-- [ ] Popover-Klick funktioniert weiterhin
-- [ ] Drop-Hover-State sichtbar, ohne dass `bg-card`-Surface bricht
-- [ ] `pnpm typecheck` + `pnpm lint` clean
+- [ ] Doctor-Token → RotationGrid-Zelle: `RotationAssignPopover` öffnet
+      sich mit vorausgewähltem Arzt
+- [ ] Vorausgewählter Arzt kann im Popover überschrieben werden
+- [ ] Klick-Pfad (ohne DnD) funktioniert weiterhin unverändert
+- [ ] Drop-Hover-State sichtbar, kein Layout-Riss
+- [ ] `pnpm typecheck` + vitest clean
 
-**Stop-Gate:** Commit `feat(plan): M3-001/B Drop-Target + useAssignShift-Bindung`,
+**Stop-Gate:** Commit `feat(plan): M3-001/B RotationGrid Drop-Target + Popover-Preselect`,
 auf Review warten.
 
 ---
@@ -176,25 +185,29 @@ auf Review warten.
 ### Sub-Schritt E — Tests (vitest)
 
 **Dateien:**
-- `frontend/src/features/plans/tests/PlanGrid.dnd.test.tsx` (neu) —
-  oder Ergänzung der bestehenden `PlanGrid.test.tsx`
+- `frontend/src/features/plans/tests/RotationGrid.dnd.test.tsx` (neu) —
+  Drop-Handler-Logik für `onDragEnd` + `RotationAssignPopover`-Preselect
 
 **Logik:**
-- Drop-Handler direkt invocieren (nicht via jsdom-DnD, da
-  Pointer-Events-Simulation brüchig) — analog zum bestehenden Pattern,
-  wo Popover-Klicks per `mousedown`-Handler getestet werden
-- Positive Tests: Doctor→Shift triggert `useAssignShift`-Mock mit
-  korrekten Argumenten
-- Negative Tests: Doctor→nicht-Schicht-Drop-Zone tut nichts; Drop ohne
-  aktive Drag-Source (Edge-Case) wirft nicht
+- `onDragEnd`-Callback direkt invocieren (nicht via jsdom-DnD — brüchig);
+  analog zum bestehenden Pattern in `RotationAssignPopover.test.tsx`
+- Mock `useCreateRotation` und `useUpdateRotation` aus `usePlanRotations`
+- Positive Tests:
+  - Doctor→RotationGrid-Zelle: `setActiveRotationCell` wird mit
+    korrektem `preselectedDoctorId` aufgerufen
+  - Popover öffnet sich mit vorausgewähltem Arzt
+- Negative Tests:
+  - Drop auf Nicht-Rotation-Zone: nichts passiert
+  - Drop mit ungültiger Doctor-ID: Handler wirft nicht
 
 **Akzeptanzkriterien:**
-- [ ] Mindestens ein positiver und ein negativer Test pro
-      Drop-Constraint (CLAUDE.md-Konvention)
-- [ ] Bestehende PlanGrid-Tests bleiben grün (Popover-Pfad)
-- [ ] `pnpm test` (vitest) grün — Baseline nach M8-002: 101 → erweitert
+- [ ] Mindestens ein positiver und ein negativer Test pro Drop-Pfad
+      (CLAUDE.md-Konvention)
+- [ ] Bestehende RotationAssignPopover-Tests bleiben grün (117 baseline)
+- [ ] `pnpm test` (vitest) grün — erweitert
 
-**Stop-Gate:** Commit `test(plan): M3-001/E DnD-Tests`, auf Review warten.
+**Stop-Gate:** Commit `test(plan): M3-001/E DnD Drop-Handler-Tests`, auf
+Review warten.
 
 ---
 
@@ -223,11 +236,11 @@ Review warten.
 
 ## Akzeptanzkriterien (Gesamtaufgabe)
 
-- [ ] `@dnd-kit/core` installiert und in `package.json` festgehalten
-- [ ] `DoctorDragSource` rendert ziehbare Tokens für aktive Ärzte
-- [ ] ShiftCell als Drop-Target verdrahtet; Drop ruft
-      `useAssignShift`
-- [ ] Bestehender `DoctorAssignPopover`-Pfad funktioniert unverändert
+- [x] `@dnd-kit/core` installiert und in `package.json` festgehalten
+- [x] `DoctorDragSource` rendert ziehbare Tokens in Bereiche-Ansicht
+- [ ] RotationGrid-Zelle als Drop-Target; Drop öffnet
+      `RotationAssignPopover` mit vorausgewähltem Arzt
+- [ ] Bestehender RotationGrid-Klick-Pfad (ohne Preselect) unverändert
 - [ ] Tastatur-Pfad funktional; `aria-*` an Source und Target
 - [ ] `DragOverlay` ohne Layout-Spring; nur dp-Tokens, keine neuen
       Tokens
@@ -240,50 +253,50 @@ Review warten.
 
 ## Out of Scope
 
-- Reassign per Zell-zu-Zell-Drag (separater Folge-Milestone, falls
-  benötigt)
-- Multi-Select-Drag (mehrere Schichten gleichzeitig zuweisen)
-- Touch-/Mobile-Optimierung (lokale Desktop-App, kein primärer Mobile-Pfad)
+- **DnD in Dienste-Ansicht** (Schicht-Zuweisung per Drag — separater
+  Folge-Milestone)
+- **Rotations-basierte Vorfilterung der Doctor-Auswahl im Schicht-Popover**
+  (Folge-Milestone nach M3-001)
+- Mehr-Tage-Drop (Drag über mehrere Tag-Spalten zur Zeitraum-Auswahl)
+- Reassign per Zell-zu-Zell-Drag im RotationGrid
+- Multi-Select-Drag (mehrere Ärzte gleichzeitig)
+- Touch-/Mobile-Optimierung (lokale Desktop-App)
 - Animationen über Hover-/Cursor-States hinaus
 - Solver-Diff-Review-UI (M9-001, separat)
-- Änderungen an Konflikt-Engine, Konflikt-Marker oder
-  `useAssignShift`-Verhalten
-- Anpassungen an `planGridUtils.ts` (pure Logik, bleibt)
+- Änderungen an Konflikt-Engine, `useAssignShift`, `planGridUtils.ts`
 
 ## Bekannte Stolperfallen
 
-- **Click-outside vs. DnD-Sensor:** Der bestehende
-  `DoctorAssignPopover` schließt sich per
-  `document.addEventListener('mousedown', ...)` (CLAUDE.md-Konvention).
-  Beim DnD-PointerSensor kann ein `mousedown` auf einem Doctor-Token
-  fälschlich den Popover schließen, obwohl gar keine Zelle offen ist.
-  Sensoren so konfigurieren, dass kein ungewollter Drag-Start aus
-  Popover-Bereichen entsteht (dnd-kit `activationConstraint`,
-  z. B. `distance: 4`).
-- **Sticky-Spalten-Hintergrund:** Bei Horizontal-Scroll dürfen
-  Drop-Hover-Hervorhebungen die `bg-card`-Naht aus M2-006 nicht
-  verletzen.
+- **Click-outside vs. DnD-Sensor:** `RotationAssignPopover` schließt
+  sich per `document.addEventListener('mousedown', ...)`. `PointerSensor`
+  mit `activationConstraint: { distance: 4 }` (bereits gesetzt) verhindert
+  ungewollte Drag-Starts aus dem Popover-Bereich.
+- **preselectedDoctorId-Prop:** `RotationAssignPopover` muss den Prop
+  optional akzeptieren; bestehende Aufrufe ohne Prop dürfen nicht brechen
+  (Typprüfung: `preselectedDoctorId?: number`).
+- **activeRotationCell-State:** PlanPage hat bereits
+  `{ departmentId, day, assignmentId }` — für DnD muss `preselectedDoctorId`
+  ergänzt werden, entweder als viertes Feld oder über separaten State.
+  Einfachste Lösung: lokaler State `preselectedDragDoctorId` wird parallel
+  zu `setActiveRotationCell` gesetzt und an den Popover übergeben.
+- **RotationGrid-Surface:** `RotationGrid` lebt im gleichen
+  `rounded-2xl border border-line bg-card`-Wrapper (M2-006) —
+  Drop-Hover-Hervorhebung darf die `bg-card`-Naht nicht verletzen.
 - **Fragments mit `key`:** Bei CSS-Grid-Zeilen weiterhin
   `<Fragment key="row-{id}">`, keine bare Fragments (CLAUDE.md).
-- **`e.stopPropagation()` am Warn-Dot:** ContextPanel-Klick-Pfad
-  weiterhin trennen — Drop darf den Warn-Dot nicht überlagern
-  (ADR-041).
-- **Optimistic update verboten.** `useAssignShift` invalidiert
-  `shifts`+`conflicts` nach onSuccess; kein lokales Vorschreiben
-  (ADR-043).
+- **Optimistic update verboten.** Popover-Formular schreibt via
+  `useCreateRotation`/`useUpdateRotation`; kein lokales Vorschreiben.
 - **dnd-kit-Doku frisch:** dnd-kit-API ändert sich zwischen Minor-Versions.
-  Vor Implementierung: context7 MCP für aktuelle Doku konsultieren
-  statt aus dem Gedächtnis.
+  Vor Implementierung: context7 MCP für aktuelle Doku konsultieren.
 
 ## Annahmen
 
-- `@dnd-kit/core` darf installiert werden, da dnd-kit explizit im
-  CLAUDE.md-Stack genannt ist (keine Rückfrage nötig).
-- Aktive Ärzte sind bereits über bestehenden Doctor-Query erreichbar
+- `@dnd-kit/core` ist installiert (seit Sub-Schritt A; keine Rückfrage nötig).
+- Aktive Ärzte sind über bestehenden Doctor-Query erreichbar
   (kein neuer Backend-Endpoint).
-- Tests dürfen den `useAssignShift`-Mutation-Hook mocken (analog
-  bestehender PlanGrid-Tests).
-- Backend-Baseline: pytest 278 passed (nach M8-002); vitest 101.
+- Tests dürfen `useCreateRotation`/`useUpdateRotation` mocken (analog
+  bestehender `RotationAssignPopover.test.tsx`).
+- Backend-Baseline: pytest 278 passed (nach M8-002); vitest 117 passed.
 
 Bei Unklarheit: `tasks/done/M8-002-solver-apply-endpoint.md` als
 Briefing-Referenz, dann hier ergänzen und stoppen.
