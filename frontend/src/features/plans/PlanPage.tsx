@@ -22,8 +22,8 @@ import { useDepartments } from '@/features/departments/useDepartments'
 import { PlanGrid } from './components/PlanGrid'
 import { ContextPanel } from './components/ContextPanel'
 import { DoctorAssignPopover } from './components/DoctorAssignPopover'
-import { DoctorDragSource } from './components/DoctorDragSource'
-import { RotationGrid } from './components/RotationGrid'
+import { DoctorDragSource, parseDoctorDragId } from './components/DoctorDragSource'
+import { RotationGrid, parseRotationDropId } from './components/RotationGrid'
 import { RotationAssignPopover } from './components/RotationAssignPopover'
 import type { ShiftWithDetails } from '@/lib/types'
 
@@ -46,6 +46,7 @@ export function PlanPage() {
     day: string
     assignmentId: number | null
   } | null>(null)
+  const [preselectedDragDoctorId, setPreselectedDragDoctorId] = useState<number | null>(null)
 
   const { data: plan } = usePlan(id)
   const { data: shifts = [], isError: shiftsError } = usePlanShifts(id)
@@ -65,6 +66,7 @@ export function PlanPage() {
     setActiveCell(null)
     setActiveRotationCell(null)
     setContextShift(null)
+    setPreselectedDragDoctorId(null)
   }, [view])
 
   const planTitle = plan
@@ -100,8 +102,15 @@ export function PlanPage() {
     useSensor(KeyboardSensor),
   )
 
-  function handleDragEnd(_event: DragEndEvent) {
-    // Drop-Bindung an useAssignShift folgt in Sub-Schritt B (M3-001).
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over) return
+    const doctorId = parseDoctorDragId(String(active.id))
+    if (doctorId === null) return
+    const target = parseRotationDropId(String(over.id))
+    if (target === null) return
+    setPreselectedDragDoctorId(doctorId)
+    setActiveRotationCell({ departmentId: target.departmentId, day: target.day, assignmentId: null })
   }
 
   return (
@@ -195,7 +204,11 @@ export function PlanPage() {
             validTo={plan!.valid_to}
             existingAssignment={existing}
             blocksIna={dept.blocks_ina_weekdays || dept.blocks_ina_weekends}
-            onClose={() => setActiveRotationCell(null)}
+            preselectedDoctorId={preselectedDragDoctorId ?? undefined}
+            onClose={() => {
+              setActiveRotationCell(null)
+              setPreselectedDragDoctorId(null)
+            }}
           />
         ) : null
       })()}

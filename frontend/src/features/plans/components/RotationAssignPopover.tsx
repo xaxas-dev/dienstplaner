@@ -14,6 +14,7 @@ interface Props {
   validTo: string
   existingAssignment: RotationAssignmentWithDetails | null
   blocksIna: boolean
+  preselectedDoctorId?: number
   onClose: () => void
 }
 
@@ -25,6 +26,7 @@ export function RotationAssignPopover({
   validTo,
   existingAssignment,
   blocksIna,
+  preselectedDoctorId,
   onClose,
 }: Props) {
   const { mutate: createMutate, isPending: isCreating } = useCreateRotation(planId)
@@ -34,7 +36,7 @@ export function RotationAssignPopover({
 
   const [search, setSearch] = useState('')
   const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(
-    existingAssignment?.doctor_id ?? null,
+    existingAssignment?.doctor_id ?? preselectedDoctorId ?? null,
   )
   const [dateFrom, setDateFrom] = useState(existingAssignment?.valid_from ?? day)
   const [dateTo, setDateTo] = useState(existingAssignment?.valid_to ?? validTo)
