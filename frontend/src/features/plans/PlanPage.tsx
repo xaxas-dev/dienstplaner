@@ -12,7 +12,16 @@ import {
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
+  type Modifier,
 } from '@dnd-kit/core'
+
+// Cursor-Hotspot am Avatar-Top: x zentriert (14 = half of 28px), y = 0
+const avatarTopModifier: Modifier = ({ activatorEvent, draggingNodeRect, transform }) => {
+  if (!draggingNodeRect || !(activatorEvent instanceof MouseEvent)) return transform
+  const offsetX = activatorEvent.clientX - draggingNodeRect.left
+  const offsetY = activatorEvent.clientY - draggingNodeRect.top
+  return { ...transform, x: transform.x + offsetX - 14, y: transform.y + offsetY }
+}
 import { CommandBar } from '@/components/dp/CommandBar'
 import { KpiBar } from '@/components/dp/KpiBar'
 import { usePlan } from './usePlans'
@@ -262,7 +271,7 @@ export function PlanPage() {
         ) : null
       })()}
     </div>
-      <DragOverlay>
+      <DragOverlay modifiers={[avatarTopModifier]}>
         {activeDragDoctor && (
           <DoctorDragOverlayToken name={activeDragDoctor.name} id={activeDragDoctor.id} />
         )}

@@ -45,11 +45,7 @@ interface DoctorDragOverlayTokenProps {
 }
 
 export function DoctorDragOverlayToken({ name, id }: DoctorDragOverlayTokenProps) {
-  return (
-    <div className="p-1.5 rounded-full bg-card shadow-lg cursor-grabbing">
-      <Avatar name={name} id={id} size={28} />
-    </div>
-  )
+  return <Avatar name={name} id={id} size={28} />
 }
 
 interface DoctorTokenProps {
