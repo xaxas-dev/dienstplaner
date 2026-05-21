@@ -235,6 +235,42 @@ Punkte nennt.
 - **Kein neuer Design-Token** für Availability-Hints — Tailwind-Klassen `ring-amber-400/60`,
   `bg-amber-400` direkt (konsistent mit bestehender Warning-Palette).
 
+### Frontend — Tarif-Warnings-Pattern (M5-001)
+- **Hook `useTarifWarnings`:** Lädt `GET /api/plans/{id}/tarif-warnings` per Plan.
+  Disabled wenn `planId === null`. Query-Key-Objekt `tarifWarningKeys` co-located in
+  `features/plans/useTarifWarnings.ts` (analog `conflictQueryKeys`).
+- **Verteilung in PlanPage:** `tarifWarningsByShift: Record<number, TarifWarning[]>` wird
+  aus `tarifWarningsData.warnings` per `shift_id` aufgebaut und an PlanGrid übergeben.
+  Plan-globale Warnings (shift_id === null) werden gefiltert — kein Cell-Marker.
+- **Sand-Dot bleibt weich (ADR-060):** Kein Schreibpfad-Eingriff, kein Drop-Block,
+  kein Auswahl-Block. Sand-Dot (§, `bg-sand border border-warn-line`) oben links am
+  ShiftCell — Konflikt-Dot (!, `bg-warn`) oben rechts bleibt unverändert (ADR-061).
+- **Cache-Invalidierung bei Shift-Mutation:** `useAssignShift` invalidiert nach
+  `onSuccess` zusätzlich `tarifWarningKeys.byPlan(planId)` — konsistent mit
+  ADR-043 (kein optimistic update). Mutation → Refetch shifts + conflicts + tarifWarnings.
+- **ContextPanel-Erweiterung:** Prop `tarifWarnings?: TarifWarning[]`; Sektion
+  „Tarif-Warnungen" unterhalb Konflikte; Severity-Chip (info=Sand, warning=warn-bg,
+  critical=warn) + rule_id + message pro Eintrag.
+- **Kein neuer Design-Token:** Sand-Token (`bg-sand`, ADR-031) und `warn`-Border
+  (`border-warn-line`) wiederverwendet.
+
+### Backend — Tarif-Plug-in-Pipeline (M5-001)
+- **`TarifRule`-Protocol** in `backend/app/solver/tarif_rules.py`: Attribute
+  `id: ConstraintId`, `severity: TarifSeverity`; Methode
+  `evaluate(self, db: Session, plan_id: int) -> list[TarifWarning]`.
+  Keine ABC, kein Mixin — Python-3.12-Protocol-Idiom.
+- **`REGISTERED_RULES: list[TarifRule] = []`** leer im Prod-Code. Neue Regeln
+  implementieren das Protocol und werden nur nach Klärung konkreter Tarif-Werte
+  (OQ-006) eingetragen. `grep REGISTERED_RULES backend/app/` findet nur Definition.
+- **Monkeypatching in Tests:** `monkeypatch.setattr(tarif_rules_module, "REGISTERED_RULES", [...])`
+  — Service importiert `from app.solver import tarif_rules as _tarif_rules` (Modul-Referenz,
+  nicht `from ... import REGISTERED_RULES`), damit Monkeypatch greift.
+- **`TarifSeverity`-StrEnum** lebt in `backend/app/schemas/tarif_warning.py`;
+  `tarif_rules.py` importiert von dort — keine Doppeldefinition, kein Zirkel-Import.
+- **`compute_tarif_warnings(db, plan_id)`** in `tarif_validation_service.py`: analog
+  `conflict_service.detect_conflicts` — Plan-Load → 404 via `PlanNotFoundError` →
+  alle registrierten Regeln aufrufen → Warnings aggregieren (keine Deduplizierung).
+
 ## Was Claude Code NICHT tun soll
 - Keine neuen Bibliotheken ohne explizite Rückfrage einführen
 - Keine Bibliotheksfunktionen verwenden, die nicht in der Doku existieren
