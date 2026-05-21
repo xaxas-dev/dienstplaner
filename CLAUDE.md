@@ -221,6 +221,20 @@ Punkte nennt.
   (`border-b-2 border-accent text-ink`), nicht Pill — Terracotta-Pill
   kollidiert visuell mit Doctor-Avataren (ADR-055).
 
+### Frontend — Availability-Pattern (M4-001)
+- **Hook `useDoctorAvailability`:** Lädt `GET /api/doctors/{id}/ina-availability?from=&to=`
+  per doctor/Zeitraum. Disabled wenn `doctorId === null`. Query-Key-Objekt
+  `availabilityKeys` exportiert (analog CLAUDE.md-Hook-Konvention).
+- **Hook `useAvailabilityForDate`:** Nutzt `useQueries` für Mehrfach-Doctor-Lookup
+  an einem Datum (DoctorAssignPopover). Teilt Query-Cache mit `useDoctorAvailability`.
+- **Visual-Hint bleibt weich:** Amber-Ring im RotationGrid (`ring-amber-400/60`)
+  und Amber-Dot im DoctorAssignPopover sind read-only. Kein Drop-Block, kein
+  Auswahl-Block (ADR-033). Tooltip zeigt `reasons`.
+- **Mutation-Invalidierung:** Absence-Mutationen invalidieren `absenceKeys[doctorId]`
+  **und** `availabilityKeys` (da Absence eine der drei INA-Quellen ist).
+- **Kein neuer Design-Token** für Availability-Hints — Tailwind-Klassen `ring-amber-400/60`,
+  `bg-amber-400` direkt (konsistent mit bestehender Warning-Palette).
+
 ## Was Claude Code NICHT tun soll
 - Keine neuen Bibliotheken ohne explizite Rückfrage einführen
 - Keine Bibliotheksfunktionen verwenden, die nicht in der Doku existieren

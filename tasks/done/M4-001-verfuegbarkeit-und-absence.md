@@ -127,12 +127,12 @@ für Absence, **additive** Hint-Logik in `RotationGrid` und
 - `backend/tests/api/test_absences.py` (neu) — Endpoint-Tests pro Route.
 
 **Akzeptanzkriterien:**
-- [ ] `uv run pytest` grün; mind. ein positiver und ein negativer Test
+- [x] `uv run pytest` grün; mind. ein positiver und ein negativer Test
       pro Service-Funktion (CLAUDE.md-Konvention)
-- [ ] Router-Pfade entsprechen CLAUDE.md-API-Konvention (Nested-Read,
+- [x] Router-Pfade entsprechen CLAUDE.md-API-Konvention (Nested-Read,
       globaler Single-Update)
-- [ ] Kein Service-Import in `api/` (Geschäftslogik nur in `services/`)
-- [ ] `ruff check` clean
+- [x] Kein Service-Import in `api/` (Geschäftslogik nur in `services/`)
+- [x] `ruff check` clean
 
 **Stop-Gate:** Commit `feat(absence): M4-001/A Absence-Service + API`,
 auf Review warten.
@@ -164,11 +164,11 @@ auf Review warten.
   (`{"2026-05-21": {"available": false, "reasons": [...]}, ...}`).
 
 **Akzeptanzkriterien:**
-- [ ] Endpoint nutzt **ausschließlich** den bestehenden Service
+- [x] Endpoint nutzt **ausschließlich** den bestehenden Service
       (`grep` zeigt nur ein Aufruf, keine duplizierte Logik)
-- [ ] `pnpm generate-api` läuft sauber, `frontend/src/lib/api-types.ts`
+- [x] `pnpm generate-api` läuft sauber, `frontend/src/lib/api-types.ts`
       ist aktualisiert und committed
-- [ ] pytest grün
+- [x] pytest grün
 
 **Stop-Gate:** Commit `feat(api): M4-001/B INA-Availability-Endpoint`,
 auf Review warten.
@@ -207,10 +207,10 @@ auf Review warten.
   Konsistenz mit Plan-Editor-Indikator).
 
 **Akzeptanzkriterien:**
-- [ ] `pnpm test` (vitest) grün, neue Tests inklusive
-- [ ] `pnpm typecheck` clean, kein `any`, keine `ts-ignore`
-- [ ] DoctorDetailPage rendert neue Sektion ohne Layout-Riss
-- [ ] Pattern entspricht INAExclusion-Schwester-Komponenten
+- [x] `pnpm test` (vitest) grün, neue Tests inklusive
+- [x] `pnpm typecheck` clean, kein `any`, keine `ts-ignore`
+- [x] DoctorDetailPage rendert neue Sektion ohne Layout-Riss
+- [x] Pattern entspricht INAExclusion-Schwester-Komponenten
 
 **Stop-Gate:** Commit `feat(doctors): M4-001/C Absence-UI in Arzt-Detail`,
 auf Review warten.
@@ -239,11 +239,11 @@ auf Review warten.
 - Kein doppelter Request: Cache wird in Schritt E wiederverwendet.
 
 **Akzeptanzkriterien:**
-- [ ] vitest grün (alte + neue Tests)
-- [ ] Drop funktioniert auch in markierter Zelle (manueller Smoke-Test
+- [x] vitest grün (alte + neue Tests)
+- [x] Drop funktioniert auch in markierter Zelle (manueller Smoke-Test
       im Review)
-- [ ] Keine neuen Tokens; nur bestehende dp-Klassen
-- [ ] Hook deaktiviert sich sauber, wenn `activeDragDoctor === null`
+- [x] Keine neuen Tokens; nur bestehende dp-Klassen
+- [x] Hook deaktiviert sich sauber, wenn `activeDragDoctor === null`
       (keine Background-Requests im Idle-State)
 
 **Stop-Gate:** Commit `feat(plan): M4-001/D Verfügbarkeits-Hint im RotationGrid`,
@@ -273,9 +273,9 @@ auf Review warten.
   hinzufügen (Scope-Disziplin).
 
 **Akzeptanzkriterien:**
-- [ ] vitest grün
-- [ ] Auswahl markierter Optionen schreibt unverändert
-- [ ] Kein UI-Glitch bei sich änderndem Schicht-Datum
+- [x] vitest grün
+- [x] Auswahl markierter Optionen schreibt unverändert
+- [x] Kein UI-Glitch bei sich änderndem Schicht-Datum
 
 **Stop-Gate:** Commit `feat(plan): M4-001/E Verfügbarkeits-Marker im Dienste-Popover`,
 auf Review warten.
@@ -310,24 +310,24 @@ auf Review warten.
 
 ## Akzeptanzkriterien (Gesamtaufgabe)
 
-- [ ] Backend: `absence_service.py` + `api/absences.py` + Router
+- [x] Backend: `absence_service.py` + `api/absences.py` + Router
       registriert; pytest grün (Baseline + neue Tests)
-- [ ] Backend: `GET /api/doctors/{id}/ina-availability` nutzt nur den
+- [x] Backend: `GET /api/doctors/{id}/ina-availability` nutzt nur den
       bestehenden Service, kein Re-Implement
-- [ ] Frontend: Absence-Liste + Formular in Arzt-Detail, analog
+- [x] Frontend: Absence-Liste + Formular in Arzt-Detail, analog
       INAExclusion-Pattern
-- [ ] Frontend: `useDoctorAvailability`-Hook; Visual-Hint in
+- [x] Frontend: `useDoctorAvailability`-Hook; Visual-Hint in
       `RotationGrid` während Drag; Marker in `DoctorAssignPopover`
-- [ ] Drop und Auswahl bleiben in allen Fällen erlaubt (Phase-A,
+- [x] Drop und Auswahl bleiben in allen Fällen erlaubt (Phase-A,
       ADR-033)
-- [ ] Keine neuen Design-Tokens (oder dokumentiert in F-Schritt)
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test` grün; `ruff check`,
+- [x] Keine neuen Design-Tokens (oder dokumentiert in F-Schritt)
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test` grün; `ruff check`,
       `uv run pytest` grün
-- [ ] `pnpm generate-api` lief; `api-types.ts` committed
-- [ ] `get_ina_availability`/`get_ina_availability_for_period` und
+- [x] `pnpm generate-api` lief; `api-types.ts` committed
+- [x] `get_ina_availability`/`get_ina_availability_for_period` und
       Konflikt-Engine unverändert (`git diff` zeigt nur additive
       Änderungen)
-- [ ] Milestone-Abschluss-Checkliste (Sub-Schritt F) vollständig
+- [x] Milestone-Abschluss-Checkliste (Sub-Schritt F) vollständig
 
 ## Out of Scope
 
@@ -407,3 +407,20 @@ git pull origin main
 git merge task/M4-001-verfuegbarkeit-und-absence
 git push origin main
 ```
+
+## Abschluss
+
+**Datum:** 2026-05-21
+**Branch:** task/M4-001-verfuegbarkeit-und-absence
+
+**Commits:**
+- feat(absence): M4-001/A Absence-Service + API (2×)
+- feat(api): M4-001/B INA-Availability-Endpoint (2×)
+- feat(doctors): M4-001/C Absence-UI in Arzt-Detail
+- feat(plan): M4-001/D Verfügbarkeits-Hint im RotationGrid (2×)
+- feat(plan): M4-001/E Verfügbarkeits-Marker im Dienste-Popover
+
+**Testergebnis:**
+- pytest: 279 passed, 26 skipped
+- vitest: 152 passed (27 Test Files)
+- pnpm type-check: clean

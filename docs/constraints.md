@@ -18,6 +18,25 @@ Konflikte blockieren nichts (weiche Philosophie). Sie werden read-only über
 `GET /api/plans/{plan_id}/conflicts` und eingebettet in
 `GET /api/plans/{plan_id}/shifts` zurückgegeben.
 
+## INA-Verfügbarkeitsanzeige (M4-001, Phase A)
+
+Read-only Marker in RotationGrid (während Drag, `ring-amber-400/60`) und
+DoctorAssignPopover (Amber-Dot am Avatar). Keine Schreibpfad-Blockade —
+Drop und Auswahl bleiben in allen Fällen erlaubt (ADR-033).
+
+Quelle: `get_ina_availability_for_period` aus `ina_availability_service.py`
+(drei Quellen: aktive Rotation in blockierendem Bereich, INAExclusion,
+Absence). Analog zur Konflikt-Engine (M2-005, ADR-035): read-only,
+kein Caching, kein Schreibpfad-Eingriff.
+
+Frontend-Hooks: `useDoctorAvailability` (per Doctor/Zeitraum, aktiviert
+durch `activeDragDoctor`) und `useAvailabilityForDate` (via `useQueries`
+für alle Ärzte an einem Datum im DoctorAssignPopover). Tooltip zeigt
+`reasons` (z. B. „Rotation CK", „Abwesenheit: Urlaub").
+
+Absence-Mutationen invalidieren `availabilityKeys` (domänenübergreifende
+Cache-Invalidierung, da Absence eine der drei INA-Quellen ist).
+
 ## Solver-Constraints (M8-001, Timefold-Integration)
 
 Implementiert in `backend/app/solver/constraints.py`.
