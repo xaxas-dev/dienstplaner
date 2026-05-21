@@ -47,6 +47,7 @@ def test_create_doctor_minimal(client: TestClient) -> None:
 def test_create_doctor_full(client: TestClient) -> None:
     payload = {
         "name": "Dr. Vollständig",
+        "title": "Dr.",
         "short_name": "VV",
         "doctor_type": "INTERNAL",
         "is_facharzt": False,
@@ -56,6 +57,7 @@ def test_create_doctor_full(client: TestClient) -> None:
     r = client.post("/api/doctors", json=payload)
     assert r.status_code == 201
     data = r.json()
+    assert data["title"] == "Dr."
     assert data["short_name"] == "VV"
     assert data["weiterbildungsjahr"] is None  # kein entry_date → null
     assert data["notes"] == "Test-Notiz"
@@ -109,11 +111,21 @@ def test_update_doctor_partial(client: TestClient) -> None:
     doctor = _create_doctor(client, name="Dr. Update", short_name="DU")
     did = doctor["id"]
 
-    r = client.patch(f"/api/doctors/{did}", json={"notes": "Neue Notiz"})
+    r = client.patch(f"/api/doctors/{did}", json={"notes": "Neue Notiz", "title": "PD"})
     assert r.status_code == 200
     data = r.json()
     assert data["notes"] == "Neue Notiz"
+    assert data["title"] == "PD"
     assert data["short_name"] == "DU"  # unverändert
+
+
+def test_update_doctor_allows_clearing_title(client: TestClient) -> None:
+    doctor = _create_doctor(client, name="Anna Titel", title="Prof.")
+    did = doctor["id"]
+
+    r = client.patch(f"/api/doctors/{did}", json={"title": None})
+    assert r.status_code == 200
+    assert r.json()["title"] is None
 
 
 def test_delete_doctor_cascades(client: TestClient) -> None:

@@ -22,6 +22,7 @@ class Doctor(Base):
     )
 
     name: Mapped[str] = mapped_column(String(200), nullable=False)
+    title: Mapped[str | None] = mapped_column(String(50), nullable=True)
     short_name: Mapped[str | None] = mapped_column(String(50), nullable=True)
     doctor_type: Mapped[DoctorType] = mapped_column(
         Enum(DoctorType, native_enum=False, length=50),

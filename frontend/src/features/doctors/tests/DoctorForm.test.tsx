@@ -17,7 +17,8 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 
 const mockDoctor: Doctor = {
   id: 1,
-  name: 'Dr. Mustermann',
+  name: 'Anna Mustermann',
+  title: 'Dr.',
   short_name: 'MM',
   doctor_type: 'INTERNAL',
   weiterbildungsjahr: null,
@@ -59,7 +60,8 @@ describe('DoctorForm – Felder', () => {
         <DoctorForm />
       </Wrapper>,
     )
-    expect(screen.getByPlaceholderText(/Dr. Mustermann/i)).toHaveValue('')
+    expect(screen.getByPlaceholderText(/Anna Berger/i)).toHaveValue('')
+    expect(screen.getByLabelText(/titel/i)).toBeInTheDocument()
   })
 
   it('füllt Felder aus doctor-Prop', () => {
@@ -68,7 +70,8 @@ describe('DoctorForm – Felder', () => {
         <DoctorForm doctor={mockDoctor} />
       </Wrapper>,
     )
-    expect(screen.getByDisplayValue('Dr. Mustermann')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Anna Mustermann')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Dr.')).toBeInTheDocument()
     expect(screen.getByDisplayValue('MM')).toBeInTheDocument()
   })
 

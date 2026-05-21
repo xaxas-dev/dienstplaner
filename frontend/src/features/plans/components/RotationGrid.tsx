@@ -26,6 +26,7 @@ const WEEKDAY_ABBR = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 interface DeptPreview {
   doctorId: number
   doctorName: string
+  doctorShortName?: string | null
   dateFrom: string
   dateTo: string
 }
@@ -81,7 +82,12 @@ function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, is
             cell.overlap ? 'ring-[1.5px] ring-warn' : '',
           ].join(' ')}
         >
-          <Avatar name={doctor.name} id={cell.assignment.doctor_id} size={22} />
+          <Avatar
+            name={doctor.name}
+            shortName={doctor.short_name}
+            id={cell.assignment.doctor_id}
+            size={22}
+          />
           <div className="flex items-center gap-0.5 mt-0.5">
             {cell.isEinarbeitung && (
               <span className="text-[8px] font-bold bg-accent text-paper px-0.5 rounded leading-tight">
@@ -103,7 +109,12 @@ function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, is
             isTod ? 'ring-2 ring-warn-line' : '',
           ].join(' ')}
         >
-          <Avatar name={deptPreview!.doctorName} id={deptPreview!.doctorId} size={22} />
+          <Avatar
+            name={deptPreview!.doctorName}
+            shortName={deptPreview!.doctorShortName}
+            id={deptPreview!.doctorId}
+            size={22}
+          />
         </div>
       ) : (
         <button
@@ -123,6 +134,7 @@ interface RotationGridPreview {
   departmentId: number
   doctorId: number
   doctorName: string
+  doctorShortName?: string | null
   dateFrom: string
   dateTo: string
 }
@@ -182,7 +194,13 @@ export function RotationGrid({
         {/* Rows */}
         {rows.map(({ department: dept, cells }) => {
           const deptPreview = preview?.departmentId === dept.id
-            ? { doctorId: preview.doctorId, doctorName: preview.doctorName, dateFrom: preview.dateFrom, dateTo: preview.dateTo }
+            ? {
+                doctorId: preview.doctorId,
+                doctorName: preview.doctorName,
+                doctorShortName: preview.doctorShortName,
+                dateFrom: preview.dateFrom,
+                dateTo: preview.dateTo,
+              }
             : null
           return (
           <Fragment key={`row-${dept.id}`}>

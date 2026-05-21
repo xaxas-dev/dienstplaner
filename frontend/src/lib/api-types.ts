@@ -862,6 +862,8 @@ export interface components {
         DoctorCreate: {
             /** Name */
             name: string;
+            /** Title */
+            title?: string | null;
             /** Short Name */
             short_name?: string | null;
             /** @default INTERNAL */
@@ -918,6 +920,8 @@ export interface components {
         DoctorResponse: {
             /** Name */
             name: string;
+            /** Title */
+            title?: string | null;
             /** Short Name */
             short_name?: string | null;
             /** @default INTERNAL */
@@ -962,6 +966,8 @@ export interface components {
         DoctorUpdate: {
             /** Name */
             name?: string | null;
+            /** Title */
+            title?: string | null;
             /** Short Name */
             short_name?: string | null;
             doctor_type?: components["schemas"]["DoctorType"] | null;
@@ -980,6 +986,8 @@ export interface components {
         DoctorWithRelations: {
             /** Name */
             name: string;
+            /** Title */
+            title?: string | null;
             /** Short Name */
             short_name?: string | null;
             /** @default INTERNAL */

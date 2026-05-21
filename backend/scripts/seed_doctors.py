@@ -25,38 +25,38 @@ MAX_ENTRY_AGE_DAYS = 8 * 365
 PART_TIME_PERCENTAGES = (50, 60, 80)
 
 DOCTOR_NAMES = [
-    "Dr. Anna Berger",
-    "Dr. Ben Conrad",
-    "Dr. Clara Dietrich",
-    "Dr. David Engel",
-    "Dr. Eva Fischer",
-    "Dr. Felix Graf",
-    "Dr. Greta Hoffmann",
-    "Dr. Hannes Jung",
-    "Dr. Ida Keller",
-    "Dr. Jonas Lange",
-    "Dr. Klara Meier",
-    "Dr. Lukas Neumann",
-    "Dr. Miriam Otto",
-    "Dr. Nils Peters",
-    "Dr. Olivia Richter",
-    "Dr. Paul Schuster",
-    "Dr. Rosa Thiel",
-    "Dr. Simon Ulrich",
-    "Dr. Theresa Vogel",
-    "Dr. Uwe Wagner",
-    "Dr. Valerie Zimmer",
-    "Dr. Wilhelm Brandt",
-    "Dr. Xenia Kraus",
-    "Dr. Yara Lorenz",
-    "Dr. Zoe Martin",
-    "Dr. Aaron Stein",
-    "Dr. Beate Wolff",
-    "Dr. Cem Albrecht",
-    "Dr. Diana Busch",
-    "Dr. Emil Franke",
-    "Dr. Frieda Hahn",
-    "Dr. Georg Kramer",
+    "Anna Berger",
+    "Ben Conrad",
+    "Clara Dietrich",
+    "David Engel",
+    "Eva Fischer",
+    "Felix Graf",
+    "Greta Hoffmann",
+    "Hannes Jung",
+    "Ida Keller",
+    "Jonas Lange",
+    "Klara Meier",
+    "Lukas Neumann",
+    "Miriam Otto",
+    "Nils Peters",
+    "Olivia Richter",
+    "Paul Schuster",
+    "Rosa Thiel",
+    "Simon Ulrich",
+    "Theresa Vogel",
+    "Uwe Wagner",
+    "Valerie Zimmer",
+    "Wilhelm Brandt",
+    "Xenia Kraus",
+    "Yara Lorenz",
+    "Zoe Martin",
+    "Aaron Stein",
+    "Beate Wolff",
+    "Cem Albrecht",
+    "Diana Busch",
+    "Emil Franke",
+    "Frieda Hahn",
+    "Georg Kramer",
 ]
 
 
@@ -70,11 +70,11 @@ def _entry_date_for_index(today: date, index: int, total: int) -> date:
 def _name_for_index(index: int) -> str:
     if index < len(DOCTOR_NAMES):
         return DOCTOR_NAMES[index]
-    return f"Dr. Test Arzt {index + 1:02d}"
+    return f"Test Arzt {index + 1:02d}"
 
 
 def _short_name_for_name(name: str, used_short_names: set[str]) -> str:
-    parts = name.replace("Dr. ", "").split()
+    parts = name.split()
     base = "".join(part[0].upper() for part in parts[:2])
     short_name = base
     suffix = 2
@@ -194,6 +194,7 @@ def apply_seed(session) -> tuple[int, int, int]:
         seed_doctors.append(
             {
                 "name": name,
+                "title": "Dr.",
                 "short_name": _short_name_for_name(name, used_short_names),
                 "doctor_type": (
                     DoctorType.EXTERNAL if index in external_indices else DoctorType.INTERNAL

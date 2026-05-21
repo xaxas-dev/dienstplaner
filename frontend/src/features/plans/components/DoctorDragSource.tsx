@@ -41,11 +41,12 @@ export function DoctorDragSource({ doctors }: DoctorDragSourceProps) {
 
 interface DoctorDragOverlayTokenProps {
   name: string
+  shortName?: string | null
   id: number
 }
 
-export function DoctorDragOverlayToken({ name, id }: DoctorDragOverlayTokenProps) {
-  return <Avatar name={name} id={id} size={28} />
+export function DoctorDragOverlayToken({ name, shortName, id }: DoctorDragOverlayTokenProps) {
+  return <Avatar name={name} shortName={shortName} id={id} size={28} />
 }
 
 interface DoctorTokenProps {
@@ -73,7 +74,7 @@ function DoctorToken({ doctor }: DoctorTokenProps) {
         isDragging ? 'opacity-40' : '',
       ].join(' ')}
     >
-      <Avatar name={doctor.name} id={doctor.id} size={24} />
+      <Avatar name={doctor.name} shortName={doctor.short_name} id={doctor.id} size={24} />
       <span className="text-sm text-ink truncate">{doctor.name}</span>
     </button>
   )
