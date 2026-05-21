@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, status
+from datetime import date
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -11,8 +13,10 @@ from app.schemas.employment_period import (
     EmploymentPeriodResponse,
     EmploymentPeriodUpdate,
 )
+from app.schemas.ina_availability import INAAvailabilityEntry
 from app.services import doctor_service
 from app.services.exceptions import DoctorNotFoundError, EmploymentPeriodNotFoundError
+from app.services.ina_availability_service import get_ina_availability_for_period
 
 router = APIRouter(prefix="/doctors", tags=["doctors"])
 
@@ -34,6 +38,28 @@ def get_doctor(doctor_id: int, db: Session = Depends(get_db)):
     if doctor is None:
         raise DoctorNotFoundError(doctor_id)
     return doctor
+
+
+@router.get("/{doctor_id}/ina-availability", response_model=dict[str, INAAvailabilityEntry])
+def get_ina_availability_range(
+    doctor_id: int,
+    from_date: date = Query(alias="from"),
+    to_date: date = Query(alias="to"),
+    db: Session = Depends(get_db),
+) -> dict[str, INAAvailabilityEntry]:
+    doctor = doctor_repo.get_doctor(db, doctor_id)
+    if doctor is None:
+        raise DoctorNotFoundError(doctor_id)
+    if from_date > to_date:
+        raise HTTPException(
+            status_code=422,
+            detail="'from' darf nicht nach 'to' liegen.",
+        )
+    raw = get_ina_availability_for_period(db, doctor_id, from_date, to_date)
+    return {
+        d.isoformat(): INAAvailabilityEntry(available=entry.available, reasons=entry.reasons)
+        for d, entry in raw.items()
+    }
 
 
 @router.post("", response_model=DoctorResponse, status_code=status.HTTP_201_CREATED)

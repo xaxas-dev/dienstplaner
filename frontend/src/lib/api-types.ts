@@ -58,6 +58,23 @@ export interface paths {
         patch: operations["update_doctor_api_doctors__doctor_id__patch"];
         trace?: never;
     };
+    "/api/doctors/{doctor_id}/ina-availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Ina Availability */
+        get: operations["get_ina_availability_api_doctors__doctor_id__ina_availability_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/doctors/{doctor_id}/employment-periods": {
         parameters: {
             query?: never;
@@ -505,21 +522,40 @@ export interface paths {
         patch: operations["update_ina_exclusion_api_ina_exclusions__exclusion_id__patch"];
         trace?: never;
     };
-    "/api/doctors/{doctor_id}/ina-availability": {
+    "/api/doctors/{doctor_id}/absences": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get Ina Availability */
-        get: operations["get_ina_availability_api_doctors__doctor_id__ina_availability_get"];
+        /** List Absences */
+        get: operations["list_absences_api_doctors__doctor_id__absences_get"];
         put?: never;
-        post?: never;
+        /** Create Absence */
+        post: operations["create_absence_api_doctors__doctor_id__absences_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/absences/{absence_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Absence */
+        delete: operations["delete_absence_api_absences__absence_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Absence */
+        patch: operations["update_absence_api_absences__absence_id__patch"];
         trace?: never;
     };
     "/api/settings": {
@@ -561,6 +597,69 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AbsenceCreate */
+        AbsenceCreate: {
+            /** Doctor Id */
+            doctor_id: number;
+            absence_type: components["schemas"]["AbsenceType"];
+            /**
+             * Valid From
+             * Format: date
+             */
+            valid_from: string;
+            /**
+             * Valid To
+             * Format: date
+             */
+            valid_to: string;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** AbsenceResponse */
+        AbsenceResponse: {
+            /** Doctor Id */
+            doctor_id: number;
+            absence_type: components["schemas"]["AbsenceType"];
+            /**
+             * Valid From
+             * Format: date
+             */
+            valid_from: string;
+            /**
+             * Valid To
+             * Format: date
+             */
+            valid_to: string;
+            /** Notes */
+            notes?: string | null;
+            /** Id */
+            id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * AbsenceType
+         * @enum {string}
+         */
+        AbsenceType: "URLAUB" | "KRANKHEIT" | "FORTBILDUNG" | "ELTERNZEIT" | "MUTTERSCHUTZ" | "SONSTIGES";
+        /** AbsenceUpdate */
+        AbsenceUpdate: {
+            absence_type?: components["schemas"]["AbsenceType"] | null;
+            /** Valid From */
+            valid_from?: string | null;
+            /** Valid To */
+            valid_to?: string | null;
+            /** Notes */
+            notes?: string | null;
+        };
         /** AppSettingResponse */
         AppSettingResponse: {
             /** Key */
@@ -976,6 +1075,13 @@ export interface components {
             status: string;
             /** Version */
             version: string;
+        };
+        /** INAAvailabilityEntry */
+        INAAvailabilityEntry: {
+            /** Available */
+            available: boolean;
+            /** Reasons */
+            reasons: string[];
         };
         /** INAAvailabilityResponse */
         INAAvailabilityResponse: {
@@ -1871,6 +1977,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DoctorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_ina_availability_api_doctors__doctor_id__ina_availability_get: {
+        parameters: {
+            query?: {
+                date?: string | null;
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path: {
+                doctor_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["INAAvailabilityResponse"][];
                 };
             };
             /** @description Validation Error */
@@ -3403,13 +3544,9 @@ export interface operations {
             };
         };
     };
-    get_ina_availability_api_doctors__doctor_id__ina_availability_get: {
+    list_absences_api_doctors__doctor_id__absences_get: {
         parameters: {
-            query?: {
-                date?: string | null;
-                from?: string | null;
-                to?: string | null;
-            };
+            query?: never;
             header?: never;
             path: {
                 doctor_id: number;
@@ -3424,7 +3561,106 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["INAAvailabilityResponse"][];
+                    "application/json": components["schemas"]["AbsenceResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_absence_api_doctors__doctor_id__absences_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doctor_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AbsenceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_absence_api_absences__absence_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                absence_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_absence_api_absences__absence_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                absence_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AbsenceUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceResponse"];
                 };
             };
             /** @description Validation Error */

@@ -90,14 +90,14 @@ class TestINAAvailabilityEndpoint:
         doc = _make_doctor(db, "Avail-Arzt")
         resp = client.get(
             f"/api/doctors/{doc.id}/ina-availability",
-            params={"date": "2026-05-04"},
+            params={"from": "2026-05-04", "to": "2026-05-04"},
         )
         assert resp.status_code == 200
         data = resp.json()
         assert len(data) == 1
-        assert data[0]["available"] is True
-        assert data[0]["date"] == "2026-05-04"
-        assert data[0]["reasons"] == []
+        assert "2026-05-04" in data
+        assert data["2026-05-04"]["available"] is True
+        assert data["2026-05-04"]["reasons"] == []
 
     def test_period_range(self, client: TestClient, db: Session) -> None:
         doc = _make_doctor(db, "Range-Arzt")
