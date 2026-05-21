@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAssignShift } from '../useAssignShift'
 import { useDoctors } from '@/features/doctors/useDoctors'
+import { useAvailabilityForDate } from '../useAvailabilityForDate'
 import type { ShiftWithDetails } from '@/lib/types'
 
 interface Props {
@@ -16,12 +17,15 @@ interface Props {
 }
 
 export function DoctorAssignPopover({
-  planId, doctorId, currentShift, openShiftsForDay, onClose,
+  planId, doctorId, day, currentShift, openShiftsForDay, onClose,
 }: Props) {
   const { mutate, isPending } = useAssignShift(planId)
   const { data: doctors = [] } = useDoctors()
   const [search, setSearch] = useState('')
   const cardRef = useRef<HTMLDivElement>(null)
+
+  const activeDoctorIds = doctors.filter((d) => d.active).map((d) => d.id)
+  const availabilityMap = useAvailabilityForDate(activeDoctorIds, day)
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -98,17 +102,29 @@ export function DoctorAssignPopover({
               className="h-7 text-xs"
             />
             <ul className="max-h-40 overflow-y-auto space-y-0.5">
-              {filteredDoctors.map((d) => (
-                <li key={d.id}>
-                  <button
-                    disabled={isPending}
-                    onClick={() => assign(currentShift.id, d.id)}
-                    className="w-full text-left px-2 py-1 rounded-md text-xs hover:bg-paper transition"
-                  >
-                    {d.name}
-                  </button>
-                </li>
-              ))}
+              {filteredDoctors.map((d) => {
+                const avail = availabilityMap[d.id]
+                const unavailable = avail !== undefined && !avail.available
+                const tooltip = unavailable ? avail.reasons.join(', ') : undefined
+                return (
+                  <li key={d.id}>
+                    <button
+                      disabled={isPending}
+                      onClick={() => assign(currentShift.id, d.id)}
+                      title={tooltip}
+                      className="w-full text-left px-2 py-1 rounded-md text-xs hover:bg-paper transition flex items-center gap-1.5"
+                    >
+                      {unavailable && (
+                        <span
+                          aria-label="Nicht INA-verfügbar"
+                          className="inline-block w-2 h-2 rounded-full bg-amber-400 flex-shrink-0"
+                        />
+                      )}
+                      <span>{d.name}</span>
+                    </button>
+                  </li>
+                )
+              })}
             </ul>
           </div>
         )}

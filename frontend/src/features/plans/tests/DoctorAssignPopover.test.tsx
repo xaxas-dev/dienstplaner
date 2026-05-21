@@ -8,6 +8,13 @@ import type { Doctor, ShiftWithDetails } from '@/lib/types'
 
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
+// Default: all doctors available — overridden per test as needed
+const mockAvailabilityMap: Record<number, { date: string; available: boolean; reasons: string[] }> = {}
+
+vi.mock('../useAvailabilityForDate', () => ({
+  useAvailabilityForDate: () => mockAvailabilityMap,
+}))
+
 const mockDoctors: Doctor[] = [
   {
     id: 1, name: 'Müller, Anna', short_name: 'AM',
@@ -54,7 +61,13 @@ function Wrapper({ children }: { children: React.ReactNode }) {
   )
 }
 
-beforeEach(() => { vi.clearAllMocks() })
+beforeEach(() => {
+  vi.clearAllMocks()
+  // Reset availability map to empty (all doctors available by default)
+  for (const key of Object.keys(mockAvailabilityMap)) {
+    delete mockAvailabilityMap[Number(key)]
+  }
+})
 
 describe('DoctorAssignPopover', () => {
   it('zeigt offene Schichttypen zur Auswahl', () => {
@@ -156,5 +169,106 @@ describe('DoctorAssignPopover', () => {
     )
     await user.keyboard('{Escape}')
     expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  describe('Availability-Marker', () => {
+    const occupied: ShiftWithDetails = { ...makeOpenShift(1, 'F'), doctor_id: 1 }
+
+    it('zeigt keinen Marker wenn Arzt verfügbar ist', () => {
+      // mockAvailabilityMap leer → available undefined → kein Marker
+      render(
+        <Wrapper>
+          <DoctorAssignPopover
+            planId={1} doctorId={1} day="2026-05-15"
+            currentShift={occupied}
+            openShiftsForDay={[]}
+            onClose={vi.fn()}
+          />
+        </Wrapper>
+      )
+      expect(screen.queryByLabelText('Nicht INA-verfügbar')).not.toBeInTheDocument()
+    })
+
+    it('zeigt amber Dot wenn Arzt nicht INA-verfügbar ist', () => {
+      mockAvailabilityMap[1] = {
+        date: '2026-05-15',
+        available: false,
+        reasons: ['Abwesenheit'],
+      }
+      render(
+        <Wrapper>
+          <DoctorAssignPopover
+            planId={1} doctorId={1} day="2026-05-15"
+            currentShift={occupied}
+            openShiftsForDay={[]}
+            onClose={vi.fn()}
+          />
+        </Wrapper>
+      )
+      expect(screen.getByLabelText('Nicht INA-verfügbar')).toBeInTheDocument()
+    })
+
+    it('zeigt keinen Marker wenn available=true', () => {
+      mockAvailabilityMap[1] = {
+        date: '2026-05-15',
+        available: true,
+        reasons: [],
+      }
+      render(
+        <Wrapper>
+          <DoctorAssignPopover
+            planId={1} doctorId={1} day="2026-05-15"
+            currentShift={occupied}
+            openShiftsForDay={[]}
+            onClose={vi.fn()}
+          />
+        </Wrapper>
+      )
+      expect(screen.queryByLabelText('Nicht INA-verfügbar')).not.toBeInTheDocument()
+    })
+
+    it('Auswahl bleibt möglich trotz Nicht-Verfügbarkeit', async () => {
+      const user = userEvent.setup()
+      mockAvailabilityMap[1] = {
+        date: '2026-05-15',
+        available: false,
+        reasons: ['Rotation blockiert'],
+      }
+      render(
+        <Wrapper>
+          <DoctorAssignPopover
+            planId={1} doctorId={1} day="2026-05-15"
+            currentShift={occupied}
+            openShiftsForDay={[]}
+            onClose={vi.fn()}
+          />
+        </Wrapper>
+      )
+      await user.click(screen.getByText('Müller, Anna'))
+      expect(mockMutate).toHaveBeenCalledWith(
+        { shiftId: 1, data: { doctor_id: 1 } },
+        expect.anything(),
+      )
+    })
+
+    it('zeigt Tooltip mit Gründen bei Nicht-Verfügbarkeit', () => {
+      mockAvailabilityMap[1] = {
+        date: '2026-05-15',
+        available: false,
+        reasons: ['Abwesenheit', 'INA-Ausschluss'],
+      }
+      render(
+        <Wrapper>
+          <DoctorAssignPopover
+            planId={1} doctorId={1} day="2026-05-15"
+            currentShift={occupied}
+            openShiftsForDay={[]}
+            onClose={vi.fn()}
+          />
+        </Wrapper>
+      )
+      const btn = screen.getByRole('button', { name: /Müller, Anna/ })
+      expect(btn).toHaveAttribute('title', 'Abwesenheit, INA-Ausschluss')
+    })
   })
 })
