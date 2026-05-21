@@ -189,3 +189,21 @@ class TestINAAvailabilityEndpoint:
             params={"from": "2026-05-04", "to": "2026-05-06"},
         )
         assert resp.status_code == 404
+
+
+class TestSeedBlocksCorrectValues:
+    def test_department_blocks_values(self, db: Session) -> None:
+        su = db.query(Department).filter(Department.name == "SU").first()
+        if su is not None:
+            assert su.blocks_ina_weekdays is True
+            assert su.blocks_ina_weekends is True
+
+        ck = db.query(Department).filter(Department.name == "Curschmann Klinik").first()
+        if ck is not None:
+            assert ck.blocks_ina_weekdays is True
+            assert ck.blocks_ina_weekends is False
+
+        emg = db.query(Department).filter(Department.name == "EMG").first()
+        if emg is not None:
+            assert emg.blocks_ina_weekdays is False
+            assert emg.blocks_ina_weekends is False
