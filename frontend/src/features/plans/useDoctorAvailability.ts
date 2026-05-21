@@ -22,16 +22,17 @@ export function useDoctorAvailability(
   const query = useQuery({
     queryKey: availabilityKeys.byDoctorRange(doctorId ?? 0, from ?? '', to ?? ''),
     queryFn: () =>
-      apiGet<INAAvailability[]>(
+      apiGet<Record<string, { available: boolean; reasons: string[] }>>(
         `/api/doctors/${doctorId}/ina-availability?from=${from}&to=${to}`,
       ),
     enabled,
   })
 
-  const data: Record<string, INAAvailability> | undefined =
-    query.data
-      ? Object.fromEntries(query.data.map((entry) => [entry.date, entry]))
-      : undefined
+  const data: Record<string, INAAvailability> | undefined = query.data
+    ? Object.fromEntries(
+        Object.entries(query.data).map(([date, entry]) => [date, { date, ...entry }]),
+      )
+    : undefined
 
   return { data, isLoading: query.isLoading }
 }
