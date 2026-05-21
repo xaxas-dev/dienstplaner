@@ -20,9 +20,7 @@ export function useDoctorAvailability(
   const enabled = doctorId !== null && from !== null && to !== null
 
   const query = useQuery({
-    queryKey: enabled
-      ? availabilityKeys.byDoctorRange(doctorId!, from!, to!)
-      : ['availability', 'disabled'],
+    queryKey: availabilityKeys.byDoctorRange(doctorId ?? 0, from ?? '', to ?? ''),
     queryFn: () =>
       apiGet<INAAvailability[]>(
         `/api/doctors/${doctorId}/ina-availability?from=${from}&to=${to}`,
