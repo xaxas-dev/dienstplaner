@@ -33,19 +33,22 @@ geht) zurück zu Polish. Jeder Milestone ist eng geschnitten (eine
 Kernfunktion pro Milestone). Briefings folgen der M8-002-Vorlage und
 werden je nach Reihenfolge in `tasks/open/` ausgearbeitet.
 
-### M3-001 — Plan-Editor v2 (Drag & Drop)
+### M3-001 — Plan-Editor v2 (Rotations-Zuweisung per Drag & Drop)
 
-**Ziel.** Schichten per Drag & Drop einem Arzt zuweisen. Click-Popover
-(`DoctorAssignPopover`) bleibt als a11y-Fallback erhalten.
+**Ziel.** Rotations-Zuweisungen (Arzt → Bereich) in der Bereiche-Ansicht
+per Drag & Drop erfassen. Drop öffnet `RotationAssignPopover` mit
+vorausgewähltem Arzt; Klick-Pfad bleibt als a11y-Fallback erhalten.
+Dienste-Ansicht (Schicht-Zuweisung) bleibt unverändert.
 
-**Kerndeliverable.** dnd-kit-basierte DnD-Interaktion im Plan-Grid;
-Drop ruft den bestehenden `useAssignShift`-Hook. Keine semantische
+**Kerndeliverable.** dnd-kit Drop-Target an RotationGrid-Zellen;
+`RotationAssignPopover` mit `preselectedDoctorId`-Prop. Keine semantische
 Validierung im Drop-Pfad (weiche Validierung, ADR-033).
 
-**Abhängigkeiten.** Keine — Backend (PATCH /shifts/{id},
-Konflikt-Engine) ist seit M2-005 vollständig.
+**Abhängigkeiten.** Keine — RotationGrid + RotationAssignPopover sind
+seit M2-006/feat/bereich-grid vollständig.
 
-**Status.** 📝 Briefing vorbereitet: `tasks/open/M3-001-plan-editor-v2-dnd.md`.
+**Status.** 🚧 In Arbeit (Sub-Schritt A/A' committed, B–F ausstehend):
+`tasks/open/M3-001-plan-editor-v2-dnd.md`.
 
 ### M4-001 — Verfügbarkeit & Rotation Management UI
 

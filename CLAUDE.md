@@ -196,6 +196,31 @@ Punkte nennt.
   nicht der dp-Surface-Wert #FFFCF5 — das ist gewollt, keinen neuen Token einführen.
   Leere Zellen: solide `border-line` + `bg-paper/50` (kein `border-dashed`).
 
+### Frontend — DnD-Pattern (M3-001)
+- **DnD nur in Bereiche-Ansicht:** Drag & Drop ist für Rotations-Zuweisung
+  (Arzt → Bereich). Dienste-Ansicht (Schicht-Zuweisung per Klick-Popover)
+  bleibt unverändert — DnD dort ist separater Folge-Milestone (ADR-053).
+- **Drop öffnet Popover, schreibt nicht direkt:** Drop auf RotationGrid-Zelle
+  setzt `preselectedDragDoctorId` und öffnet `RotationAssignPopover`.
+  User bestätigt `valid_from`/`valid_to`. Kein direkter DB-Write im
+  Drop-Handler (ADR-054).
+- **Drag-ID-Konvention:**
+  - Drag-Source: `doctor-{id}` — Helpers `makeDoctorDragId` /
+    `parseDoctorDragId` in `DoctorDragSource.tsx`
+  - Drop-Target: `rotation-{departmentId}-{yyyy-MM-dd}` — Helpers
+    `makeRotationDropId` / `parseRotationDropId` in `RotationGrid.tsx`
+- **DragOverlay:** `DoctorDragOverlayToken` (in `DoctorDragSource.tsx`)
+  rendert das gezogene Token am Cursor (`shadow-lg`). `activeDragDoctor`-State
+  in PlanPage: gesetzt in `onDragStart`, gecleart in `onDragEnd`/`onDragCancel`.
+- **ActivationConstraint:** `PointerSensor` mit `distance: 4` verhindert
+  versehentliche Drags aus Klick-Interaktionen.
+- **Screenreader:** Deutsche Announcements in `DndContext.accessibility`
+  nutzen `active.data.current.doctorName` und `over.data.current.departmentName`.
+  Diese Felder werden in `useDraggable`/`useDroppable` als `data` mitgegeben.
+- **Tab-Style:** Aktiver Tab in PlanPage nutzt Underline
+  (`border-b-2 border-accent text-ink`), nicht Pill — Terracotta-Pill
+  kollidiert visuell mit Doctor-Avataren (ADR-055).
+
 ## Was Claude Code NICHT tun soll
 - Keine neuen Bibliotheken ohne explizite Rückfrage einführen
 - Keine Bibliotheksfunktionen verwenden, die nicht in der Doku existieren

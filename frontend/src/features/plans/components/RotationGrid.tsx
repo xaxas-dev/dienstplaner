@@ -1,10 +1,123 @@
 import { Fragment } from 'react'
 import { format, isWeekend, isToday } from 'date-fns'
+import { useDroppable } from '@dnd-kit/core'
 import { Avatar } from '@/components/dp/Avatar'
 import { buildRotationGridData } from '../rotationGridUtils'
 import type { RotationAssignmentWithDetails, Department } from '@/lib/types'
 
+const ROTATION_DROP_ID_PREFIX = 'rotation-'
+
+export function makeRotationDropId(departmentId: number, day: string): string {
+  return `${ROTATION_DROP_ID_PREFIX}${departmentId}-${day}`
+}
+
+export function parseRotationDropId(id: string): { departmentId: number; day: string } | null {
+  if (!id.startsWith(ROTATION_DROP_ID_PREFIX)) return null
+  const rest = id.slice(ROTATION_DROP_ID_PREFIX.length)
+  const dashIdx = rest.indexOf('-')
+  if (dashIdx === -1) return null
+  const departmentId = Number(rest.slice(0, dashIdx))
+  const day = rest.slice(dashIdx + 1)
+  return Number.isFinite(departmentId) ? { departmentId, day } : null
+}
+
 const WEEKDAY_ABBR = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
+
+interface DeptPreview {
+  doctorId: number
+  doctorName: string
+  dateFrom: string
+  dateTo: string
+}
+
+interface RotationDropCellProps {
+  departmentId: number
+  departmentName: string
+  dayKey: string
+  cell: {
+    assignment: RotationAssignmentWithDetails
+    isEinarbeitung: boolean
+    overlap: boolean
+  } | undefined
+  isWe: boolean
+  isTod: boolean
+  onCellClick: (departmentId: number, day: string, assignmentId: number | null) => void
+  deptPreview?: DeptPreview | null
+}
+
+function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, isTod, onCellClick, deptPreview }: RotationDropCellProps) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: makeRotationDropId(departmentId, dayKey),
+    data: { departmentName, dayKey },
+  })
+  const doctor = cell?.assignment.doctor ?? null
+  const isPreview = !cell && deptPreview != null && dayKey >= deptPreview.dateFrom && dayKey <= deptPreview.dateTo
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={[
+        'h-[42px] flex items-center justify-center p-0.5 border-b border-line/50',
+        isWe ? 'bg-weekend' : '',
+        isOver ? 'bg-accent/25 ring-[3px] ring-inset ring-accent' : '',
+      ].join(' ')}
+    >
+      {cell && doctor ? (
+        <button
+          onClick={() => onCellClick(departmentId, dayKey, cell.assignment.id)}
+          className={[
+            'relative w-full h-full rounded-cell flex flex-col items-center justify-center px-0.5 transition',
+            'hover:brightness-95 border border-line/20',
+            'bg-accent/15',
+            isTod ? 'ring-2 ring-warn-line' : '',
+            cell.overlap ? 'ring-[1.5px] ring-warn' : '',
+          ].join(' ')}
+        >
+          <Avatar name={doctor.name} id={cell.assignment.doctor_id} size={22} />
+          <div className="flex items-center gap-0.5 mt-0.5">
+            {cell.isEinarbeitung && (
+              <span className="text-[8px] font-bold bg-accent text-paper px-0.5 rounded leading-tight">
+                E
+              </span>
+            )}
+            {cell.overlap && (
+              <span className="text-[8px] font-bold text-warn-ink leading-tight">
+                !
+              </span>
+            )}
+          </div>
+        </button>
+      ) : isPreview ? (
+        <div
+          className={[
+            'w-full h-full rounded-cell flex items-center justify-center',
+            'border border-dashed border-accent/70 bg-accent/10 opacity-60',
+            isTod ? 'ring-2 ring-warn-line' : '',
+          ].join(' ')}
+        >
+          <Avatar name={deptPreview!.doctorName} id={deptPreview!.doctorId} size={22} />
+        </div>
+      ) : (
+        <button
+          onClick={() => onCellClick(departmentId, dayKey, null)}
+          aria-label={`${departmentName}, ${dayKey}, leer – Zuweisung hinzufügen`}
+          className={[
+            'w-full h-full rounded-cell border border-line/70 bg-card transition',
+            isTod ? 'ring-2 ring-warn-line' : '',
+          ].join(' ')}
+        />
+      )}
+    </div>
+  )
+}
+
+interface RotationGridPreview {
+  departmentId: number
+  doctorId: number
+  doctorName: string
+  dateFrom: string
+  dateTo: string
+}
 
 interface Props {
   rotations: RotationAssignmentWithDetails[]
@@ -12,6 +125,7 @@ interface Props {
   validFrom: string
   validTo: string
   onCellClick: (departmentId: number, day: string, assignmentId: number | null) => void
+  preview?: RotationGridPreview | null
 }
 
 export function RotationGrid({
@@ -20,14 +134,15 @@ export function RotationGrid({
   validFrom,
   validTo,
   onCellClick,
+  preview,
 }: Props) {
   const { rows, days } = buildRotationGridData(rotations, departments, validFrom, validTo)
 
   return (
     <div className="overflow-auto flex-1">
       <div
-        className="grid min-w-max"
-        style={{ gridTemplateColumns: `210px repeat(${days.length}, 36px)` }}
+        className="grid"
+        style={{ gridTemplateColumns: `210px repeat(${days.length}, minmax(36px, 1fr))` }}
       >
         {/* Header */}
         <div className="sticky left-0 bg-card z-10 h-10 border-b border-line flex items-center px-3">
@@ -55,7 +170,11 @@ export function RotationGrid({
         })}
 
         {/* Rows */}
-        {rows.map(({ department: dept, cells }) => (
+        {rows.map(({ department: dept, cells }) => {
+          const deptPreview = preview?.departmentId === dept.id
+            ? { doctorId: preview.doctorId, doctorName: preview.doctorName, dateFrom: preview.dateFrom, dateTo: preview.dateTo }
+            : null
+          return (
           <Fragment key={`row-${dept.id}`}>
             {/* Left label column */}
             <div className="sticky left-0 bg-card z-10 flex flex-col justify-center px-3 h-[42px] border-b border-line/50 min-w-0">
@@ -79,68 +198,23 @@ export function RotationGrid({
             {/* Day cells */}
             {days.map((day) => {
               const dayKey = format(day, 'yyyy-MM-dd')
-              const cell = cells[dayKey]
-              const isWe = isWeekend(day)
-              const isTod = isToday(day)
-              const doctor = cell?.assignment.doctor ?? null
-
               return (
-                <div
+                <RotationDropCell
                   key={`cell-${dept.id}-${dayKey}`}
-                  className={[
-                    'h-[42px] flex items-center justify-center p-0.5 border-b border-line/30',
-                    isWe ? 'bg-weekend/40' : '',
-                  ].join(' ')}
-                >
-                  {cell && doctor ? (
-                    <button
-                      onClick={() => onCellClick(dept.id, dayKey, cell.assignment.id)}
-                      className={[
-                        'relative w-full h-full rounded-cell flex flex-col items-center justify-center px-0.5 transition',
-                        'hover:brightness-95',
-                        'bg-accent/10',
-                        isTod ? 'ring-2 ring-warn-line' : '',
-                        cell.overlap ? 'ring-[1.5px] ring-warn' : '',
-                      ].join(' ')}
-                    >
-                      {/* Doctor avatar + name */}
-                      <div className="flex items-center gap-1 w-full min-w-0 px-1">
-                        <Avatar name={doctor.name} id={cell.assignment.doctor_id} size={18} />
-                        <span className="text-[11px] font-medium leading-none truncate">
-                          {(doctor.short_name ?? doctor.name).slice(0, 8)}
-                        </span>
-                      </div>
-
-                      {/* Badges */}
-                      <div className="flex items-center gap-0.5 mt-0.5">
-                        {cell.isEinarbeitung && (
-                          <span className="text-[8px] font-bold bg-accent text-paper px-0.5 rounded leading-tight">
-                            E
-                          </span>
-                        )}
-                        {cell.overlap && (
-                          <span className="text-[8px] font-bold text-warn-ink leading-tight">
-                            !
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => onCellClick(dept.id, dayKey, null)}
-                      className={[
-                        'aspect-square w-full rounded-cell border border-line transition',
-                        'hover:bg-card hover:border-line-2',
-                        isWe ? 'bg-weekend/40' : 'bg-paper/50',
-                        isTod ? 'ring-2 ring-warn-line' : '',
-                      ].join(' ')}
-                    />
-                  )}
-                </div>
+                  departmentId={dept.id}
+                  departmentName={dept.name}
+                  dayKey={dayKey}
+                  cell={cells[dayKey]}
+                  isWe={isWeekend(day)}
+                  isTod={isToday(day)}
+                  onCellClick={onCellClick}
+                  deptPreview={deptPreview}
+                />
               )
             })}
           </Fragment>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
