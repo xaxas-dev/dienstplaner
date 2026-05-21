@@ -29,6 +29,7 @@ import { usePlan } from './usePlans'
 import { usePlanShifts } from './usePlanShifts'
 import { usePlanConflicts } from './usePlanConflicts'
 import { usePlanRotations } from './usePlanRotations'
+import { useDoctorAvailability } from './useDoctorAvailability'
 import { useDoctors } from '@/features/doctors/useDoctors'
 import { useDepartments } from '@/features/departments/useDepartments'
 import { PlanGrid } from './components/PlanGrid'
@@ -74,6 +75,11 @@ export function PlanPage() {
   const { data: doctors = [] } = useDoctors()
   const { data: departments = [] } = useDepartments()
   const { data: rotations = [] } = usePlanRotations(id)
+  const { data: dragAvailability } = useDoctorAvailability(
+    activeDragDoctor?.id ?? null,
+    plan?.valid_from ?? null,
+    plan?.valid_to ?? null,
+  )
 
   useEffect(() => {
     if (shiftsError) {
@@ -235,6 +241,7 @@ export function PlanPage() {
                 setActiveRotationCell({ departmentId, day, assignmentId })
               }
               preview={rotationPreview}
+              availability={activeDragDoctor ? dragAvailability : undefined}
             />
           )}
         </div>

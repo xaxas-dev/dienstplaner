@@ -3,7 +3,7 @@ import { format, isWeekend, isToday } from 'date-fns'
 import { useDroppable } from '@dnd-kit/core'
 import { Avatar } from '@/components/dp/Avatar'
 import { buildRotationGridData } from '../rotationGridUtils'
-import type { RotationAssignmentWithDetails, Department } from '@/lib/types'
+import type { RotationAssignmentWithDetails, Department, INAAvailability } from '@/lib/types'
 
 const ROTATION_DROP_ID_PREFIX = 'rotation-'
 
@@ -43,9 +43,11 @@ interface RotationDropCellProps {
   isTod: boolean
   onCellClick: (departmentId: number, day: string, assignmentId: number | null) => void
   deptPreview?: DeptPreview | null
+  unavailableHint?: boolean
+  unavailableReasons?: string[]
 }
 
-function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, isTod, onCellClick, deptPreview }: RotationDropCellProps) {
+function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, isTod, onCellClick, deptPreview, unavailableHint, unavailableReasons }: RotationDropCellProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: makeRotationDropId(departmentId, dayKey),
     data: { departmentName, dayKey },
@@ -53,13 +55,19 @@ function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, is
   const doctor = cell?.assignment.doctor ?? null
   const isPreview = !cell && deptPreview != null && dayKey >= deptPreview.dateFrom && dayKey <= deptPreview.dateTo
 
+  const tooltipTitle = unavailableHint && unavailableReasons && unavailableReasons.length > 0
+    ? unavailableReasons.join(', ')
+    : undefined
+
   return (
     <div
       ref={setNodeRef}
+      title={tooltipTitle}
       className={[
         'h-[42px] flex items-center justify-center p-0.5 border-b border-line/50',
         isWe ? 'bg-weekend' : '',
         isOver ? 'bg-accent/25 ring-[3px] ring-inset ring-accent' : '',
+        unavailableHint ? 'ring-1 ring-amber-400/60' : '',
       ].join(' ')}
     >
       {cell && doctor ? (
@@ -126,6 +134,7 @@ interface Props {
   validTo: string
   onCellClick: (departmentId: number, day: string, assignmentId: number | null) => void
   preview?: RotationGridPreview | null
+  availability?: Record<string, INAAvailability>
 }
 
 export function RotationGrid({
@@ -135,6 +144,7 @@ export function RotationGrid({
   validTo,
   onCellClick,
   preview,
+  availability,
 }: Props) {
   const { rows, days } = buildRotationGridData(rotations, departments, validFrom, validTo)
 
@@ -198,6 +208,9 @@ export function RotationGrid({
             {/* Day cells */}
             {days.map((day) => {
               const dayKey = format(day, 'yyyy-MM-dd')
+              const availEntry = availability?.[dayKey]
+              const unavailableHint = availEntry !== undefined && !availEntry.available
+              const unavailableReasons = unavailableHint ? availEntry.reasons : undefined
               return (
                 <RotationDropCell
                   key={`cell-${dept.id}-${dayKey}`}
@@ -209,6 +222,8 @@ export function RotationGrid({
                   isTod={isToday(day)}
                   onCellClick={onCellClick}
                   deptPreview={deptPreview}
+                  unavailableHint={unavailableHint}
+                  unavailableReasons={unavailableReasons}
                 />
               )
             })}
