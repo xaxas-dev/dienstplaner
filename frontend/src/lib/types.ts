@@ -75,3 +75,8 @@ export type RotationAssignment = components['schemas']['RotationAssignmentRespon
 export type RotationAssignmentWithDetails = components['schemas']['RotationAssignmentWithDetails']
 export type RotationAssignmentCreate = components['schemas']['RotationAssignmentCreate']
 export type RotationAssignmentUpdate = components['schemas']['RotationAssignmentUpdate']
+
+export type AbsenceType = components['schemas']['AbsenceType']
+export type Absence = components['schemas']['AbsenceResponse']
+export type AbsenceCreate = components['schemas']['AbsenceCreate']
+export type AbsenceUpdate = components['schemas']['AbsenceUpdate']
