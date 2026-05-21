@@ -5,18 +5,22 @@ export function ShiftCell({
   code,
   shiftTypeId,
   conflict,
+  tarifWarning,
   weekend,
   today,
   onClick,
   onConflictDotClick,
+  onTarifDotClick,
 }: {
   code?: string
   shiftTypeId?: number
   conflict?: boolean
+  tarifWarning?: boolean
   weekend?: boolean
   today?: boolean
   onClick?: () => void
   onConflictDotClick?: () => void
+  onTarifDotClick?: () => void
 }) {
   if (!code) {
     return (
@@ -50,6 +54,14 @@ export function ShiftCell({
           className="absolute -right-1 -top-1 grid size-3 place-items-center rounded-full bg-warn text-[8px] font-bold text-paper"
         >
           !
+        </span>
+      )}
+      {tarifWarning && (
+        <span
+          onClick={(e) => { e.stopPropagation(); onTarifDotClick?.() }}
+          className="absolute -left-1 -top-1 grid size-3 place-items-center rounded-full bg-sand border border-warn-line text-[8px] font-bold text-ink"
+        >
+          §
         </span>
       )}
     </button>
