@@ -61,11 +61,16 @@ export function PlanPage() {
     assignmentId: number | null
   } | null>(null)
   const [preselectedDragDoctorId, setPreselectedDragDoctorId] = useState<number | null>(null)
-  const [activeDragDoctor, setActiveDragDoctor] = useState<{ id: number; name: string } | null>(null)
+  const [activeDragDoctor, setActiveDragDoctor] = useState<{
+    id: number
+    name: string
+    shortName?: string | null
+  } | null>(null)
   const [rotationPreview, setRotationPreview] = useState<{
     departmentId: number
     doctorId: number
     doctorName: string
+    doctorShortName?: string | null
     dateFrom: string
     dateTo: string
   } | null>(null)
@@ -141,8 +146,9 @@ export function PlanPage() {
   function handleDragStart(event: DragStartEvent) {
     const doctorId = parseDoctorDragId(String(event.active.id))
     if (doctorId === null) return
-    const name = (event.active.data.current as { doctorName?: string } | undefined)?.doctorName ?? ''
-    setActiveDragDoctor({ id: doctorId, name })
+    const doctor = doctors.find((d) => d.id === doctorId)
+    const name = (event.active.data.current as { doctorName?: string } | undefined)?.doctorName ?? doctor?.name ?? ''
+    setActiveDragDoctor({ id: doctorId, name, shortName: doctor?.short_name })
   }
 
   function handleDragEnd(event: DragEndEvent) {
@@ -307,6 +313,7 @@ export function PlanPage() {
                 departmentId: activeRotationCell.departmentId,
                 doctorId: doctor.id,
                 doctorName: doctor.name,
+                doctorShortName: doctor.short_name,
                 dateFrom: preview.dateFrom,
                 dateTo: preview.dateTo,
               })
@@ -322,7 +329,11 @@ export function PlanPage() {
     </div>
       <DragOverlay modifiers={[avatarTopModifier]}>
         {activeDragDoctor && (
-          <DoctorDragOverlayToken name={activeDragDoctor.name} id={activeDragDoctor.id} />
+          <DoctorDragOverlayToken
+            name={activeDragDoctor.name}
+            shortName={activeDragDoctor.shortName}
+            id={activeDragDoctor.id}
+          />
         )}
       </DragOverlay>
     </DndContext>

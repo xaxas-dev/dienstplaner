@@ -59,7 +59,7 @@ export function PlanGrid({
               key={`lbl-${doctor.id}`}
               className="sticky left-0 bg-paper z-10 flex items-center gap-2 px-2 h-[42px] border-b border-line/50"
             >
-              <Avatar name={doctor.name} id={doctor.id} size={26} />
+              <Avatar name={doctor.name} shortName={doctor.short_name} id={doctor.id} size={26} />
               <div className="min-w-0">
                 <p className="text-[13px] font-medium leading-tight truncate">
                   {doctor.name}

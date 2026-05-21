@@ -28,6 +28,7 @@ import type { Doctor } from '@/lib/types'
 
 const schema = z.object({
   name: z.string().min(1, 'Name ist erforderlich').max(200, 'Maximal 200 Zeichen'),
+  title: z.string().max(50, 'Maximal 50 Zeichen').nullable().optional(),
   short_name: z.string().max(50, 'Maximal 50 Zeichen').nullable().optional(),
   doctor_type: z.enum(['INTERNAL', 'EXTERNAL']),
   is_facharzt: z.boolean(),
@@ -53,6 +54,7 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
     resolver: zodResolver(schema),
     defaultValues: {
       name: doctor?.name ?? '',
+      title: doctor?.title ?? null,
       short_name: doctor?.short_name ?? null,
       doctor_type: doctor?.doctor_type ?? 'INTERNAL',
       is_facharzt: doctor?.is_facharzt ?? false,
@@ -70,6 +72,7 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
     if (doctor) {
       form.reset({
         name: doctor.name,
+        title: doctor.title ?? null,
         short_name: doctor.short_name ?? null,
         doctor_type: doctor.doctor_type,
         is_facharzt: doctor.is_facharzt,
@@ -84,6 +87,7 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
   const onSubmit = (values: FormValues) => {
     const payload = {
       ...values,
+      title: values.title || null,
       short_name: values.short_name || null,
       notes: values.notes || null,
       entry_date: values.entry_date || null,
@@ -135,8 +139,35 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
             <FormItem>
               <FormLabel>Name *</FormLabel>
               <FormControl>
-                <Input placeholder="Dr. Mustermann" {...field} />
+                <Input placeholder="Anna Berger" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Titel */}
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Titel</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Kein Titel"
+                  list="doctor-title-options"
+                  {...field}
+                  value={field.value ?? ''}
+                  onChange={(e) => field.onChange(e.target.value || null)}
+                />
+              </FormControl>
+              <datalist id="doctor-title-options">
+                <option value="Dr." />
+                <option value="Prof." />
+                <option value="PD" />
+                <option value="Prof. Dr." />
+              </datalist>
               <FormMessage />
             </FormItem>
           )}

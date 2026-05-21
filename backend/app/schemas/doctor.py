@@ -11,6 +11,7 @@ from app.schemas.qualification import QualificationResponse
 
 class DoctorBase(BaseModel):
     name: str = Field(max_length=200)
+    title: str | None = Field(default=None, max_length=50)
     short_name: str | None = Field(default=None, max_length=50)
     doctor_type: DoctorType = DoctorType.INTERNAL
     is_facharzt: bool = False
@@ -25,6 +26,7 @@ class DoctorCreate(DoctorBase): ...
 
 class DoctorUpdate(BaseModel):
     name: str | None = Field(default=None, max_length=200)
+    title: str | None = Field(default=None, max_length=50)
     short_name: str | None = Field(default=None, max_length=50)
     doctor_type: DoctorType | None = None
     is_facharzt: bool | None = None

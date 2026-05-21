@@ -25,7 +25,7 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
     <div className="rounded-2xl bg-card border border-line p-5 flex flex-col gap-3 hover:-translate-y-px hover:shadow transition-all">
       {/* Header */}
       <div className="flex items-start gap-3">
-        <Avatar name={doctor.name} id={doctor.id} size={44} />
+        <Avatar name={doctor.name} shortName={doctor.short_name} id={doctor.id} size={44} />
         <div className="flex-1 min-w-0">
           <p className="font-serif text-[19px] leading-tight text-ink truncate">
             {doctor.name}
