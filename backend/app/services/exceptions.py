@@ -142,3 +142,15 @@ class SettingNotFoundError(Exception):
     def __init__(self, key: str) -> None:
         super().__init__(f"Einstellung '{key}' nicht gefunden")
         self.key = key
+
+
+class AbsenceNotFoundError(Exception):
+    def __init__(self, absence_id: int) -> None:
+        super().__init__(f"Abwesenheit mit ID {absence_id} nicht gefunden")
+        self.absence_id = absence_id
+
+
+class AbsenceValidationError(Exception):
+    def __init__(self, detail: str) -> None:
+        super().__init__(detail)
+        self.detail = detail
