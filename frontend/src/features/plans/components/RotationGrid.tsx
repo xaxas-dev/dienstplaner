@@ -23,6 +23,13 @@ export function parseRotationDropId(id: string): { departmentId: number; day: st
 
 const WEEKDAY_ABBR = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 
+interface DeptPreview {
+  doctorId: number
+  doctorName: string
+  dateFrom: string
+  dateTo: string
+}
+
 interface RotationDropCellProps {
   departmentId: number
   departmentName: string
@@ -35,21 +42,23 @@ interface RotationDropCellProps {
   isWe: boolean
   isTod: boolean
   onCellClick: (departmentId: number, day: string, assignmentId: number | null) => void
+  deptPreview?: DeptPreview | null
 }
 
-function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, isTod, onCellClick }: RotationDropCellProps) {
+function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, isTod, onCellClick, deptPreview }: RotationDropCellProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: makeRotationDropId(departmentId, dayKey),
     data: { departmentName, dayKey },
   })
   const doctor = cell?.assignment.doctor ?? null
+  const isPreview = !cell && deptPreview != null && dayKey >= deptPreview.dateFrom && dayKey <= deptPreview.dateTo
 
   return (
     <div
       ref={setNodeRef}
       className={[
         'h-[42px] flex items-center justify-center p-0.5 border-b border-line/30',
-        isWe ? 'bg-weekend/40' : '',
+        isWe ? 'bg-weekend' : '',
         isOver ? 'bg-accent/25 ring-[3px] ring-inset ring-accent' : '',
       ].join(' ')}
     >
@@ -58,8 +67,8 @@ function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, is
           onClick={() => onCellClick(departmentId, dayKey, cell.assignment.id)}
           className={[
             'relative w-full h-full rounded-cell flex flex-col items-center justify-center px-0.5 transition',
-            'hover:brightness-95',
-            'bg-accent/10',
+            'hover:brightness-95 border border-line/20',
+            'bg-accent/15',
             isTod ? 'ring-2 ring-warn-line' : '',
             cell.overlap ? 'ring-[1.5px] ring-warn' : '',
           ].join(' ')}
@@ -78,14 +87,22 @@ function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, is
             )}
           </div>
         </button>
+      ) : isPreview ? (
+        <div
+          className={[
+            'w-full h-full rounded-cell flex items-center justify-center',
+            'border border-dashed border-accent/70 bg-accent/10 opacity-60',
+            isTod ? 'ring-2 ring-warn-line' : '',
+          ].join(' ')}
+        >
+          <Avatar name={deptPreview!.doctorName} id={deptPreview!.doctorId} size={22} />
+        </div>
       ) : (
         <button
           onClick={() => onCellClick(departmentId, dayKey, null)}
           aria-label={`${departmentName}, ${dayKey}, leer – Zuweisung hinzufügen`}
           className={[
-            'aspect-square w-full rounded-cell border border-line transition',
-            'hover:bg-card hover:border-line-2',
-            isWe ? 'bg-weekend/40' : 'bg-paper/50',
+            'w-full h-full rounded-cell border border-line/40 bg-card transition',
             isTod ? 'ring-2 ring-warn-line' : '',
           ].join(' ')}
         />
@@ -94,12 +111,21 @@ function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, is
   )
 }
 
+interface RotationGridPreview {
+  departmentId: number
+  doctorId: number
+  doctorName: string
+  dateFrom: string
+  dateTo: string
+}
+
 interface Props {
   rotations: RotationAssignmentWithDetails[]
   departments: Department[]
   validFrom: string
   validTo: string
   onCellClick: (departmentId: number, day: string, assignmentId: number | null) => void
+  preview?: RotationGridPreview | null
 }
 
 export function RotationGrid({
@@ -108,14 +134,15 @@ export function RotationGrid({
   validFrom,
   validTo,
   onCellClick,
+  preview,
 }: Props) {
   const { rows, days } = buildRotationGridData(rotations, departments, validFrom, validTo)
 
   return (
     <div className="overflow-auto flex-1">
       <div
-        className="grid min-w-max"
-        style={{ gridTemplateColumns: `210px repeat(${days.length}, 36px)` }}
+        className="grid"
+        style={{ gridTemplateColumns: `210px repeat(${days.length}, minmax(36px, 1fr))` }}
       >
         {/* Header */}
         <div className="sticky left-0 bg-card z-10 h-10 border-b border-line flex items-center px-3">
@@ -143,7 +170,11 @@ export function RotationGrid({
         })}
 
         {/* Rows */}
-        {rows.map(({ department: dept, cells }) => (
+        {rows.map(({ department: dept, cells }) => {
+          const deptPreview = preview?.departmentId === dept.id
+            ? { doctorId: preview.doctorId, doctorName: preview.doctorName, dateFrom: preview.dateFrom, dateTo: preview.dateTo }
+            : null
+          return (
           <Fragment key={`row-${dept.id}`}>
             {/* Left label column */}
             <div className="sticky left-0 bg-card z-10 flex flex-col justify-center px-3 h-[42px] border-b border-line/50 min-w-0">
@@ -177,11 +208,13 @@ export function RotationGrid({
                   isWe={isWeekend(day)}
                   isTod={isToday(day)}
                   onCellClick={onCellClick}
+                  deptPreview={deptPreview}
                 />
               )
             })}
           </Fragment>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

@@ -8,6 +8,7 @@ import {
   DragOverlay,
   KeyboardSensor,
   PointerSensor,
+  pointerWithin,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -59,6 +60,13 @@ export function PlanPage() {
   } | null>(null)
   const [preselectedDragDoctorId, setPreselectedDragDoctorId] = useState<number | null>(null)
   const [activeDragDoctor, setActiveDragDoctor] = useState<{ id: number; name: string } | null>(null)
+  const [rotationPreview, setRotationPreview] = useState<{
+    departmentId: number
+    doctorId: number
+    doctorName: string
+    dateFrom: string
+    dateTo: string
+  } | null>(null)
 
   const { data: plan } = usePlan(id)
   const { data: shifts = [], isError: shiftsError } = usePlanShifts(id)
@@ -79,6 +87,7 @@ export function PlanPage() {
     setActiveRotationCell(null)
     setContextShift(null)
     setPreselectedDragDoctorId(null)
+    setRotationPreview(null)
   }, [view])
 
   const planTitle = plan
@@ -140,6 +149,7 @@ export function PlanPage() {
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={pointerWithin}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
@@ -224,6 +234,7 @@ export function PlanPage() {
               onCellClick={(departmentId, day, assignmentId) =>
                 setActiveRotationCell({ departmentId, day, assignmentId })
               }
+              preview={rotationPreview}
             />
           )}
         </div>
@@ -263,9 +274,25 @@ export function PlanPage() {
             existingAssignment={existing}
             blocksIna={dept.blocks_ina_weekdays || dept.blocks_ina_weekends}
             preselectedDoctorId={preselectedDragDoctorId ?? undefined}
+            onPreviewChange={(preview) => {
+              if (preview === null) {
+                setRotationPreview(null)
+                return
+              }
+              const doctor = doctors.find((d) => d.id === preview.doctorId)
+              if (!doctor) return
+              setRotationPreview({
+                departmentId: activeRotationCell.departmentId,
+                doctorId: doctor.id,
+                doctorName: doctor.name,
+                dateFrom: preview.dateFrom,
+                dateTo: preview.dateTo,
+              })
+            }}
             onClose={() => {
               setActiveRotationCell(null)
               setPreselectedDragDoctorId(null)
+              setRotationPreview(null)
             }}
           />
         ) : null

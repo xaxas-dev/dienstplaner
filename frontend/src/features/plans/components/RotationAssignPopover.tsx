@@ -6,6 +6,12 @@ import { useCreateRotation, useUpdateRotation, useDeleteRotation } from '../useP
 import { useDoctors } from '@/features/doctors/useDoctors'
 import type { RotationAssignmentWithDetails } from '@/lib/types'
 
+interface PreviewState {
+  doctorId: number
+  dateFrom: string
+  dateTo: string
+}
+
 interface Props {
   planId: number
   departmentId: number
@@ -15,6 +21,7 @@ interface Props {
   existingAssignment: RotationAssignmentWithDetails | null
   blocksIna: boolean
   preselectedDoctorId?: number
+  onPreviewChange?: (preview: PreviewState | null) => void
   onClose: () => void
 }
 
@@ -27,6 +34,7 @@ export function RotationAssignPopover({
   existingAssignment,
   blocksIna,
   preselectedDoctorId,
+  onPreviewChange,
   onClose,
 }: Props) {
   const { mutate: createMutate, isPending: isCreating } = useCreateRotation(planId)
@@ -63,6 +71,26 @@ export function RotationAssignPopover({
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
+
+  const onPreviewChangeRef = useRef(onPreviewChange)
+  useEffect(() => {
+    onPreviewChangeRef.current = onPreviewChange
+  })
+
+  useEffect(() => {
+    const fn = onPreviewChangeRef.current
+    if (!fn) return
+    if (selectedDoctorId !== null) {
+      fn({ doctorId: selectedDoctorId, dateFrom, dateTo })
+    } else {
+      fn(null)
+    }
+  }, [selectedDoctorId, dateFrom, dateTo])
+
+  // Vorschau beim Unmount (Abbrechen) zuverlässig löschen
+  useEffect(() => {
+    return () => { onPreviewChangeRef.current?.(null) }
+  }, [])
 
   const isPending = isCreating || isUpdating || isDeleting
 
