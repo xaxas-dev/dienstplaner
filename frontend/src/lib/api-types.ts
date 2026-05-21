@@ -558,6 +558,23 @@ export interface paths {
         patch: operations["update_absence_api_absences__absence_id__patch"];
         trace?: never;
     };
+    "/api/plans/{plan_id}/tarif-warnings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Tarif Warnings */
+        get: operations["get_tarif_warnings_api_plans__plan_id__tarif_warnings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings": {
         parameters: {
             query?: never;
@@ -1254,6 +1271,15 @@ export interface components {
          * @enum {string}
          */
         PlanStatus: "DRAFT" | "RELEASED" | "ARCHIVED";
+        /** PlanTarifWarnings */
+        PlanTarifWarnings: {
+            /** Plan Id */
+            plan_id: number;
+            /** Warnings */
+            warnings: components["schemas"]["TarifWarning"][];
+            /** Warning Count */
+            warning_count: number;
+        };
         /** PlanUpdate */
         PlanUpdate: {
             /** Name */
@@ -1783,6 +1809,25 @@ export interface components {
             soft_score: number;
             /** Feasible */
             feasible: boolean;
+        };
+        /**
+         * TarifSeverity
+         * @enum {string}
+         */
+        TarifSeverity: "info" | "warning" | "critical";
+        /** TarifWarning */
+        TarifWarning: {
+            /** Shift Id */
+            shift_id?: number | null;
+            /** Doctor Id */
+            doctor_id?: number | null;
+            /** Shift Date */
+            shift_date?: string | null;
+            /** Rule Id */
+            rule_id: string;
+            severity: components["schemas"]["TarifSeverity"];
+            /** Message */
+            message: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -3661,6 +3706,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AbsenceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_tarif_warnings_api_plans__plan_id__tarif_warnings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanTarifWarnings"];
                 };
             };
             /** @description Validation Error */

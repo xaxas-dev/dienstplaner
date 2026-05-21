@@ -3,7 +3,7 @@ import { format, isWeekend, isToday } from 'date-fns'
 import { Avatar } from '@/components/dp/Avatar'
 import { ShiftCell } from '@/components/dp/ShiftCell'
 import { buildGridData } from '../planGridUtils'
-import type { ShiftWithDetails, Doctor } from '@/lib/types'
+import type { ShiftWithDetails, Doctor, TarifWarning } from '@/lib/types'
 
 const WEEKDAY_ABBR = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 
@@ -14,10 +14,12 @@ interface Props {
   validTo: string
   onCellClick: (shiftId: number | null, doctorId: number, day: string) => void
   onConflictDotClick: (shift: ShiftWithDetails) => void
+  onTarifDotClick?: (shift: ShiftWithDetails) => void
+  tarifWarnings?: Record<number, TarifWarning[]>
 }
 
 export function PlanGrid({
-  shifts, doctors, validFrom, validTo, onCellClick, onConflictDotClick,
+  shifts, doctors, validFrom, validTo, onCellClick, onConflictDotClick, onTarifDotClick, tarifWarnings,
 }: Props) {
   const { rows, days } = buildGridData(shifts, doctors, validFrom, validTo)
 
@@ -86,12 +88,21 @@ export function PlanGrid({
                     code={firstShift?.shift_type?.short_name ?? undefined}
                     shiftTypeId={firstShift?.shift_type_id}
                     conflict={cell?.hasConflict}
+                    tarifWarning={
+                      firstShift != null &&
+                      (tarifWarnings?.[firstShift.id]?.length ?? 0) > 0
+                    }
                     weekend={isWeekend(day)}
                     today={isToday(day)}
                     onClick={() => onCellClick(firstShift?.id ?? null, doctor.id, dayKey)}
                     onConflictDotClick={
                       firstShift && cell?.hasConflict
                         ? () => onConflictDotClick(firstShift)
+                        : undefined
+                    }
+                    onTarifDotClick={
+                      firstShift && (tarifWarnings?.[firstShift.id]?.length ?? 0) > 0
+                        ? () => onTarifDotClick?.(firstShift)
                         : undefined
                     }
                   />

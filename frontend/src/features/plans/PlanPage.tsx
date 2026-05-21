@@ -30,6 +30,7 @@ import { usePlanShifts } from './usePlanShifts'
 import { usePlanConflicts } from './usePlanConflicts'
 import { usePlanRotations } from './usePlanRotations'
 import { useDoctorAvailability } from './useDoctorAvailability'
+import { useTarifWarnings } from './useTarifWarnings'
 import { useDoctors } from '@/features/doctors/useDoctors'
 import { useDepartments } from '@/features/departments/useDepartments'
 import { PlanGrid } from './components/PlanGrid'
@@ -38,7 +39,7 @@ import { DoctorAssignPopover } from './components/DoctorAssignPopover'
 import { DoctorDragSource, DoctorDragOverlayToken, parseDoctorDragId } from './components/DoctorDragSource'
 import { RotationGrid, parseRotationDropId } from './components/RotationGrid'
 import { RotationAssignPopover } from './components/RotationAssignPopover'
-import type { ShiftWithDetails } from '@/lib/types'
+import type { ShiftWithDetails, TarifWarning } from '@/lib/types'
 
 interface ActiveCell {
   shiftId: number | null
@@ -80,6 +81,14 @@ export function PlanPage() {
     plan?.valid_from ?? null,
     plan?.valid_to ?? null,
   )
+  const { data: tarifWarningsData } = useTarifWarnings(id)
+
+  const tarifWarningsByShift: Record<number, TarifWarning[]> = {}
+  for (const w of tarifWarningsData?.warnings ?? []) {
+    if (w.shift_id != null) {
+      ;(tarifWarningsByShift[w.shift_id] ??= []).push(w)
+    }
+  }
 
   useEffect(() => {
     if (shiftsError) {
@@ -229,6 +238,11 @@ export function PlanPage() {
                 setActiveCell(null)
                 setContextShift(shift)
               }}
+              onTarifDotClick={(shift) => {
+                setActiveCell(null)
+                setContextShift(shift)
+              }}
+              tarifWarnings={tarifWarningsByShift}
             />
           )}
           {view === 'bereiche' && plan && (
@@ -249,6 +263,7 @@ export function PlanPage() {
           <ContextPanel
             shift={contextShift}
             onClose={() => setContextShift(null)}
+            tarifWarnings={tarifWarningsByShift[contextShift.id]}
           />
         )}
       </div>

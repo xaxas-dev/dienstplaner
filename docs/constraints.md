@@ -83,3 +83,34 @@ Penalty: −1 Hard pro verletztem Paar.
 
 Keine Tarif-Werte dürfen ohne Rückfrage erfunden werden — alle regulatorischen
 Constraints kommen erst nach Klärung mit Domänenexperten.
+
+## Tarif-Validation-Framework (M5-001, Phase A)
+
+Read-only Tarif-Warnings als zweiter Marker neben der Konflikt-Engine (ADR-060).
+Pipeline in `backend/app/services/tarif_validation_service.py`, Endpoint
+`GET /api/plans/{id}/tarif-warnings`.
+
+**Plug-in-Architektur (ADR-059):**
+- `TarifRule`-Protocol in `backend/app/solver/tarif_rules.py`: `id: ConstraintId`,
+  `severity: TarifSeverity`, `evaluate(db, plan_id) -> list[TarifWarning]`
+- `REGISTERED_RULES: list[TarifRule] = []` — leer im Prod-Code
+- Neue Regeln implementieren das Protocol und werden in `REGISTERED_RULES` eingetragen
+  (erst nach Klärung konkreter Tarif-Werte, OQ-006)
+
+**Severity-Klassifizierung** (`TarifSeverity` StrEnum):
+- `info` — Hinweis ohne Handlungsbedarf
+- `warning` — Tarif-Risiko, sollte geprüft werden
+- `critical` — klarer Verstoß (z. B. ArbZG-Grenzwert überschritten)
+
+**Frontend-Marker (ADR-061):** Sand-Dot (§, oben links) am ShiftCell —
+dezenter als Konflikt-Dot (!, oben rechts). Klick öffnet ContextPanel mit
+`TarifWarning`-Liste (Severity-Chip + rule_id + message). Kein Schreibpfad-Eingriff.
+
+**Noch nicht implementierte Constraints** (warten auf Domänenklärung):
+
+| Constraint-ID | Klasse | Beschreibung |
+|---------------|--------|--------------|
+| max-weekly-hours | Regulatorisch-hart | TV-Ärzte/TdL + ArbZG max. Wochenstunden |
+| min-rest-time | Regulatorisch-hart | Mindestruhezeit zwischen Diensten |
+| max-consecutive-days | Regulatorisch-hart | Max. aufeinanderfolgende Arbeitstage |
+| fairness-distribution | Soft | Gleichmäßige Dienstverteilung |

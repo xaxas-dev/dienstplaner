@@ -80,3 +80,7 @@ export type AbsenceType = components['schemas']['AbsenceType']
 export type Absence = components['schemas']['AbsenceResponse']
 export type AbsenceCreate = components['schemas']['AbsenceCreate']
 export type AbsenceUpdate = components['schemas']['AbsenceUpdate']
+
+export type PlanTarifWarnings = components['schemas']['PlanTarifWarnings']
+export type TarifWarning = components['schemas']['TarifWarning']
+export type TarifSeverity = components['schemas']['TarifSeverity']
