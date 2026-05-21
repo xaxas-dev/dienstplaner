@@ -57,7 +57,7 @@ function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, is
     <div
       ref={setNodeRef}
       className={[
-        'h-[42px] flex items-center justify-center p-0.5 border-b border-line/30',
+        'h-[42px] flex items-center justify-center p-0.5 border-b border-line/50',
         isWe ? 'bg-weekend' : '',
         isOver ? 'bg-accent/25 ring-[3px] ring-inset ring-accent' : '',
       ].join(' ')}
@@ -102,7 +102,7 @@ function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, is
           onClick={() => onCellClick(departmentId, dayKey, null)}
           aria-label={`${departmentName}, ${dayKey}, leer – Zuweisung hinzufügen`}
           className={[
-            'w-full h-full rounded-cell border border-line/40 bg-card transition',
+            'w-full h-full rounded-cell border border-line/70 bg-card transition',
             isTod ? 'ring-2 ring-warn-line' : '',
           ].join(' ')}
         />
