@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 from sqlalchemy.orm import Session
 
@@ -17,14 +19,6 @@ def _make_doctor(db: Session, name: str = "Testarzt") -> Doctor:
 class TestCreateAbsence:
     def test_create_happy_path(self, db: Session) -> None:
         doc = _make_doctor(db)
-        data = {
-            "absence_type": "URLAUB",
-            "valid_from": "2026-06-01",
-            "valid_to": "2026-06-14",
-            "notes": "Sommerurlaub",
-        }
-        from datetime import date
-
         absence = svc.create_absence(
             db,
             doc.id,
@@ -42,8 +36,6 @@ class TestCreateAbsence:
         assert str(absence.valid_to) == "2026-06-14"
 
     def test_create_single_day(self, db: Session) -> None:
-        from datetime import date
-
         doc = _make_doctor(db, "Einzel-Arzt")
         absence = svc.create_absence(
             db,
@@ -57,8 +49,6 @@ class TestCreateAbsence:
         assert absence.valid_from == absence.valid_to
 
     def test_create_raises_422_when_from_after_to(self, db: Session) -> None:
-        from datetime import date
-
         doc = _make_doctor(db, "Validierungsarzt")
         with pytest.raises(AbsenceValidationError):
             svc.create_absence(
@@ -79,8 +69,6 @@ class TestGetAbsencesForDoctor:
         assert result == []
 
     def test_returns_absences_for_doctor(self, db: Session) -> None:
-        from datetime import date
-
         doc = _make_doctor(db)
         svc.create_absence(
             db,
@@ -104,8 +92,6 @@ class TestGetAbsencesForDoctor:
         assert len(result) == 2
 
     def test_does_not_return_other_doctors_absences(self, db: Session) -> None:
-        from datetime import date
-
         doc1 = _make_doctor(db, "Arzt-1")
         doc2 = _make_doctor(db, "Arzt-2")
         svc.create_absence(
@@ -123,8 +109,6 @@ class TestGetAbsencesForDoctor:
 
 class TestUpdateAbsence:
     def test_update_notes_happy_path(self, db: Session) -> None:
-        from datetime import date
-
         doc = _make_doctor(db)
         absence = svc.create_absence(
             db,
@@ -139,8 +123,6 @@ class TestUpdateAbsence:
         assert updated.notes == "Aktualisierter Kommentar"
 
     def test_update_type_happy_path(self, db: Session) -> None:
-        from datetime import date
-
         doc = _make_doctor(db)
         absence = svc.create_absence(
             db,
@@ -159,8 +141,6 @@ class TestUpdateAbsence:
             svc.update_absence(db, 99999, {"notes": "Nicht existent"})
 
     def test_update_raises_422_when_from_after_to(self, db: Session) -> None:
-        from datetime import date
-
         doc = _make_doctor(db)
         absence = svc.create_absence(
             db,
@@ -177,8 +157,6 @@ class TestUpdateAbsence:
 
 class TestDeleteAbsence:
     def test_delete_happy_path(self, db: Session) -> None:
-        from datetime import date
-
         doc = _make_doctor(db)
         absence = svc.create_absence(
             db,

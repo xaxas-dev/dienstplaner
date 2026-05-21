@@ -63,7 +63,11 @@ class TestCreateAbsence:
         }
         resp = client.post(f"/api/doctors/{doc.id}/absences", json=payload)
         assert resp.status_code == 201
-        assert resp.json()["notes"] is None
+        data = resp.json()
+        assert data["notes"] is None
+        assert data["absence_type"] == "KRANKHEIT"
+        assert data["valid_from"] == "2026-03-10"
+        assert data["valid_to"] == "2026-03-15"
 
     def test_create_unknown_doctor_returns_404(self, client: TestClient, db: Session) -> None:
         payload = {
