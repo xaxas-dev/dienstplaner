@@ -313,6 +313,12 @@ Punkte nennt.
 - **Ebene E (Drag-Modus) visuell bereit:** ShiftCell akzeptiert `dragState` und `dragPreviewDoctor` Props. DnD-Verdrahtung in Dienste-Ansicht folgt in Phase B (ADR-053 bleibt offen).
 - **Farben ohne neue Tokens:** `#D6CCB6` (Dot Werktag), `#CBC2AC` (Dot Wochenende), `#FAF0DC` (Row-Tint), `#FBE5D6` (Header-BG), `rgba(198,106,61,0.08)` (Crosshair-Zell-BG) — direkte Hex-Werte, kein neuer Token.
 - **`DragState` exportiert:** `export type DragState` in `ShiftCell.tsx` — Consumer können den Typ importieren ohne Doppeldefinition.
+- **ShiftCell-Größe:** `w-full h-full` (kein `aspect-square`) — passt zum RotationDropCell-Muster, kein Overflow bei breiten Spalten.
+- **Grid-Spaltenbreite:** `minmax(36px, 1fr)` in beiden Grids (PlanGrid + RotationGrid) — skaliert auf Containerbreite, scrollt ab < 36px.
+
+### Frontend — shadcn/ui-Fallstricke
+- **SelectItem darf keinen Leerstring als value haben** (`value=""` wirft Radix-Runtime-Error). Für „keine Auswahl" / nullable Felder Sentinel `"__none__"` verwenden und im `onValueChange`-Handler auf `null` mappen: `(v) => field.onChange(v === '__none__' ? null : v)`.
+- **MiniRail aktive Items:** Farbe `bg-[#C66A3D] text-[#FFF8EF]` (Terrakotta/Creme = Logo-Farben), nicht `bg-ink text-paper`.
 
 ## Was Claude Code NICHT tun soll
 - Keine neuen Bibliotheken ohne explizite Rückfrage einführen
