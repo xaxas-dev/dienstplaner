@@ -102,6 +102,17 @@ Claude Code soll nach jedem Schritt diese Checkliste anhaken und stoppen, bis du
 
 ---
 
+## ✅ Schritt 6a — Logo (Sortier-D · Schicht)
+
+- [ ] Rail zeigt neues LogoMark-SVG (kein Newsreader-Italic-„D" mehr).
+- [ ] Terrakotta-Hintergrund (`#C66A3D`), Creme-Mark (`#FFF8EF`), `border-radius: 12px`.
+- [ ] Fünf sortierte Balken mit Schicht-Segmenten erkennbar.
+- [ ] Statisch ohne `pulse`-Prop — kein Flackern, keine CPU-Last.
+- [ ] `prefers-reduced-motion`: Animation deaktiviert (Keyframe mit `animation: none`).
+- [ ] TypeScript-Kompilierung sauber (0 Fehler).
+
+---
+
 ## Regression-Smoke
 
 Diese darfst du nach jedem Schritt 1× drücken und nichts darf brennen:

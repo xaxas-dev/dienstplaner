@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { Avatar } from '@/components/dp/Avatar'
+import { LogoMark } from '@/components/dp/LogoMark'
 import { useClinicName } from '@/lib/useSettings'
 import { cn } from '@/lib/utils'
 
@@ -54,8 +55,8 @@ export function MiniRail() {
   return (
     <aside className="w-[60px] shrink-0 h-screen bg-card border-r border-line flex flex-col items-center py-3 gap-1">
       {/* Logo-Tile */}
-      <div className="w-[38px] h-[38px] rounded-xl bg-dp-accent flex items-center justify-center mb-1 shrink-0">
-        <span className="font-serif italic text-paper text-xl leading-none select-none">D</span>
+      <div className="mb-1 shrink-0">
+        <LogoMark size={38} radius={12} />
       </div>
 
       {/* Divider */}

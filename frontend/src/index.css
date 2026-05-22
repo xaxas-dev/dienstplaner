@@ -56,3 +56,22 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* ── Logo-Pulse-Animation (Plan-Generator-Status) ────────────────── */
+@keyframes dp-logo-bar-pulse {
+  0%, 70%, 100% { opacity: 1; }
+  35%           { opacity: 0.35; }
+}
+
+[data-pulse] .dp-logo-bars [data-bar] {
+  animation: dp-logo-bar-pulse 1.6s ease-in-out infinite;
+}
+[data-pulse] .dp-logo-bars [data-bar="1"] { animation-delay: 0s;    }
+[data-pulse] .dp-logo-bars [data-bar="2"] { animation-delay: 0.12s; }
+[data-pulse] .dp-logo-bars [data-bar="3"] { animation-delay: 0.24s; }
+[data-pulse] .dp-logo-bars [data-bar="4"] { animation-delay: 0.36s; }
+[data-pulse] .dp-logo-bars [data-bar="5"] { animation-delay: 0.48s; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-pulse] .dp-logo-bars [data-bar] { animation: none; }
+}
