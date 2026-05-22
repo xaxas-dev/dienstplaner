@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils'
 import { colorForShiftType } from '@/lib/design/shift-palette'
 import { Avatar } from '@/components/dp/Avatar'
 
-type DragState = 'valid' | 'invalid' | 'hover-target' | null
+export type DragState = 'valid' | 'invalid' | 'hover-target' | null
 
 export function ShiftCell({
   code,
