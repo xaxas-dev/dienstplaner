@@ -9,6 +9,7 @@ dependencies = [
     "alembic>=1.13.0",
     "pydantic-settings>=2.0.0",
     "timefold>=1.24.0b0",
+    "openpyxl>=3.1,<4",
 ]
 
 [dependency-groups]
