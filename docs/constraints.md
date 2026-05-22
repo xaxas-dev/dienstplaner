@@ -18,6 +18,21 @@ Konflikte blockieren nichts (weiche Philosophie). Sie werden read-only über
 `GET /api/plans/{plan_id}/conflicts` und eingebettet in
 `GET /api/plans/{plan_id}/shifts` zurückgegeben.
 
+## Rotations-Zuweisung via Drag & Drop (M3-001, Phase A)
+
+Ärzte können per Drag & Drop auf RotationGrid-Zellen gezogen werden.
+Der Drop schreibt **nicht direkt** in die DB — er öffnet den
+`RotationAssignPopover`, in dem der User `valid_from`/`valid_to` bestätigt
+(ADR-054). Kein Constraint-Check im Drop-Handler.
+
+Drag-Source: `doctor-{id}` (Helper `makeDoctorDragId`/`parseDoctorDragId`).
+Drop-Target: `rotation-{departmentId}-{yyyy-MM-dd}` (Helper
+`makeRotationDropId`/`parseRotationDropId`).
+
+`PointerSensor` mit `distance: 4` verhindert versehentliche Drags aus
+Klick-Interaktionen. Screenreader-Announcements in Deutsch via
+`DndContext.accessibility`.
+
 ## INA-Verfügbarkeitsanzeige (M4-001, Phase A)
 
 Read-only Marker in RotationGrid (während Drag, `ring-amber-400/60`) und

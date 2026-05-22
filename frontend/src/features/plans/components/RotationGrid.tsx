@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
 import { format, isWeekend, isToday } from 'date-fns'
 import { useDroppable } from '@dnd-kit/core'
 import { Avatar } from '@/components/dp/Avatar'
@@ -46,9 +46,12 @@ interface RotationDropCellProps {
   deptPreview?: DeptPreview | null
   unavailableHint?: boolean
   unavailableReasons?: string[]
+  isHoverTarget?: boolean
+  isRowHovered?: boolean
+  onMouseEnter?: () => void
 }
 
-function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, isTod, onCellClick, deptPreview, unavailableHint, unavailableReasons }: RotationDropCellProps) {
+function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, isTod, onCellClick, deptPreview, unavailableHint, unavailableReasons, isHoverTarget, isRowHovered, onMouseEnter }: RotationDropCellProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: makeRotationDropId(departmentId, dayKey),
     data: { departmentName, dayKey },
@@ -64,9 +67,11 @@ function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, is
     <div
       ref={setNodeRef}
       title={tooltipTitle}
+      onMouseEnter={onMouseEnter}
       className={[
         'h-[42px] flex items-center justify-center p-0.5 border-b border-line/50',
         isWe ? 'bg-weekend' : '',
+        isRowHovered && !isOver ? 'bg-[#FAF0DC]' : '',
         isOver ? 'bg-accent/25 ring-[3px] ring-inset ring-accent' : '',
         unavailableHint ? 'ring-1 ring-amber-400/60' : '',
       ].join(' ')}
@@ -121,10 +126,40 @@ function RotationDropCell({ departmentId, departmentName, dayKey, cell, isWe, is
           onClick={() => onCellClick(departmentId, dayKey, null)}
           aria-label={`${departmentName}, ${dayKey}, leer – Zuweisung hinzufügen`}
           className={[
-            'w-full h-full rounded-cell border border-line/70 bg-card transition',
+            'w-full h-full rounded-cell border transition flex items-center justify-center',
+            isHoverTarget ? 'border-dashed' : 'border-line/70 bg-card',
             isTod ? 'ring-2 ring-warn-line' : '',
           ].join(' ')}
-        />
+          style={isHoverTarget ? {
+            borderColor: '#C66A3D',
+            borderWidth: '1.5px',
+            background: 'rgba(198, 106, 61, 0.08)',
+            borderRadius: '7px',
+            transition: 'background 80ms ease-out, border-color 80ms ease-out',
+          } : undefined}
+        >
+          {isHoverTarget ? (
+            <span
+              className="text-[14px] font-medium pointer-events-none select-none"
+              style={{ color: '#C66A3D' }}
+              aria-hidden
+            >
+              +
+            </span>
+          ) : (
+            <span
+              className="pointer-events-none"
+              style={{
+                display: 'block',
+                width: 5,
+                height: 5,
+                borderRadius: 999,
+                background: isWe ? '#CBC2AC' : '#D6CCB6',
+              }}
+              aria-hidden
+            />
+          )}
+        </button>
       )}
     </div>
   )
@@ -159,31 +194,36 @@ export function RotationGrid({
   availability,
 }: Props) {
   const { rows, days } = buildRotationGridData(rotations, departments, validFrom, validTo)
+  const [hover, setHover] = useState<{ row: number; col: number } | null>(null)
 
   return (
     <div className="overflow-auto flex-1">
       <div
         className="grid"
         style={{ gridTemplateColumns: `210px repeat(${days.length}, minmax(36px, 1fr))` }}
+        onMouseLeave={() => setHover(null)}
       >
         {/* Header */}
         <div className="sticky left-0 bg-card z-10 h-10 border-b border-line flex items-center px-3">
           <span className="text-[11px] font-medium text-ink-3 uppercase tracking-wide">Bereich</span>
         </div>
-        {days.map((day) => {
+        {days.map((day, colIdx) => {
           const isWe = isWeekend(day)
           const isTod = isToday(day)
           const abbr = WEEKDAY_ABBR[day.getDay() === 0 ? 6 : day.getDay() - 1]
+          const isColHovered = hover?.col === colIdx
           return (
             <div
               key={format(day, 'yyyy-MM-dd')}
               className={[
-                'h-10 flex flex-col items-center justify-center border-b border-line',
+                'h-10 flex flex-col items-center justify-center border-b border-line transition-colors',
                 isWe ? 'bg-weekend' : '',
                 isTod ? 'bg-warn-bg text-warn-ink' : '',
+                isColHovered && !isTod ? 'text-[#7A3414]' : '',
               ].join(' ')}
+              style={isColHovered && !isTod ? { background: '#FBE5D6' } : undefined}
             >
-              <span className="text-[10px] text-ink-3 leading-none">{abbr}</span>
+              <span className="text-[10px] leading-none">{abbr}</span>
               <span className="text-[16px] font-serif leading-tight">
                 {format(day, 'd')}
               </span>
@@ -192,7 +232,8 @@ export function RotationGrid({
         })}
 
         {/* Rows */}
-        {rows.map(({ department: dept, cells }) => {
+        {rows.map(({ department: dept, cells }, rowIdx) => {
+          const isRowHovered = hover?.row === rowIdx
           const deptPreview = preview?.departmentId === dept.id
             ? {
                 doctorId: preview.doctorId,
@@ -205,7 +246,13 @@ export function RotationGrid({
           return (
           <Fragment key={`row-${dept.id}`}>
             {/* Left label column */}
-            <div className="sticky left-0 bg-card z-10 flex flex-col justify-center px-3 h-[42px] border-b border-line/50 min-w-0">
+            <div
+              className={[
+                'sticky left-0 bg-paper z-10 flex flex-col justify-center px-3 h-[42px] border-b border-line/50 min-w-0 transition-colors',
+                isRowHovered ? 'bg-[#FAF0DC]' : '',
+              ].join(' ')}
+              onMouseEnter={() => setHover({ row: rowIdx, col: -1 })}
+            >
               <div className="flex items-center gap-1.5 min-w-0">
                 <p className="text-[13px] font-medium leading-tight truncate">
                   {dept.name}
@@ -224,11 +271,13 @@ export function RotationGrid({
             </div>
 
             {/* Day cells */}
-            {days.map((day) => {
+            {days.map((day, colIdx) => {
               const dayKey = format(day, 'yyyy-MM-dd')
               const availEntry = availability?.[dayKey]
               const unavailableHint = availEntry !== undefined && !availEntry.available
               const unavailableReasons = unavailableHint ? availEntry.reasons : undefined
+              const isTarget = isRowHovered && hover?.col === colIdx
+              const isFilled = !!cells[dayKey]
               return (
                 <RotationDropCell
                   key={`cell-${dept.id}-${dayKey}`}
@@ -242,6 +291,9 @@ export function RotationGrid({
                   deptPreview={deptPreview}
                   unavailableHint={unavailableHint}
                   unavailableReasons={unavailableReasons}
+                  isHoverTarget={isTarget && !isFilled}
+                  isRowHovered={isRowHovered}
+                  onMouseEnter={() => setHover({ row: rowIdx, col: colIdx })}
                 />
               )
             })}

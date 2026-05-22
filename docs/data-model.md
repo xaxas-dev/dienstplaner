@@ -12,6 +12,7 @@ erDiagram
         int id PK
         string name
         string short_name
+        string title
         enum doctor_type
         bool is_facharzt
         bool active
@@ -136,6 +137,12 @@ Anrechnungen basiert, kann es **vor** dem realen Eintrittsdatum liegen.
 Beide Felder sind nullable. Für externe Ärzte werden sie typischerweise nicht
 gepflegt. In der ersten Version werden beide Felder manuell gesetzt.
 Eine automatische Berechnung aus konfigurierten Anrechnungszeiten folgt später.
+
+### `title` am Arzt (Migration 0007)
+
+`title` ist ein optionales VARCHAR(50)-Feld für den akademischen Titel
+(z. B. „Dr. med.", „Prof. Dr. med."). Es ist nullable. Rein display-seitig —
+kein Einfluss auf Planungslogik oder Constraints.
 
 ### `weiterbildungsjahr` als computed property
 

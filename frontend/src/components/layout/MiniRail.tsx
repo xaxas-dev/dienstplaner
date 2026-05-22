@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { Avatar } from '@/components/dp/Avatar'
-import { useClinicName } from '@/lib/useSettings'
+import { LogoMark } from '@/components/dp/LogoMark'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -34,8 +34,6 @@ const mainNavItems: NavItem[] = [
 
 export function MiniRail() {
   const location = useLocation()
-  const { data: clinicNameSetting } = useClinicName()
-  const clinicName = clinicNameSetting?.value ?? 'Klinik'
 
   function isActive(to: string) {
     if (to === '/heute') return location.pathname === '/heute' || location.pathname === '/'
@@ -46,7 +44,7 @@ export function MiniRail() {
     return cn(
       'w-10 h-10 rounded-xl flex items-center justify-center transition-colors',
       active
-        ? 'bg-ink text-paper'
+        ? 'bg-[#C66A3D] text-[#FFF8EF]'
         : 'text-ink-2 hover:bg-line hover:text-ink',
     )
   }
@@ -54,8 +52,8 @@ export function MiniRail() {
   return (
     <aside className="w-[60px] shrink-0 h-screen bg-card border-r border-line flex flex-col items-center py-3 gap-1">
       {/* Logo-Tile */}
-      <div className="w-[38px] h-[38px] rounded-xl bg-dp-accent flex items-center justify-center mb-1 shrink-0">
-        <span className="font-serif italic text-paper text-xl leading-none select-none">D</span>
+      <div className="mb-1 shrink-0">
+        <LogoMark size={38} radius={12} />
       </div>
 
       {/* Divider */}
@@ -90,18 +88,10 @@ export function MiniRail() {
         <TooltipContent side="right">Einstellungen</TooltipContent>
       </Tooltip>
 
-      {/* Avatar + clinic_name Sub-Label */}
-      <Tooltip delayDuration={300}>
-        <TooltipTrigger asChild>
-          <div className="flex flex-col items-center gap-1 mt-1 cursor-default select-none">
-            <Avatar name="Planer" id="planer" size={32} />
-            <span className="text-[10px] text-ink-3 leading-tight w-[52px] truncate text-center">
-              {clinicName}
-            </span>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="right">{clinicName}</TooltipContent>
-      </Tooltip>
+      {/* Avatar */}
+      <div className="mt-1">
+        <Avatar name="Planer" id="planer" size={32} />
+      </div>
     </aside>
   )
 }

@@ -87,4 +87,16 @@ describe('DoctorCard', () => {
     render(<Wrapper><DoctorCard doctor={inactiveDoctor} /></Wrapper>)
     expect(screen.getByText('Inaktiv')).toBeInTheDocument()
   })
+
+  it('zeigt Titel vor dem Namen wenn vorhanden', () => {
+    const doctorWithTitle: Doctor = { ...baseDoctor, title: 'Dr. med.' }
+    render(<Wrapper><DoctorCard doctor={doctorWithTitle} /></Wrapper>)
+    expect(screen.getByText('Dr. med. Lena Hartmann')).toBeInTheDocument()
+  })
+
+  it('zeigt nur den Namen wenn kein Titel gesetzt', () => {
+    render(<Wrapper><DoctorCard doctor={baseDoctor} /></Wrapper>)
+    expect(screen.getByText('Lena Hartmann')).toBeInTheDocument()
+    expect(screen.queryByText(/dr\./i)).not.toBeInTheDocument()
+  })
 })

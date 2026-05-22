@@ -102,6 +102,43 @@ Claude Code soll nach jedem Schritt diese Checkliste anhaken und stoppen, bis du
 
 ---
 
+## ✅ Schritt 6a — Logo (Sortier-D · Schicht)
+
+- [ ] Rail zeigt neues LogoMark-SVG (kein Newsreader-Italic-„D" mehr).
+- [ ] Terrakotta-Hintergrund (`#C66A3D`), Creme-Mark (`#FFF8EF`), `border-radius: 12px`.
+- [ ] Fünf sortierte Balken mit Schicht-Segmenten erkennbar.
+- [ ] Statisch ohne `pulse`-Prop — kein Flackern, keine CPU-Last.
+- [ ] `prefers-reduced-motion`: Animation deaktiviert (Keyframe mit `animation: none`).
+- [ ] TypeScript-Kompilierung sauber (0 Fehler).
+
+---
+
+## ✅ Schritt 6b — Plan-Grid-Affordance (A · Dot-Grid, D · Crosshair-Hover, E · Drag-Modus)
+
+### Ebene A — Dot-Grid
+- [ ] Leere Zelle zeigt 5×5 px Punkt (`border-radius: 999px`).
+- [ ] Werktag: `#D6CCB6`; Wochenende: `#CBC2AC`.
+- [ ] Kein Punkt in Header-Zellen.
+- [ ] Gefüllte Zellen: kein Punkt.
+
+### Ebene D — Crosshair-Hover
+- [ ] Cursor über leerer Zelle: Row-Tint `#FAF0DC` + Header-Zelle `#FBE5D6 / #7A3414` + `+`-Glyph in Zielzelle.
+- [ ] Cursor über gefüllter Zelle: Row-Tint + Header-Zelle, kein `+`-Glyph.
+- [ ] Cursor verlässt Grid: vollständiger Rückfall in Ruhezustand.
+- [ ] Keyboard-Fokus auf Zelle löst denselben Crosshair aus.
+- [ ] `prefers-reduced-motion`: Transition-Dauer 0 ms.
+
+### Ebene E — Drag-Modus (visuelles Layer)
+- [ ] `dragState='valid'`: grüner Dashed-Rahmen + BG vorhanden.
+- [ ] `dragState='invalid'`: Schraffur-BG vorhanden.
+- [ ] `dragState='hover-target'`: orange Solid-Rahmen + Avatar-Preview vorhanden.
+- [ ] Ohne `dragState`-Prop: kein Effekt (Layer inaktiv).
+
+### TypeScript
+- [ ] `pnpm tsc --noEmit` sauber.
+
+---
+
 ## Regression-Smoke
 
 Diese darfst du nach jedem Schritt 1× drücken und nichts darf brennen:

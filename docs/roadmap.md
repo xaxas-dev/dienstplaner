@@ -107,7 +107,7 @@ schließen.
 
 **Abhängigkeiten.** M3–M6 abgeschlossen.
 
-**Status.** ⏳ Geplant.
+**Status.** ✅ Abgeschlossen (2026-05-22). Logo (Sortier-D), Grid-Affordance (3 Ebenen), Arzt-Titel in DoctorCard, Backend-Lifecycle-Smoke-Test, vollständiger Doku-Sweep.
 
 ## Phase B — laufend
 

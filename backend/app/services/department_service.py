@@ -51,6 +51,7 @@ def delete_department_with_check(db: Session, department_id: int) -> None:
     dept = dept_repo.get_department(db, department_id)
     if dept is None:
         raise DepartmentNotFoundError(department_id)
-    # TODO: wenn Plan-Modul existiert, prüfen ob Department in Plänen verwendet wird
+    # Department-Nutzung in Plänen läuft über RotationAssignment (department_id FK).
+    # Kein harter Guard hier — Phase A erlaubt Delete; Phase B ergänzt ggf. Constraint.
     dept_repo.delete_department(db, department_id)
     db.commit()
