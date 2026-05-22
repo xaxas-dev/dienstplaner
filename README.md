@@ -9,7 +9,7 @@ Ausgabe: Excel-Schnittstellendatei für das interne Klinik-Tool.
 
 ## Status
 
-Projekt in aktiver Entwicklung. Konzeptphase abgeschlossen, Implementierung läuft.
+Phase A (Manueller Planungsassistent) abgeschlossen. Alle M0–M7-Milestones implementiert.
 
 ## Tech-Stack
 
@@ -73,7 +73,8 @@ Die App verwendet `AtelierShell` als Layout-Wrapper (ersetzt die alte `AppShell`
   (Titel mit optionalem italic-Akzent, Breadcrumb, Filter-Chips, Suchfeld, Primärbutton)
 
 Aktuelle Seiten-Status:
-- `/heute` und `/plans`: Platzhalter-Seiten (werden in M2-003 implementiert)
+- `/heute`: Dashboard (Heute-Ansicht)
+- `/plans`: Plan-Editor mit Dienste- und Bereiche-Ansicht (PlanGrid, RotationGrid)
 - Stammdaten-Pages (Ärzte, Stationen, Schichttypen, Qualifikationen, Sonderregelungen):
   vollständig auf Atelier-Look migriert (M1-011):
   - **Ärzte-Liste**: 3-spaltiges Card-Grid mit Avatar, Qualifikations-Chips, 14-Tage-Heatmap

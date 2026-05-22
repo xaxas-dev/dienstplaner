@@ -101,13 +101,11 @@ Bis das Backend nachzieht: feste Reihenfolge in einer Map `shiftTypeId → token
 
 ---
 
-## 3 · Layout-Shell ersetzen
+## 3 · Layout-Shell (implementiert als AtelierShell)
 
-`frontend/src/components/layout/AppShell.tsx` komplett umbauen:
+`frontend/src/components/layout/AtelierShell.tsx` (ersetzt die ursprüngliche `AppShell.tsx`):
 
-- Aktuell: linke Sidebar 240 px breit mit Labels.
-- Neu: **schmale Mini-Rail** (60 px) links mit reinen Icon-Buttons. Tooltip auf Hover
-  zeigt das Label.
+- **MiniRail** (60 px) links mit reinen Icon-Buttons. Tooltip auf Hover zeigt das Label.
 
 > **Sichtbarkeit:** Die Rail ist Teil des persistenten `AppShell` und erscheint
 > **auf jeder Route** — Plan, Ärzte, Stationen, Schichten, Qualifikationen, Regeln,
@@ -200,7 +198,7 @@ shadcn-Anpassungen:
 
 ## 7 · Plan-Grid (Herzstück)
 
-Datei: `frontend/src/features/plans/PlanGrid.tsx`. Reines CSS-Grid, keine Tabelle.
+Datei: `frontend/src/features/plans/components/PlanGrid.tsx`. Reines CSS-Grid, keine Tabelle.
 
 ```
 grid-template-columns: 210px repeat(N_DAYS, 44px) 1fr
@@ -306,17 +304,17 @@ Tastenkürzel: `cmd/ctrl + K` öffnet, `esc` schließt.
 
 | Route | Page | Status |
 |---|---|---|
-| `/` | Redirect → `/heute` | NEU |
-| `/heute` | `DashboardPage` | NEU |
+| `/` | Redirect → `/heute` | ✅ implementiert |
+| `/heute` | `DashboardPage` | ✅ implementiert |
 | `/plans` | `PlanListPage` (Kachel-Grid, Plan anlegen) | ✅ M2-003 |
 | `/plans/:id` | `PlanPage` (PlanGrid + ContextPanel, Schichtzuweisung) | ✅ M2-003 |
-| `/doctors` | `DoctorListPage` → Karten-Grid | umbauen |
-| `/doctors/new` | bleibt | nur Styling anpassen |
-| `/doctors/:id` | bleibt | nur Styling anpassen |
-| `/departments` | bleibt Tabelle, neuer Frame | restylen |
-| `/shift-types` | bleibt Tabelle, neuer Frame | restylen |
-| `/qualifications` | bleibt Tabelle, neuer Frame | restylen |
-| `/rule-overrides` | bleibt Tabelle, neuer Frame | restylen |
+| `/doctors` | `DoctorListPage` → Karten-Grid | ✅ M1-011 |
+| `/doctors/new` | `DoctorCreatePage` | ✅ implementiert |
+| `/doctors/:id` | `DoctorDetailPage` | ✅ implementiert |
+| `/departments` | Tabelle, Atelier-Frame | ✅ M1-011 |
+| `/shift-types` | Tabelle, Atelier-Frame | ✅ M1-011 |
+| `/qualifications` | Tabelle, Atelier-Frame | ✅ M1-011 |
+| `/rule-overrides` | Tabelle, Atelier-Frame | ✅ M1-011 |
 
 ---
 
@@ -324,21 +322,21 @@ Tastenkürzel: `cmd/ctrl + K` öffnet, `esc` schließt.
 
 Pro Schritt bitte committen und Screenshots zeigen.
 
-1. **Tokens & Fonts:** `index.css`, `tailwind.config.ts`. Body-bg auf `paper`, font-sans
-   auf Geist. Headings-Helper-Class `.dp-h1` mit Newsreader.
-2. **Primitives:** `Chip`, `ShiftChip`, `ShiftCell`, `Avatar`, `KpiTile`, `Sparkline`.
-   Storybook-light: jeweils auf einer leeren `/playground`-Route alle Varianten zeigen.
-3. **Layout-Shell:** `MiniRail` ersetzt Sidebar. Navigation funktioniert weiter.
-4. **CommandBar + KpiBar** als reusable Frame.
-5. **Dashboard** (`/heute`). Statisches Mock-Data zuerst, später `useDashboard()`-Hook.
-6. ✅ **PlanGrid + PlanPage** — umgesetzt in M2-003 mit echten API-Daten (nicht Mock).
-   PlanListPage (`/plans`), PlanPage (`/plans/:id`), PlanGrid, DoctorAssignPopover,
-   ContextPanel + ConflictCard, Konflikt-Warn-Dot. Hooks: usePlans, usePlanShifts,
-   usePlanConflicts, useAssignShift. Utility: planGridUtils.buildGridData.
-7. **DoctorList** auf Karten umstellen.
-8. **Restliche Listen** in neuen Frame setzen, Badges vereinheitlichen.
-9. **⌘K Command Palette.**
-10. **Aufräumen** alte Styles, alte Tabellen-Page-Header entfernen.
+1. ✅ **Tokens & Fonts** — `index.css`, `tailwind.config.ts`, `lib/design/tokens.ts`,
+   `lib/design/shift-palette.ts`. (M1-009)
+2. ✅ **Primitives** — `Chip`, `ShiftChip`, `ShiftCell`, `Avatar`, `KpiTile`, `Sparkline`
+   in `components/dp/`. `/playground`-Route. (M1-009)
+3. ✅ **Layout-Shell** — `AtelierShell` + `MiniRail` ersetzt `AppShell`. (M1-010)
+4. ✅ **CommandBar + KpiBar** als reusable Frame. (M1-010)
+5. ✅ **Dashboard** (`/heute`). (M1-011)
+6. ✅ **PlanGrid + PlanPage** — PlanListPage (`/plans`), PlanPage (`/plans/:id`),
+   PlanGrid, DoctorAssignPopover, ContextPanel + ConflictCard, Konflikt-Warn-Dot.
+   Hooks: usePlans, usePlanShifts, usePlanConflicts, useAssignShift.
+   Utility: planGridUtils.buildGridData. (M2-003/M2-004/M2-005/M2-006)
+7. ✅ **DoctorList** auf Karten-Grid. (M1-011)
+8. ✅ **Restliche Listen** in Atelier-Frame, Badges vereinheitlicht. (M1-011)
+9. **⌘K Command Palette** — noch nicht implementiert.
+10. ✅ **Aufräumen** alte Styles entfernt.
 
 ---
 
@@ -380,7 +378,7 @@ Lies vollständig in dieser Reihenfolge:
   4. handoff/primitives.tsx, handoff/mock-data.ts
   5. Dienstplaner Redesign.html  (öffne und screenshotte zur visuellen Referenz)
   6. variants/variant-a.jsx, variants/variant-ab-plan.jsx, variants/data.js
-  7. frontend/src/App.tsx, AppShell.tsx, index.css, tailwind.config.ts
+  7. frontend/src/App.tsx, AtelierShell.tsx, index.css, tailwind.config.ts
   8. frontend/src/features/doctors/DoctorListPage.tsx, frontend/src/lib/types.ts
 
 Beginne mit Schritt 1 aus §13 (Tokens & Fonts):
