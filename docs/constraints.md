@@ -114,3 +114,23 @@ dezenter als Konflikt-Dot (!, oben rechts). Klick öffnet ContextPanel mit
 | min-rest-time | Regulatorisch-hart | Mindestruhezeit zwischen Diensten |
 | max-consecutive-days | Regulatorisch-hart | Max. aufeinanderfolgende Arbeitstage |
 | fairness-distribution | Soft | Gleichmäßige Dienstverteilung |
+
+## Excel-Export (M6-001, Phase A)
+
+Read-only Export des aktuellen Plan-Stands als `.xlsx`-Datei.
+Kein Constraint-Check, kein Schreibpfad-Eingriff.
+
+**Endpoint:** `GET /api/plans/{id}/export`
+**Service:** `backend/app/services/plan_export_service.py` — `build_plan_xlsx(db, plan_id) -> bytes`
+**Bibliothek:** `openpyxl` (Stack-Bestandteil)
+
+**Schema (ADR-064 — Default bis Klinik-Tool-Spec vorliegt):**
+Sheet `Dienste`. Spalten: `Datum`, `Wochentag`, `Schichttyp (Kurz)`,
+`Schichttyp`, `Arzt-Kürzel`, `Arzt`, `Gepinnt`, `Notiz`.
+Eine Zeile pro Shift. Sortierung: `shift_date ASC`, `display_order ASC`.
+Datum als ISO-8601-String. Wochentag als deutsche Kurzform (Mo–So).
+
+**Noch nicht implementiert:**
+- Klinik-tool-spezifisches Schema (wartet auf OQ-007)
+- Pivot-Layout (Datum × Schichttyp)
+- Rotation-/Stammdaten-Sheets

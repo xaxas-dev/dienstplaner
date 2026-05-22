@@ -94,7 +94,7 @@ exportieren.
 **Abhängigkeiten.** Excel-Spaltenschema muss vor Start mit dem
 Klinik-Tool abgeglichen werden (siehe offene Domänen-Frage zum Schema).
 
-**Status.** ⏳ Geplant; vor Start: Schema-Klärung.
+**Status.** ✅ Abgeschlossen (2026-05-22). Default-Schema (ein Sheet `Dienste`, eine Zeile pro Shift). Klinik-tool-spezifisches Schema folgt als Folge-Milestone (OQ-007).
 
 ### M7-001 — Phase-A-Abschluss & Polish
 

@@ -271,6 +271,37 @@ Punkte nennt.
   `conflict_service.detect_conflicts` — Plan-Load → 404 via `PlanNotFoundError` →
   alle registrierten Regeln aufrufen → Warnings aggregieren (keine Deduplizierung).
 
+### Backend — Plan-Excel-Export (M6-001)
+- **Service-Layering streng:** `openpyxl`-Imports nur in
+  `backend/app/services/plan_export_service.py`. `api/plans.py` ruft
+  ausschließlich `build_plan_xlsx(db, plan_id)` auf — kein Workbook-Code in `api/`.
+- **`build_plan_xlsx(db, plan_id) -> bytes`:** Plan laden via
+  `plan_repository.get_plan`; `None` → `PlanNotFoundError`. Workbook
+  in-memory via `BytesIO`, `wb.save(buffer)`, `buffer.getvalue()` zurückgeben.
+  `seek(0)` nicht vergessen wenn `BytesIO` weiter übergeben wird.
+- **`GET /api/plans/{id}/export`** mit `StreamingResponse(BytesIO(data))` +
+  MIME `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` +
+  `Content-Disposition: attachment; filename="<slug>.xlsx"`. `GET` statt `POST`
+  (idempotent, kein Body, Browser-Direkt-Download — ADR-063).
+- **Slug-Konvention:** `re.sub(r"[^A-Za-z0-9_-]+", "-", name).strip("-")` +
+  `.xlsx`; Fallback `plan-{id}.xlsx` bei leerem Slug.
+- **Default-Schema (ADR-064):** Ein Sheet `Dienste`. Spalten: Datum,
+  Wochentag, Schichttyp (Kurz), Schichttyp, Arzt-Kürzel, Arzt, Gepinnt,
+  Notiz. Sortierung: `shift_date ASC`, `display_order ASC`. Datum als
+  ISO-8601-String. Wochentag: `("Mo","Di","Mi","Do","Fr","Sa","So")[weekday()]`.
+  Schema-Anpassung für klinikinternes Tool folgt nach Klärung von OQ-007.
+
+### Frontend — Plan-Excel-Export (M6-001)
+- **Direkt-Download via `window.location.assign`:** Export-Button in
+  `CommandBar.primaryAction` → `onClick: () => window.location.assign(\`/api/plans/\${id}/export\`)`.
+  Kein `fetch`, kein Blob, kein URL.createObjectURL — `GET`+`Content-Disposition`
+  triggert den Browser-Download direkt.
+- **Kein neuer Hook, kein Query-Key:** Export ist idempotent und zustandslos;
+  TanStack Query nicht involviert.
+- **jsdom-Test für `window.location.assign`:**
+  `Object.defineProperty(window, 'location', { value: { assign: vi.fn() }, writable: true })`
+  — direktes Überschreiben wirft in jsdom.
+
 ## Was Claude Code NICHT tun soll
 - Keine neuen Bibliotheken ohne explizite Rückfrage einführen
 - Keine Bibliotheksfunktionen verwenden, die nicht in der Doku existieren
