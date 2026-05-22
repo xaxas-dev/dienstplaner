@@ -97,7 +97,7 @@ export function PlanGrid({
                     className={cn(
                       'h-[42px] flex items-center justify-center p-0.5 border-b border-line/30 transition-colors',
                       isWeekend(day) ? 'bg-weekend/40' : '',
-                      isRowHovered && !isFilled ? 'bg-[#FAF0DC]' : '',
+                      isRowHovered ? 'bg-[#FAF0DC]' : '',
                     )}
                   >
                     <ShiftCell
