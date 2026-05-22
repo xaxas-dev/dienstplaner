@@ -302,6 +302,18 @@ Punkte nennt.
   `Object.defineProperty(window, 'location', { value: { assign: vi.fn() }, writable: true })`
   — direktes Überschreiben wirft in jsdom.
 
+### Frontend — Logo & Branding (M7-001)
+- **LogoMark-Komponente:** `frontend/src/components/dp/LogoMark.tsx` exportiert `LogoMarkSvg`, `LogoMark`, `LogoWordmark`. Default: size=38, bg=Terrakotta `#C66A3D`, fg=Creme `#FFF8EF`, radius=12, pulse=false.
+- **Pulse-Animation:** aktiv nur wenn `pulse={true}`. CSS-Keyframes in `frontend/src/index.css` (`[data-pulse] .dp-logo-bars [data-bar]`). `@media (prefers-reduced-motion: reduce)` deaktiviert Animation.
+- **Kein Plan-Generator-Store in Phase A:** `pulse` bleibt `false`. Phase B verdrahtet `isGenerating`.
+
+### Frontend — Plan-Grid-Affordance (M7-001)
+- **Layer-Priorität in ShiftCell:** filled → dragging → hover-target → idle-dot. Einfacher visueller `else-if`-Switch — keine komplexe State-Maschine.
+- **Hover-State auf PlanGrid-Level:** `useState<{row, col}|null>` — kein per-Zellen-State. `onMouseLeave` des Grid-Containers resettet. `onFocus` auf ShiftCell triggert denselben Crosshair für Keyboard-Nutzer.
+- **Ebene E (Drag-Modus) visuell bereit:** ShiftCell akzeptiert `dragState` und `dragPreviewDoctor` Props. DnD-Verdrahtung in Dienste-Ansicht folgt in Phase B (ADR-053 bleibt offen).
+- **Farben ohne neue Tokens:** `#D6CCB6` (Dot Werktag), `#CBC2AC` (Dot Wochenende), `#FAF0DC` (Row-Tint), `#FBE5D6` (Header-BG), `rgba(198,106,61,0.08)` (Crosshair-Zell-BG) — direkte Hex-Werte, kein neuer Token.
+- **`DragState` exportiert:** `export type DragState` in `ShiftCell.tsx` — Consumer können den Typ importieren ohne Doppeldefinition.
+
 ## Was Claude Code NICHT tun soll
 - Keine neuen Bibliotheken ohne explizite Rückfrage einführen
 - Keine Bibliotheksfunktionen verwenden, die nicht in der Doku existieren
