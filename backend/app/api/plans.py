@@ -1,4 +1,7 @@
+from io import BytesIO
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -14,7 +17,7 @@ from app.schemas.plan import (
     PlanWithRelations,
 )
 from app.schemas.solve import ApplyRequest, ApplyResult, SolveResult
-from app.services import conflict_service, plan_service
+from app.services import conflict_service, plan_export_service, plan_service
 from app.services.exceptions import PlanNotFoundError
 
 router = APIRouter(prefix="/plans", tags=["plans"])
@@ -84,6 +87,23 @@ def solve_plan(plan_id: int, db: Session = Depends(get_db)) -> SolveResult:
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"Solver nicht verfügbar: {exc}")
     return solver_service.solve_plan(db, plan_id)
+
+
+_XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
+@router.get("/{plan_id}/export")
+def export_plan(plan_id: int, db: Session = Depends(get_db)) -> StreamingResponse:
+    plan = plan_repo.get_plan(db, plan_id)
+    if plan is None:
+        raise PlanNotFoundError(plan_id)
+    data = plan_export_service.build_plan_xlsx(db, plan_id)
+    filename = plan_export_service.make_filename_slug(plan.name, plan_id)
+    return StreamingResponse(
+        BytesIO(data),
+        media_type=_XLSX_MIME,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.post("/{plan_id}/apply", response_model=ApplyResult)
