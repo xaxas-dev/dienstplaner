@@ -13,7 +13,6 @@ import {
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { Avatar } from '@/components/dp/Avatar'
 import { LogoMark } from '@/components/dp/LogoMark'
-import { useClinicName } from '@/lib/useSettings'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -35,8 +34,6 @@ const mainNavItems: NavItem[] = [
 
 export function MiniRail() {
   const location = useLocation()
-  const { data: clinicNameSetting } = useClinicName()
-  const clinicName = clinicNameSetting?.value ?? 'Klinik'
 
   function isActive(to: string) {
     if (to === '/heute') return location.pathname === '/heute' || location.pathname === '/'
@@ -91,18 +88,10 @@ export function MiniRail() {
         <TooltipContent side="right">Einstellungen</TooltipContent>
       </Tooltip>
 
-      {/* Avatar + clinic_name Sub-Label */}
-      <Tooltip delayDuration={300}>
-        <TooltipTrigger asChild>
-          <div className="flex flex-col items-center gap-1 mt-1 cursor-default select-none">
-            <Avatar name="Planer" id="planer" size={32} />
-            <span className="text-[10px] text-ink-3 leading-tight w-[52px] truncate text-center">
-              {clinicName}
-            </span>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="right">{clinicName}</TooltipContent>
-      </Tooltip>
+      {/* Avatar */}
+      <div className="mt-1">
+        <Avatar name="Planer" id="planer" size={32} />
+      </div>
     </aside>
   )
 }

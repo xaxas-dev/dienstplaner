@@ -153,21 +153,23 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Titel</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Kein Titel"
-                  list="doctor-title-options"
-                  {...field}
-                  value={field.value ?? ''}
-                  onChange={(e) => field.onChange(e.target.value || null)}
-                />
-              </FormControl>
-              <datalist id="doctor-title-options">
-                <option value="Dr." />
-                <option value="Prof." />
-                <option value="PD" />
-                <option value="Prof. Dr." />
-              </datalist>
+              <Select
+                onValueChange={(v) => field.onChange(v || null)}
+                value={field.value ?? ''}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Kein Titel" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="">Kein Titel</SelectItem>
+                  <SelectItem value="Dr.">Dr.</SelectItem>
+                  <SelectItem value="Prof.">Prof.</SelectItem>
+                  <SelectItem value="PD">PD</SelectItem>
+                  <SelectItem value="Prof. Dr.">Prof. Dr.</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
