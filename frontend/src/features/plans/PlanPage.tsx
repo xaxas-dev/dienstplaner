@@ -23,6 +23,7 @@ const avatarTopModifier: Modifier = ({ activatorEvent, draggingNodeRect, transfo
   const offsetY = activatorEvent.clientY - draggingNodeRect.top
   return { ...transform, x: transform.x + offsetX - 14, y: transform.y + offsetY }
 }
+import { FileDown } from 'lucide-react'
 import { CommandBar } from '@/components/dp/CommandBar'
 import { KpiBar } from '@/components/dp/KpiBar'
 import { usePlan } from './usePlans'
@@ -208,6 +209,15 @@ export function PlanPage() {
       <CommandBar
         title={planTitle}
         breadcrumb={[{ label: 'Pläne', href: '/plans' }]}
+        primaryAction={
+          !isNaN(id)
+            ? {
+                label: 'Exportieren',
+                icon: FileDown,
+                onClick: () => window.location.assign(`/api/plans/${id}/export`),
+              }
+            : undefined
+        }
       />
       <div className="px-6 py-3">
         <KpiBar tiles={kpiTiles} />
