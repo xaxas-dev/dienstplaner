@@ -111,7 +111,7 @@ Bis das Backend nachzieht: feste Reihenfolge in einer Map `shiftTypeId → token
 > **auf jeder Route** — Plan, Ärzte, Stationen, Schichten, Qualifikationen, Regeln,
 > alle Detail- und Form-Seiten. Ohne Ausnahme. Das Dashboard (`/heute`) **bekommt
 > die Rail ebenfalls**; falls bewusst eine „Lobby"-Variante ohne Rail gewünscht ist,
-> muss das explizit über ein `<AppShell variant="bare">`-Flag passieren — Default
+> muss das explizit über ein `<AtelierShell variant="bare">`-Flag passieren — Default
 > ist **Rail überall**. (In den Artboards der Designdatei wurde die Rail aus
 > Layout-Gründen teils weggelassen; das ist eine Darstellungs-Konvention im Canvas,
 > kein Designbeschluss.)

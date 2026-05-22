@@ -45,8 +45,11 @@ frontend/src/
       usePlanConflicts.ts
       useAssignShift.ts
       useTarifWarnings.ts
+      usePlanRotations.ts
       planGridUtils.ts       → pure Transformationsfunktion, kein React
     doctors/
+      useDoctorAvailability.ts → GET /api/doctors/{id}/ina-availability
+      useAvailabilityForDate.ts → useQueries für Mehrfach-Doctor-Lookup
     departments/
     absences/
     ...
