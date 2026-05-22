@@ -28,7 +28,7 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
         <Avatar name={doctor.name} shortName={doctor.short_name} id={doctor.id} size={44} />
         <div className="flex-1 min-w-0">
           <p className="font-serif text-[19px] leading-tight text-ink truncate">
-            {doctor.name}
+            {doctor.title ? `${doctor.title} ` : ''}{doctor.name}
           </p>
           <p className="text-xs text-ink-2 mt-0.5">{subLine}</p>
         </div>
