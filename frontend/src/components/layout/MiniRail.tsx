@@ -44,7 +44,7 @@ export function MiniRail() {
     return cn(
       'w-10 h-10 rounded-xl flex items-center justify-center transition-colors',
       active
-        ? 'bg-ink text-paper'
+        ? 'bg-[#C66A3D] text-[#FFF8EF]'
         : 'text-ink-2 hover:bg-line hover:text-ink',
     )
   }

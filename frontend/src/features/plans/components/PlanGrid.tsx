@@ -28,8 +28,8 @@ export function PlanGrid({
   return (
     <div className="overflow-auto flex-1">
       <div
-        className="grid min-w-max"
-        style={{ gridTemplateColumns: `210px repeat(${days.length}, 36px)` }}
+        className="grid"
+        style={{ gridTemplateColumns: `210px repeat(${days.length}, minmax(36px, 1fr))` }}
         onMouseLeave={() => setHover(null)}
       >
         {/* Header */}

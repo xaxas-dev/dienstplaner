@@ -116,7 +116,7 @@ export function ShiftCell({
         onMouseEnter={onMouseEnter}
         onFocus={onFocus}
         className={cn(
-          'aspect-square w-full rounded-cell border border-line bg-paper/50 transition',
+          'w-full h-full rounded-cell border border-line bg-paper/50 transition',
           'flex items-center justify-center',
           'hover:bg-card hover:border-line-2',
           weekend && 'bg-weekend/40',
@@ -137,7 +137,7 @@ export function ShiftCell({
       onMouseEnter={onMouseEnter}
       onFocus={onFocus}
       className={cn(
-        'relative aspect-square w-full rounded-cell text-[11px] font-bold leading-none transition',
+        'relative w-full h-full rounded-cell text-[11px] font-bold leading-none transition',
         'hover:brightness-95',
         conflict && 'ring-[1.5px] ring-warn',
         today && 'ring-2 ring-warn-line',

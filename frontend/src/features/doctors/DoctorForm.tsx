@@ -154,8 +154,8 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
             <FormItem>
               <FormLabel>Titel</FormLabel>
               <Select
-                onValueChange={(v) => field.onChange(v || null)}
-                value={field.value ?? ''}
+                onValueChange={(v) => field.onChange(v === '__none__' ? null : v)}
+                value={field.value ?? '__none__'}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -163,7 +163,7 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Kein Titel</SelectItem>
+                  <SelectItem value="__none__">Kein Titel</SelectItem>
                   <SelectItem value="Dr.">Dr.</SelectItem>
                   <SelectItem value="Prof.">Prof.</SelectItem>
                   <SelectItem value="PD">PD</SelectItem>
