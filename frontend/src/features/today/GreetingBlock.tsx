@@ -18,13 +18,13 @@ export function GreetingBlock({ date }: { date: Date }) {
         {clinicName ? (
           <>
             {clinicName} —{' '}
-            <em className="not-italic text-accent">Heute</em>{' '}
+            <em className="not-italic text-dp-accent">Heute</em>{' '}
             im Blick
           </>
         ) : (
           <>
             Guten Morgen —{' '}
-            <em className="not-italic text-accent">Heute</em>{' '}
+            <em className="not-italic text-dp-accent">Heute</em>{' '}
             im Blick
           </>
         )}
