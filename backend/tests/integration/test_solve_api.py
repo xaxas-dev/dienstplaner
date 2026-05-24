@@ -170,3 +170,119 @@ def test_solve_plan_db_unveraendert(
     doctor_ids_after = {s["id"]: s["doctor_id"] for s in shifts_after}
 
     assert doctor_ids_before == doctor_ids_after, "DB wurde durch /solve verändert!"
+
+
+# ---------------------------------------------------------------------------
+# ABSENT_DOCTOR-Integrationstests (M8-003)
+# ---------------------------------------------------------------------------
+
+
+def test_solve_meidet_abwesenden_arzt(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Solver weist abwesenden Arzt nicht auf Datum seiner Absence zu.
+
+    Alice hat Absence am Plan-Datum, Bob nicht.
+    Erwartung: hard_score == 0, Diff enthält nicht Alice für diesen Shift.
+    """
+    monkeypatch.setattr(_ss, "TERMINATION_SECONDS", 3)
+
+    st_ids = _seed_shift_types(client)
+    alice = _create_doctor(client, "Dr. Alice-Absent")
+    _create_doctor(client, "Dr. Bob-Available")
+
+    # Plan mit einem Shift am 2026-07-01
+    r = client.post(
+        "/api/plans",
+        json={
+            "name": "AbsentTest",
+            "valid_from": "2026-07-01",
+            "valid_to": "2026-07-01",
+            "shift_type_ids": [list(st_ids.values())[0]],
+        },
+    )
+    assert r.status_code == 201
+    plan = r.json()
+
+    # Alice Absence am Plan-Datum
+    r = client.post(
+        f"/api/doctors/{alice['id']}/absences",
+        json={
+            "doctor_id": alice["id"],
+            "absence_type": "URLAUB",
+            "valid_from": "2026-07-01",
+            "valid_to": "2026-07-01",
+        },
+    )
+    assert r.status_code == 201
+
+    r = client.post(f"/api/plans/{plan['id']}/solve")
+    assert r.status_code == 200
+    data = r.json()
+
+    assert data["hard_score"] == 0, f"Unerwartet: hard_score={data['hard_score']}"
+
+    # Kein Vorschlag darf Alice dem Shift zuweisen
+    for pa in data["proposed_assignments"]:
+        assert pa["doctor_id"] != alice["id"], (
+            f"Solver hat abwesende Alice (id={alice['id']}) zugewiesen"
+        )
+
+
+def test_solve_nur_abwesender_arzt_bleibt_unassigned(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Nur ein Arzt vorhanden, der abwesend ist → Solver wählt None (allows_unassigned).
+
+    Keine Zuweisung ist besser als ABSENT_DOCTOR-Penalty.
+    Erwartung: hard_score == 0, Shift im Diff mit doctor_id=null.
+    """
+    monkeypatch.setattr(_ss, "TERMINATION_SECONDS", 3)
+
+    st_ids = _seed_shift_types(client)
+    alice = _create_doctor(client, "Dr. AliceOnly-Absent")
+
+    r = client.post(
+        "/api/plans",
+        json={
+            "name": "OnlyAbsentTest",
+            "valid_from": "2026-07-02",
+            "valid_to": "2026-07-02",
+            "shift_type_ids": [list(st_ids.values())[0]],
+        },
+    )
+    assert r.status_code == 201
+    plan = r.json()
+
+    # Alice zuweisen (nicht gepinnt)
+    shifts = plan["shifts"]
+    r = client.patch(
+        f"/api/shifts/{shifts[0]['id']}",
+        json={"doctor_id": alice["id"], "is_pinned": False},
+    )
+    assert r.status_code == 200
+
+    # Alice Absence am Plan-Datum
+    r = client.post(
+        f"/api/doctors/{alice['id']}/absences",
+        json={
+            "doctor_id": alice["id"],
+            "absence_type": "URLAUB",
+            "valid_from": "2026-07-02",
+            "valid_to": "2026-07-02",
+        },
+    )
+    assert r.status_code == 201
+
+    r = client.post(f"/api/plans/{plan['id']}/solve")
+    assert r.status_code == 200
+    data = r.json()
+
+    assert data["hard_score"] == 0, f"Unerwartet: hard_score={data['hard_score']}"
+
+    # Shift muss im Diff sein mit doctor_id=null (Solver entfernt abwesende Alice)
+    diff_by_shift = {pa["shift_id"]: pa["doctor_id"] for pa in data["proposed_assignments"]}
+    assert shifts[0]["id"] in diff_by_shift, "Solver-Diff enthält Shift nicht"
+    assert diff_by_shift[shifts[0]["id"]] is None, "Solver hat abwesende Alice nicht entfernt"
