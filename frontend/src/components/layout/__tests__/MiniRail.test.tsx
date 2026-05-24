@@ -5,9 +5,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { MiniRail } from '../MiniRail'
 
 vi.mock('@/lib/useSettings', () => ({
-  useClinicName: () => ({
-    data: { key: 'clinic_name', value: 'Testklinik UKSH', description: null, updated_at: '' },
-  }),
+  useClinicName: () => ({ data: null }),
 }))
 
 function Wrapper({ initialPath = '/' }: { initialPath?: string }) {
@@ -37,26 +35,22 @@ describe('MiniRail', () => {
     expect(screen.getByRole('link', { name: 'Einstellungen' })).toBeInTheDocument()
   })
 
-  it('markiert aktive Route mit bg-ink-Klasse', () => {
+  it('markiert aktive Route mit Terrakotta-Hintergrund', () => {
     render(<Wrapper initialPath="/doctors" />)
     const activeLink = screen.getByRole('link', { name: 'Ärzte' })
-    expect(activeLink.className).toContain('bg-ink')
+    // M7-001: aktive Items nutzen #C66A3D statt bg-ink (CLAUDE.md MiniRail-Konvention)
+    expect(activeLink.className).toContain('bg-[#C66A3D]')
   })
 
   it('markiert Sub-Routen korrekt (/doctors/123 → Ärzte aktiv)', () => {
     render(<Wrapper initialPath="/doctors/123" />)
     const activeLink = screen.getByRole('link', { name: 'Ärzte' })
-    expect(activeLink.className).toContain('bg-ink')
+    expect(activeLink.className).toContain('bg-[#C66A3D]')
   })
 
-  it('inaktive Routes haben NICHT bg-ink-Klasse', () => {
+  it('inaktive Routes haben NICHT Terrakotta-Hintergrund', () => {
     render(<Wrapper initialPath="/doctors" />)
     const inactiveLink = screen.getByRole('link', { name: 'Stationen' })
-    expect(inactiveLink.className).not.toContain('bg-ink')
-  })
-
-  it('zeigt clinic_name Sub-Label aus dem Settings-Hook', () => {
-    render(<Wrapper initialPath="/doctors" />)
-    expect(screen.getByText('Testklinik UKSH')).toBeInTheDocument()
+    expect(inactiveLink.className).not.toContain('bg-[#C66A3D]')
   })
 })
