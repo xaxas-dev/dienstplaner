@@ -1,7 +1,7 @@
 """Zentrale Constraint-Registry: IDs und Klassifizierung.
 
 Drei Sektionen:
-  1. Logisch-hart (nie overridebar): DOUBLE_BOOKED
+  1. Logisch-hart (nie overridebar): DOUBLE_BOOKED, ABSENT_DOCTOR
   2. Regulatorisch-hart (overridebar A/B/C): (leer — Folge-Milestones)
   3. Soft (Optimierungsziele): (leer — Folge-Milestones)
 
@@ -25,14 +25,16 @@ if TYPE_CHECKING:
 class ConstraintId(enum.StrEnum):
     # --- Logisch-hart (nie overridebar) ---
     DOUBLE_BOOKED = "double-booked"
-    # Folge-Milestones: ABSENT_DOCTOR = "absent-doctor"
+    ABSENT_DOCTOR = "absent-doctor"
 
     # --- Regulatorisch-hart (overridebar) --- Folge-Milestones
     # --- Soft (Optimierungsziele) ---          Folge-Milestones
 
 
 # Klassifizierungs-Sets — für Override-Logik und Reporting.
-LOGISCH_HART: frozenset[ConstraintId] = frozenset([ConstraintId.DOUBLE_BOOKED])
+LOGISCH_HART: frozenset[ConstraintId] = frozenset(
+    [ConstraintId.DOUBLE_BOOKED, ConstraintId.ABSENT_DOCTOR]
+)
 REGULATORISCH_HART: frozenset[ConstraintId] = frozenset()
 SOFT: frozenset[ConstraintId] = frozenset()
 
