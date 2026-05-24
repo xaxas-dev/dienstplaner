@@ -9,6 +9,7 @@ from app.database import get_db
 from app.models.plan import PlanStatus
 from app.repositories import plan_repository as plan_repo
 from app.schemas.conflict import PlanConflicts
+from app.schemas.dashboard import DashboardSummary
 from app.schemas.plan import (
     CloneResult,
     PlanClone,
@@ -18,7 +19,7 @@ from app.schemas.plan import (
     PlanWithRelations,
 )
 from app.schemas.solve import ApplyRequest, ApplyResult, SolveResult
-from app.services import conflict_service, plan_export_service, plan_service
+from app.services import conflict_service, dashboard_service, plan_export_service, plan_service
 from app.services.exceptions import PlanNotFoundError
 
 router = APIRouter(prefix="/plans", tags=["plans"])
@@ -81,6 +82,16 @@ def clone_plan(plan_id: int, body: PlanClone, db: Session = Depends(get_db)):
     data = body.model_dump()
     new_plan, copied, skipped = plan_service.clone_plan(db, plan_id, data)
     return CloneResult(plan=new_plan, rotations_copied=copied, rotations_skipped=skipped)
+
+
+@router.get("/{plan_id}/dashboard", response_model=DashboardSummary)
+def get_dashboard_summary(
+    plan_id: int,
+    today: date | None = None,
+    db: Session = Depends(get_db),
+) -> DashboardSummary:
+    target = today or date.today()
+    return dashboard_service.build_dashboard_summary(db, plan_id, target)
 
 
 @router.get("/{plan_id}/conflicts", response_model=PlanConflicts)

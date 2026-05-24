@@ -233,3 +233,26 @@ def test_current_plan_not_found_returns_204(client: TestClient) -> None:
 def test_current_plan_no_plans_returns_204(client: TestClient) -> None:
     r = client.get("/api/plans/current?today=2026-05-15")
     assert r.status_code == 204
+
+
+# ---------------------------------------------------------------------------
+# GET /api/plans/{id}/dashboard
+# ---------------------------------------------------------------------------
+
+
+def test_dashboard_summary_smoke(client: TestClient) -> None:
+    _seed_shift_types(client)
+    plan = _create_plan(client, valid_from="2026-05-01", valid_to="2026-05-31")
+    r = client.get(f"/api/plans/{plan['id']}/dashboard?today=2026-05-15")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["plan_id"] == plan["id"]
+    assert "kpis" in data
+    assert "today_shifts" in data
+    assert "coverage_by_department" in data
+    assert "attention" in data
+
+
+def test_dashboard_summary_404_unknown_plan(client: TestClient) -> None:
+    r = client.get("/api/plans/9999/dashboard?today=2026-05-15")
+    assert r.status_code == 404
