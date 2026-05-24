@@ -27,6 +27,7 @@ from app.solver.tarif_rules import ConstraintId
 def constraint_definitions(cf: ConstraintFactory) -> list[Constraint]:
     return [
         double_booked(cf),
+        absent_doctor(cf),
     ]
 
 
@@ -41,4 +42,20 @@ def double_booked(cf: ConstraintFactory) -> Constraint:
         .filter(lambda s1, s2: s1.doctor is not None)
         .penalize(HardSoftScore.ONE_HARD)
         .as_constraint(ConstraintId.DOUBLE_BOOKED)
+    )
+
+
+def absent_doctor(cf: ConstraintFactory) -> Constraint:
+    """Logisch-harte Constraint: Arzt darf nicht an einem Datum eingeplant werden,
+    an dem er nach INA-Regeln nicht verfügbar ist (Absence, INAExclusion,
+    blockierende Rotation). Verfügbarkeit ist als Snapshot in
+    SolverDoctor.unavailable_dates vorberechnet."""
+    return (
+        cf.for_each(SolverShift)
+        .filter(
+            lambda s: s.doctor is not None
+            and s.shift_date in s.doctor.unavailable_dates
+        )
+        .penalize(HardSoftScore.ONE_HARD)
+        .as_constraint(ConstraintId.ABSENT_DOCTOR)
     )

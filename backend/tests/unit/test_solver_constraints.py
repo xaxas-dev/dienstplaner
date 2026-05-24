@@ -119,3 +119,72 @@ def test_offene_shifts_kein_hard_penalty() -> None:
 
     # Solver hat zwei verschiedene Ärzte zur Auswahl — DOUBLE_BOOKED tritt nicht auf.
     assert solution.score.hard_score == 0
+
+
+# ---------------------------------------------------------------------------
+# ABSENT_DOCTOR-Tests (M8-003)
+# ---------------------------------------------------------------------------
+
+_ABSENT_DATE = date(2026, 6, 5)
+
+_DR_ABSENT: "SolverDoctor | None" = None
+if _JVM_OK:
+    _DR_ABSENT = SolverDoctor(
+        doctor_id=3, name="Dr. Abwesend", unavailable_dates=frozenset([_ABSENT_DATE])
+    )
+
+
+def test_absent_doctor_penalize_bei_unavailable_date() -> None:
+    """Arzt an Datum in unavailable_dates (gepinnt) → Hard-Score < 0."""
+    shift = SolverShift(
+        shift_id=10, plan_id=1, shift_date=_ABSENT_DATE,
+        shift_type_id=1, doctor=_DR_ABSENT, is_pinned=True,
+    )
+    solution = _solve(ShiftSchedule(doctors=[_DR_ABSENT], shifts=[shift]))
+
+    assert solution.score.hard_score < 0
+
+
+def test_absent_doctor_kein_penalize_bei_available_date() -> None:
+    """Arzt an Datum NICHT in unavailable_dates (gepinnt) → Hard-Score 0."""
+    other_date = date(2026, 6, 6)  # nicht in unavailable_dates
+    shift = SolverShift(
+        shift_id=11, plan_id=1, shift_date=other_date,
+        shift_type_id=1, doctor=_DR_ABSENT, is_pinned=True,
+    )
+    solution = _solve(ShiftSchedule(doctors=[_DR_ABSENT], shifts=[shift]))
+
+    assert solution.score.hard_score == 0
+
+
+def test_absent_doctor_kein_penalize_bei_null_doctor() -> None:
+    """Offener Shift (doctor=None) an unavailable_dates-Datum → kein Penalty."""
+    shift = SolverShift(
+        shift_id=12, plan_id=1, shift_date=_ABSENT_DATE,
+        shift_type_id=1, doctor=None,
+    )
+    solution = _solve(ShiftSchedule(doctors=[_DR_ABSENT], shifts=[shift]))
+
+    assert solution.score.hard_score == 0
+
+
+def test_absent_doctor_und_double_booked_addieren() -> None:
+    """Beide Verstöße gleichzeitig → Score <= -2 (Constraints addieren)."""
+    # _DR_ALICE ist an _ABSENT_DATE in zwei Shifts (DOUBLE_BOOKED)
+    # und in unavailable_dates (ABSENT_DOCTOR) → mind. 2× ONE_HARD
+    dr_alice_absent = SolverDoctor(
+        doctor_id=10, name="Dr. AliceAbsent",
+        unavailable_dates=frozenset([_ABSENT_DATE]),
+    )
+    s1 = SolverShift(
+        shift_id=20, plan_id=1, shift_date=_ABSENT_DATE,
+        shift_type_id=1, doctor=dr_alice_absent, is_pinned=True,
+    )
+    s2 = SolverShift(
+        shift_id=21, plan_id=1, shift_date=_ABSENT_DATE,
+        shift_type_id=2, doctor=dr_alice_absent, is_pinned=True,
+    )
+    solution = _solve(ShiftSchedule(doctors=[dr_alice_absent], shifts=[s1, s2]))
+
+    # DOUBLE_BOOKED (1×) + ABSENT_DOCTOR (2×) = mindestens -3
+    assert solution.score.hard_score <= -2
