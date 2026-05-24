@@ -1,3 +1,5 @@
+from datetime import date
+
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, selectinload
 
@@ -20,6 +22,16 @@ def list_plans(db: Session, *, status: PlanStatus | None = None) -> list[Plan]:
 
 def get_plan(db: Session, plan_id: int) -> Plan | None:
     return _with_relations(db.query(Plan)).filter(Plan.id == plan_id).first()
+
+
+def get_current_plan(db: Session, today: date) -> Plan | None:
+    """Neuester Plan, dessen Gültigkeitszeitraum today enthält."""
+    return (
+        _with_relations(db.query(Plan))
+        .filter(Plan.valid_from <= today, Plan.valid_to >= today)
+        .order_by(desc(Plan.created_at))
+        .first()
+    )
 
 
 def create_plan(db: Session, data: dict) -> Plan:

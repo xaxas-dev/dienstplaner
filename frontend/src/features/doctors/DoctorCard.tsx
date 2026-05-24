@@ -55,7 +55,6 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
       {/* Heatmap */}
       <div>
         <p className="text-[10px] text-ink-3 uppercase tracking-wide mb-1">Nächste 14 Tage</p>
-        {/* shifts: leeres Array — Hook kommt nach Solver (M2-003) */}
         <ShiftHeatmap14 shifts={[]} />
       </div>
 

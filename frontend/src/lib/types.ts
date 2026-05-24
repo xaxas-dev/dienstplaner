@@ -84,3 +84,49 @@ export type AbsenceUpdate = components['schemas']['AbsenceUpdate']
 export type PlanTarifWarnings = components['schemas']['PlanTarifWarnings']
 export type TarifWarning = components['schemas']['TarifWarning']
 export type TarifSeverity = components['schemas']['TarifSeverity']
+
+// Dashboard-Types (manuell, noch nicht im OpenAPI-Schema generiert)
+export interface DoctorInfo {
+  id: number
+  name: string
+  initials: string
+}
+
+export interface DutyShift {
+  shift_type_name: string
+  shift_type_short_name: string
+  time_label: string | null
+  doctors: DoctorInfo[]
+}
+
+export interface CoverageBar {
+  department_name: string
+  filled: number
+  total: number
+  pct: number
+}
+
+export type AttentionSeverity = 'info' | 'warning' | 'error'
+
+export interface AttentionItem {
+  date: string
+  person_name: string | null
+  message: string
+  severity: AttentionSeverity
+}
+
+export interface DashboardKpis {
+  coverage_pct: number
+  open_shifts: number
+  conflicts: number
+  on_leave: number
+}
+
+export interface DashboardSummary {
+  plan_id: number
+  date: string
+  kpis: DashboardKpis
+  today_shifts: DutyShift[]
+  coverage_by_department: CoverageBar[]
+  attention: AttentionItem[]
+}

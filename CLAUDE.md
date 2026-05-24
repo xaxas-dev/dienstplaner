@@ -316,6 +316,22 @@ Punkte nennt.
 - **ShiftCell-Größe:** `w-full h-full` (kein `aspect-square`) — passt zum RotationDropCell-Muster, kein Overflow bei breiten Spalten.
 - **Grid-Spaltenbreite:** `minmax(36px, 1fr)` in beiden Grids (PlanGrid + RotationGrid) — skaliert auf Containerbreite, scrollt ab < 36px.
 
+### Frontend — Dashboard-Pattern (M7-002)
+- **`GET /api/plans/current`** liefert 200+Plan oder 204 (kein Plan für heute) — kein 404.
+  Route muss in `plans.py` VOR `/{plan_id}` definiert sein (FastAPI matcht sonst gegen `plan_id="current"`).
+- **`GET /api/plans/{id}/dashboard?today=YYYY-MM-DD`** aggregiert KPIs, today_shifts,
+  coverage_by_department, attention in einer Response. Service `dashboard_service.py`
+  wiederverwendet `conflict_service.detect_conflicts` — nie duplizieren.
+- **Hook `useCurrentPlan`:** 204 → `null` via custom `fetch` (nicht `apiGet`, da 204 kein Body).
+  Query-Key-Objekt `currentPlanKeys` exportiert.
+- **Hook `useDashboardSummary`:** `enabled: planId != null`. Query-Keys `dashboardKeys`.
+- **Dashboard-Types** manuell in `frontend/src/lib/types.ts` ergänzt (OpenAPI-Generator läuft
+  nicht auf Feature-Branches — manuell hinzufügen, bei Merge generieren lassen).
+- **Empty-State-Pattern:** Wenn `currentPlan === null`, alle Karten zeigen
+  „Kein Plan für diesen Monat", KPI-Tiles zeigen `—`, CTA → `/plans/new`.
+- **Keine neuen `dp/`-Primitives** für Dashboard — Komponenten inline in `features/today/`.
+- **Layout:** `grid grid-cols-[1.4fr_1fr] gap-7 px-10 py-6`. Karten: `rounded-2xl bg-card border border-line p-5`.
+
 ### Frontend — shadcn/ui-Fallstricke
 - **SelectItem darf keinen Leerstring als value haben** (`value=""` wirft Radix-Runtime-Error). Für „keine Auswahl" / nullable Felder Sentinel `"__none__"` verwenden und im `onValueChange`-Handler auf `null` mappen: `(v) => field.onChange(v === '__none__' ? null : v)`.
 - **MiniRail aktive Items:** Farbe `bg-[#C66A3D] text-[#FFF8EF]` (Terrakotta/Creme = Logo-Farben), nicht `bg-ink text-paper`.
