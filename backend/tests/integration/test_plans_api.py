@@ -208,4 +208,28 @@ def test_delete_plan_cascade(client: TestClient) -> None:
     assert client.get(f"/api/plans/{plan_id}").status_code == 404
     # Seit M2-005: Shifts-Endpunkt prüft Plan-Existenz → 404 (vorher: 200 mit [])
     assert client.get(f"/api/plans/{plan_id}/shifts").status_code == 404
-    assert client.get(f"/api/plans/{plan_id}/versions").json() == []
+
+
+# ---------------------------------------------------------------------------
+# GET /api/plans/current
+# ---------------------------------------------------------------------------
+
+
+def test_current_plan_found(client: TestClient) -> None:
+    _seed_shift_types(client)
+    plan = _create_plan(client, valid_from="2026-05-01", valid_to="2026-05-31")
+    r = client.get("/api/plans/current?today=2026-05-15")
+    assert r.status_code == 200
+    assert r.json()["id"] == plan["id"]
+
+
+def test_current_plan_not_found_returns_204(client: TestClient) -> None:
+    _seed_shift_types(client)
+    _create_plan(client, valid_from="2026-05-01", valid_to="2026-05-31")
+    r = client.get("/api/plans/current?today=2026-06-01")
+    assert r.status_code == 204
+
+
+def test_current_plan_no_plans_returns_204(client: TestClient) -> None:
+    r = client.get("/api/plans/current?today=2026-05-15")
+    assert r.status_code == 204

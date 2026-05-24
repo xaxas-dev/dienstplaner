@@ -1,6 +1,7 @@
+from datetime import date
 from io import BytesIO
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
@@ -27,6 +28,16 @@ router = APIRouter(prefix="/plans", tags=["plans"])
 def list_plans(status: str | None = None, db: Session = Depends(get_db)) -> list:
     plan_status = PlanStatus(status) if status else None
     return plan_repo.list_plans(db, status=plan_status)
+
+
+@router.get("/current", response_model=PlanWithRelations)
+def get_current_plan(today: date | None = None, db: Session = Depends(get_db)):
+    """Liefert den neuesten Plan, dessen Zeitraum heute enthält. 204 falls keiner."""
+    target = today or date.today()
+    plan = plan_repo.get_current_plan(db, target)
+    if plan is None:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return plan
 
 
 @router.get("/{plan_id}", response_model=PlanWithRelations)
