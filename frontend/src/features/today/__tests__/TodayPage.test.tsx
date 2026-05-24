@@ -7,6 +7,10 @@ import type { DashboardSummary, PlanWithRelations } from '@/lib/types'
 
 // --- Mocks ---
 
+vi.mock('@/lib/useSettings', () => ({
+  useClinicName: () => ({ data: null }),
+}))
+
 vi.mock('../useCurrentPlan', () => ({
   useCurrentPlan: vi.fn(),
   currentPlanKeys: { all: ['currentPlan'], byDate: (d: string) => ['currentPlan', d] },
