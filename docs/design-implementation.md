@@ -305,7 +305,7 @@ Tastenkürzel: `cmd/ctrl + K` öffnet, `esc` schließt.
 | Route | Page | Status |
 |---|---|---|
 | `/` | Redirect → `/heute` | ✅ implementiert |
-| `/heute` | `DashboardPage` | ✅ implementiert |
+| `/heute` | `TodayPage` (Dashboard) | ✅ M7-002 |
 | `/plans` | `PlanListPage` (Kachel-Grid, Plan anlegen) | ✅ M2-003 |
 | `/plans/:id` | `PlanPage` (PlanGrid + ContextPanel, Schichtzuweisung) | ✅ M2-003 |
 | `/doctors` | `DoctorListPage` → Karten-Grid | ✅ M1-011 |
