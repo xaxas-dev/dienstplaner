@@ -13,8 +13,15 @@ _JVM_SKIP_REASON = "JVM-Check noch nicht ausgeführt"
 
 try:
     import app.models  # noqa: F401 – alle Modelle registrieren
-    from app.models.doctor import Doctor
-    from app.models.plan import Plan, PlanStatus
+    from app.models import (
+        Absence,
+        AbsenceType,
+        Department,
+        Doctor,
+        Plan,
+        PlanStatus,
+        RotationAssignment,
+    )
     from app.models.shift import Shift
     from app.models.shift_type import ShiftType
     from app.solver.domain import SolverDoctor, SolverShift
@@ -225,3 +232,96 @@ def test_to_solver_inaktiver_arzt_nicht_im_wertebereich(
 
     doctor_ids = {sd.doctor_id for sd in schedule.doctors}
     assert inactive.id not in doctor_ids
+
+
+# ---------------------------------------------------------------------------
+# Availability-Snapshot-Tests (M8-003)
+# ---------------------------------------------------------------------------
+
+
+def test_to_solver_leerer_plan_kein_crash(
+    db: Session, plan: "Plan", doctor_alice: "Doctor"
+) -> None:
+    """Plan ohne Shifts → leerer Snapshot pro Arzt, kein Exception."""
+    schedule = to_solver(db, plan.id)
+
+    alice_solver = next(sd for sd in schedule.doctors if sd.doctor_id == doctor_alice.id)
+    assert alice_solver.unavailable_dates == frozenset()
+
+
+def test_to_solver_snapshot_leer_fuer_verfuegbaren_arzt(
+    db: Session, plan: "Plan", doctor_alice: "Doctor", shift_type_v: "ShiftType"
+) -> None:
+    """Arzt ohne Abwesenheiten/Exclusions/blockierende Rotation → leeres frozenset."""
+    shift_date = date(2026, 6, 2)  # Dienstag
+    shift = Shift(
+        plan_id=plan.id,
+        shift_date=shift_date,
+        shift_type_id=shift_type_v.id,
+    )
+    db.add(shift)
+    db.flush()
+
+    schedule = to_solver(db, plan.id)
+
+    alice_solver = next(sd for sd in schedule.doctors if sd.doctor_id == doctor_alice.id)
+    assert alice_solver.unavailable_dates == frozenset()
+
+
+def test_to_solver_snapshot_enthaelt_absence_datum(
+    db: Session, plan: "Plan", doctor_alice: "Doctor", shift_type_v: "ShiftType"
+) -> None:
+    """Absence über Plan-Datum → Datum in unavailable_dates."""
+    shift_date = date(2026, 6, 2)  # Dienstag
+    shift = Shift(
+        plan_id=plan.id,
+        shift_date=shift_date,
+        shift_type_id=shift_type_v.id,
+    )
+    absence = Absence(
+        doctor_id=doctor_alice.id,
+        absence_type=AbsenceType.URLAUB,
+        valid_from=date(2026, 6, 1),
+        valid_to=date(2026, 6, 5),
+    )
+    db.add_all([shift, absence])
+    db.flush()
+
+    schedule = to_solver(db, plan.id)
+
+    alice_solver = next(sd for sd in schedule.doctors if sd.doctor_id == doctor_alice.id)
+    assert shift_date in alice_solver.unavailable_dates
+
+
+def test_to_solver_snapshot_enthaelt_rotation_datum(
+    db: Session, plan: "Plan", doctor_alice: "Doctor", shift_type_v: "ShiftType"
+) -> None:
+    """Aktive Rotation auf blockierendem Bereich (Werktag) → Datum in unavailable_dates."""
+    shift_date = date(2026, 6, 2)  # Dienstag — Werktag
+    shift = Shift(
+        plan_id=plan.id,
+        shift_date=shift_date,
+        shift_type_id=shift_type_v.id,
+    )
+    dept = Department(
+        name="INA-Rotation-Test",
+        blocks_ina_weekdays=True,
+        blocks_ina_weekends=False,
+    )
+    db.add_all([shift, dept])
+    db.flush()
+
+    rotation = RotationAssignment(
+        doctor_id=doctor_alice.id,
+        department_id=dept.id,
+        plan_id=plan.id,
+        valid_from=date(2026, 6, 1),
+        valid_to=date(2026, 6, 30),
+    )
+    db.add(rotation)
+    db.flush()
+
+    schedule = to_solver(db, plan.id)
+
+    alice_solver = next(sd for sd in schedule.doctors if sd.doctor_id == doctor_alice.id)
+    assert shift_date in alice_solver.unavailable_dates
