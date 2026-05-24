@@ -31,9 +31,16 @@ from timefold.solver.score import HardSoftScore
 class SolverDoctor:
     """Arzt als problem fact (planning value im Werte-Bereich der Shifts)."""
 
-    def __init__(self, doctor_id: int, name: str) -> None:
+    def __init__(
+        self,
+        doctor_id: int,
+        name: str,
+        *,
+        unavailable_dates: frozenset[date] = frozenset(),
+    ) -> None:
         self.doctor_id = doctor_id
         self.name = name
+        self.unavailable_dates = unavailable_dates
 
     def __repr__(self) -> str:
         return f"SolverDoctor(id={self.doctor_id}, name={self.name!r})"

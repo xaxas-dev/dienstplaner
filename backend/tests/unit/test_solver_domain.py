@@ -90,6 +90,29 @@ def test_solver_shift_gepinnt_ohne_arzt_nicht_pinnbar() -> None:
     assert s.is_pinned is False  # Sonderfall: nicht-pinnbar
 
 
+# --- SolverDoctor.unavailable_dates (M8-003) ---
+
+
+def test_solver_doctor_default_unavailable_dates_leer() -> None:
+    d = SolverDoctor(doctor_id=1, name="Dr. Müller")
+    assert d.unavailable_dates == frozenset()
+
+
+def test_solver_doctor_unavailable_dates_konfigurierbar() -> None:
+    dates = frozenset([date(2025, 6, 5), date(2025, 6, 10)])
+    d = SolverDoctor(doctor_id=2, name="Dr. Weber", unavailable_dates=dates)
+    assert d.unavailable_dates == dates
+    assert date(2025, 6, 5) in d.unavailable_dates
+
+
+def test_solver_doctor_eq_ignoriert_unavailable_dates() -> None:
+    """Identität basiert nur auf doctor_id, nicht auf Snapshot-Inhalt."""
+    a = SolverDoctor(1, "Alice")
+    b = SolverDoctor(1, "Alice", unavailable_dates=frozenset([date(2025, 6, 1)]))
+    assert a == b
+    assert hash(a) == hash(b)
+
+
 # --- ShiftSchedule ---
 
 
