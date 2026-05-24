@@ -5,7 +5,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.absences import router as absences_router
-from app.api.tarif_warnings import router as tarif_warnings_router
 from app.api.app_settings import router as app_settings_router
 from app.api.departments import router as departments_router
 from app.api.doctors import ep_router
@@ -21,6 +20,7 @@ from app.api.rotations import plan_rotations_router, rotations_router
 from app.api.rule_overrides import router as rule_overrides_router
 from app.api.shift_types import router as shift_types_router
 from app.api.shifts import router as shifts_router
+from app.api.tarif_warnings import router as tarif_warnings_router
 from app.config import BASE_DIR
 
 

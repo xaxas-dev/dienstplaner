@@ -115,7 +115,7 @@ schließen.
 |----|-------|--------|
 | M8-001 | Solver-Skeleton (`/solve`, read-only Diff) | ✅ |
 | M8-002 | Solver-Apply (`/apply`, DB-Write ohne JVM) | ✅ |
-| M8-003 | Solver-Constraint ABSENT_DOCTOR (logisch-hart) | ⏳ |
+| M8-003 | Solver-Constraint ABSENT_DOCTOR (logisch-hart) | ✅ Abgeschlossen (2026-05-24). Availability-Snapshot-Pattern; `get_ina_availability_for_period` wiederverwendet. |
 | M8-004+ | Weitere Solver-Constraints (regulatorisch, soft) | ⏳ Tarif-Werte nötig |
 
 ## Phase B — Frontend (separater Strang)

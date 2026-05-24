@@ -97,6 +97,14 @@ Details: docs/architecture.md
   übersprungen (`skipped_pinned`), nicht überschrieben. `is_pinned` wird nicht
   gesetzt (Solver-Apply ≠ manuell). Konflikte nicht in der Response —
   Client invalidiert `shifts`+`conflicts` und refetcht. Einzelne Transaktion.
+- **Availability-Snapshot-Pattern (M8-003):** Timefold-Constraints dürfen keine
+  DB-Queries ausführen. Neue logisch-harte Constraints, die Arzt-Verfügbarkeit
+  prüfen, müssen den Snapshot-Pattern nutzen: Verfügbarkeit vor dem Solve via
+  `get_ina_availability_for_period()` pro Arzt berechnen und als immutable problem
+  fact (`frozenset[date]`) in `SolverDoctor.unavailable_dates` speichern.
+  `__eq__/__hash__` von `SolverDoctor` bleiben auf `doctor_id` — Snapshot ist
+  kein Identitätsmerkmal. Neue logisch-harte Constraint = `mapping.py` erweitern
+  + `constraints.py` ergänzen + `tarif_rules.py` ConstraintId + ADR.
 - **Timefold-Python-API (empirisch verifiziert, timefold==1.24.0b0):**
   - Dekoratoren: `@planning_entity`, `@planning_solution`, `@constraint_provider`
   - Felder: `Annotated[Type, PlanningVariable(allows_unassigned=True)]`,

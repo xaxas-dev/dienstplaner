@@ -87,11 +87,35 @@ Penalty: −1 Hard pro verletztem Paar.
 - Konflikte werden **nicht** im Apply berechnet; Client refetcht
   `GET /plans/{id}/shifts` (Decoupling per ADR-038/ADR-051).
 
+### 2. ABSENT_DOCTOR (logisch-hart, ConstraintId.ABSENT_DOCTOR, M8-003)
+
+**Regel:** Kein Arzt darf an einem Datum eingeplant werden, an dem er nach
+INA-Regeln nicht verfügbar ist (blockierende Rotation, INAExclusion, Absence).
+
+**Klasse:** Logisch-hart — nie overridebar.
+
+**Implementierung:**
+```python
+cf.for_each(SolverShift)
+  .filter(lambda s: s.doctor is not None
+      and s.shift_date in s.doctor.unavailable_dates)
+  .penalize(HardSoftScore.ONE_HARD)
+  .as_constraint(ConstraintId.ABSENT_DOCTOR)
+```
+
+**Availability-Snapshot-Pattern (ADR-071):** Timefold-Constraints dürfen
+keine DB-Queries ausführen. Vor dem Solve berechnet `to_solver()` einmalig
+`get_ina_availability_for_period(db, doctor_id, plan_start, plan_end)` pro
+aktivem Arzt und speichert das Ergebnis als `unavailable_dates: frozenset[date]`
+in `SolverDoctor`. Der Constraint-Filter ist ein O(1)-Set-Lookup.
+
+**Wichtig:** `POST /apply` prüft ABSENT_DOCTOR nicht — weiche Validierung
+Phase A (ADR-033). Manuelle Zuweisung eines abwesenden Arztes bleibt möglich.
+
 ### Folge-Milestones (noch nicht implementiert)
 
 | Constraint-ID | Klasse | Beschreibung |
 |---------------|--------|--------------|
-| absent-doctor | Logisch-hart | Arzt ist abwesend (Absence/INAExclusion/blockierende Rotation) |
 | max-weekly-hours | Regulatorisch-hart | ArbZG max. Wochenstunden |
 | min-rest-time | Regulatorisch-hart | Mindestruhezeit zwischen Diensten (TV-Ärzte/TdL) |
 | fairness-distribution | Soft | Gleichmäßige Dienstverteilung unter Ärzte |
