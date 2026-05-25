@@ -46,7 +46,7 @@ export function useEntityItems(enabled: boolean): EntityItems {
     id: `plan-${p.id}`,
     label: p.name,
     group: 'plans',
-    keywords: [String(p.id), p.valid_from, p.valid_to],
+    keywords: [String(p.id), p.valid_from ?? '', p.valid_to ?? ''].filter(Boolean),
     onSelect: () => navigate(`/plans/${p.id}`),
   }))
 
