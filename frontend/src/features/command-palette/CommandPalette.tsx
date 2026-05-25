@@ -1,4 +1,4 @@
-import { useCommandPalette } from './CommandPaletteContext'
+import { useCommandPalette } from './useCommandPalette'
 import {
   CommandDialog,
   CommandEmpty,
