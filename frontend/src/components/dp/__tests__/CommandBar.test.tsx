@@ -3,11 +3,17 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CommandBar } from '../CommandBar'
 
-// vi.hoisted sorgt dafür, dass die Variable vor dem Hoisting von vi.mock verfügbar ist
-const { mockToastInfo } = vi.hoisted(() => ({ mockToastInfo: vi.fn() }))
+// Mock useCommandPalette so tests don't need a real provider
+const mockOpen = vi.fn()
+vi.mock('@/features/command-palette/useCommandPalette', () => ({
+  useCommandPalette: () => ({ open: mockOpen, close: vi.fn(), toggle: vi.fn(), isOpen: false }),
+}))
 
-vi.mock('sonner', () => ({
-  toast: { info: mockToastInfo, success: vi.fn(), error: vi.fn() },
+// Mock platform — jsdom reports Win32, but we make it explicit
+vi.mock('@/lib/platform', () => ({
+  isMac: () => false,
+  getModifierKey: () => 'ctrl',
+  getModifierGlyph: () => 'Strg',
 }))
 
 beforeEach(() => {
@@ -60,18 +66,17 @@ describe('CommandBar', () => {
     expect(onClick).toHaveBeenCalledOnce()
   })
 
-  it('Klick auf Suchfeld-Button zeigt Toast', async () => {
+  it('Klick auf Suchfeld-Button öffnet Command Palette', async () => {
     const user = userEvent.setup()
     render(<CommandBar title="Plan" showSearch />)
-    // Suchfeld-Button hat SVG + Text + ⌘K-Chip; über role + data-testid oder via Text
-    const searchBtn = screen.getByRole('button', { name: /⌘k/i })
+    const searchBtn = screen.getByRole('button', { name: /strg\+k/i })
     await user.click(searchBtn)
-    expect(mockToastInfo).toHaveBeenCalledWith('Command Palette kommt in M1-012')
+    expect(mockOpen).toHaveBeenCalledOnce()
   })
 
   it('blendet Suchfeld aus wenn showSearch=false', () => {
     render(<CommandBar title="Plan" showSearch={false} />)
-    expect(screen.queryByText('⌘K')).toBeNull()
+    expect(screen.queryByText('Strg+K')).toBeNull()
   })
 
   it('rendert Primärbutton und reagiert auf Klick', async () => {

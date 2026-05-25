@@ -11,6 +11,10 @@ vi.mock('@/lib/useSettings', () => ({
   useClinicName: () => ({ data: null }),
 }))
 
+vi.mock('@/features/command-palette/useCommandPalette', () => ({
+  useCommandPalette: () => ({ open: vi.fn(), close: vi.fn(), toggle: vi.fn(), isOpen: false }),
+}))
+
 vi.mock('../useCurrentPlan', () => ({
   useCurrentPlan: vi.fn(),
   currentPlanKeys: { all: ['currentPlan'], byDate: (d: string) => ['currentPlan', d] },

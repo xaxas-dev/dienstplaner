@@ -1,10 +1,11 @@
 import * as React from 'react'
 import { Search, ChevronRight } from 'lucide-react'
-import { toast } from 'sonner'
 import type { LucideIcon } from 'lucide-react'
 import { Chip } from './Chip'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useCommandPalette } from '@/features/command-palette/useCommandPalette'
+import { isMac, getModifierGlyph } from '@/lib/platform'
 
 interface BreadcrumbItem {
   label: string
@@ -40,9 +41,8 @@ export function CommandBar({
   showSearch = true,
   className,
 }: CommandBarProps) {
-  function handleSearchClick() {
-    toast.info('Command Palette kommt in M1-012')
-  }
+  const { open } = useCommandPalette()
+  function handleSearchClick() { open() }
 
   return (
     <div className={cn('flex items-center gap-3 px-10 py-4 bg-paper', className)}>
@@ -101,7 +101,7 @@ export function CommandBar({
           <Search className="size-3.5 shrink-0" />
           <span className="text-xs hidden sm:inline">Suchen</span>
           <span className="font-mono text-[10px] bg-line rounded px-1 py-0.5 leading-none">
-            ⌘K
+            {isMac() ? `${getModifierGlyph()}K` : `${getModifierGlyph()}+K`}
           </span>
         </button>
       )}

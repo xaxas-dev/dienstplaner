@@ -10,6 +10,10 @@ import { FileDown } from 'lucide-react'
 import { MemoryRouter } from 'react-router-dom'
 import { CommandBar } from '@/components/dp/CommandBar'
 
+vi.mock('@/features/command-palette/useCommandPalette', () => ({
+  useCommandPalette: () => ({ open: vi.fn(), close: vi.fn(), toggle: vi.fn(), isOpen: false }),
+}))
+
 afterEach(cleanup)
 
 function renderExportBar(onClick: () => void) {
