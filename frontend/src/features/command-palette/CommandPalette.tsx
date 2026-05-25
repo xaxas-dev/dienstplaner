@@ -23,28 +23,34 @@ export function CommandPalette() {
       <CommandList>
         <CommandEmpty>Keine Treffer</CommandEmpty>
         <CommandGroup heading="Navigation">
-          {navigationItems.map((item) => (
-            <CommandItem
-              key={item.id}
-              value={`${item.label} ${item.keywords?.join(' ') ?? ''}`}
-              onSelect={() => handleSelect(item)}
-            >
-              {item.icon && <item.icon className="mr-2 size-4 shrink-0 text-ink-3" />}
-              {item.label}
-            </CommandItem>
-          ))}
+          {navigationItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <CommandItem
+                key={item.id}
+                value={`${item.label} ${item.keywords?.join(' ') ?? ''}`}
+                onSelect={() => handleSelect(item)}
+              >
+                {Icon && <Icon className="mr-2 size-4 shrink-0 text-ink-3" />}
+                {item.label}
+              </CommandItem>
+            )
+          })}
         </CommandGroup>
         <CommandGroup heading="Aktionen">
-          {quickActions.map((item) => (
-            <CommandItem
-              key={item.id}
-              value={`${item.label} ${item.keywords?.join(' ') ?? ''}`}
-              onSelect={() => handleSelect(item)}
-            >
-              {item.icon && <item.icon className="mr-2 size-4 shrink-0 text-ink-3" />}
-              {item.label}
-            </CommandItem>
-          ))}
+          {quickActions.map((item) => {
+            const Icon = item.icon
+            return (
+              <CommandItem
+                key={item.id}
+                value={`${item.label} ${item.keywords?.join(' ') ?? ''}`}
+                onSelect={() => handleSelect(item)}
+              >
+                {Icon && <Icon className="mr-2 size-4 shrink-0 text-ink-3" />}
+                {item.label}
+              </CommandItem>
+            )
+          })}
         </CommandGroup>
       </CommandList>
     </CommandDialog>
