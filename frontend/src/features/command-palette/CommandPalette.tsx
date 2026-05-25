@@ -1,6 +1,7 @@
 import { useCommandPalette } from './useCommandPalette'
 import { useNavigationItems } from './items/navigation'
 import { useQuickActions } from './items/quickActions'
+import { useEntityItems } from './items/useEntityItems'
 import {
   CommandDialog, CommandInput, CommandList,
   CommandGroup, CommandItem, CommandEmpty,
@@ -11,6 +12,7 @@ export function CommandPalette() {
   const { isOpen, close } = useCommandPalette()
   const navigationItems = useNavigationItems()
   const quickActions = useQuickActions()
+  const { doctorItems, planItems, departmentItems } = useEntityItems(isOpen)
 
   function handleSelect(item: CommandItemDef) {
     close()
@@ -52,6 +54,57 @@ export function CommandPalette() {
             )
           })}
         </CommandGroup>
+        {doctorItems.length > 0 && (
+          <CommandGroup heading="Ärzte">
+            {doctorItems.map((item) => {
+              const Icon = item.icon
+              return (
+                <CommandItem
+                  key={item.id}
+                  value={`${item.label} ${item.keywords?.join(' ') ?? ''}`}
+                  onSelect={() => handleSelect(item)}
+                >
+                  {Icon && <Icon className="mr-2 size-4 shrink-0 text-ink-3" />}
+                  {item.label}
+                </CommandItem>
+              )
+            })}
+          </CommandGroup>
+        )}
+        {planItems.length > 0 && (
+          <CommandGroup heading="Pläne">
+            {planItems.map((item) => {
+              const Icon = item.icon
+              return (
+                <CommandItem
+                  key={item.id}
+                  value={`${item.label} ${item.keywords?.join(' ') ?? ''}`}
+                  onSelect={() => handleSelect(item)}
+                >
+                  {Icon && <Icon className="mr-2 size-4 shrink-0 text-ink-3" />}
+                  {item.label}
+                </CommandItem>
+              )
+            })}
+          </CommandGroup>
+        )}
+        {departmentItems.length > 0 && (
+          <CommandGroup heading="Stationen">
+            {departmentItems.map((item) => {
+              const Icon = item.icon
+              return (
+                <CommandItem
+                  key={item.id}
+                  value={`${item.label} ${item.keywords?.join(' ') ?? ''}`}
+                  onSelect={() => handleSelect(item)}
+                >
+                  {Icon && <Icon className="mr-2 size-4 shrink-0 text-ink-3" />}
+                  {item.label}
+                </CommandItem>
+              )
+            })}
+          </CommandGroup>
+        )}
       </CommandList>
     </CommandDialog>
   )
