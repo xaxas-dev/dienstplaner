@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useCommandPalette } from './useCommandPalette'
 import { useNavigationItems } from './items/navigation'
 import { useQuickActions } from './items/quickActions'
@@ -7,6 +8,8 @@ import {
   CommandGroup, CommandItem, CommandEmpty,
 } from '@/components/ui/command'
 import type { CommandItemDef } from './items/types'
+import { getRecents, pushRecent } from './recents'
+import type { RecentItem } from './recents'
 
 export function CommandPalette() {
   const { isOpen, close } = useCommandPalette()
@@ -14,16 +17,58 @@ export function CommandPalette() {
   const quickActions = useQuickActions()
   const { doctorItems, planItems, departmentItems } = useEntityItems(isOpen)
 
+  const [recents, setRecents] = useState<RecentItem[]>([])
+  const [inputValue, setInputValue] = useState('')
+
+  useEffect(() => {
+    if (isOpen) setRecents(getRecents())
+  }, [isOpen])
+
   function handleSelect(item: CommandItemDef) {
+    pushRecent({ id: item.id, label: item.label, group: item.group })
+    setRecents(getRecents())
     close()
     item.onSelect()
   }
 
+  function handleRecentSelect(recent: RecentItem) {
+    const allItems = [
+      ...navigationItems,
+      ...quickActions,
+      ...doctorItems,
+      ...planItems,
+      ...departmentItems,
+    ]
+    const found = allItems.find((item) => item.id === recent.id)
+    if (found) {
+      handleSelect(found)
+    } else {
+      // Item no longer exists — remove from local state; next open will reload from storage
+      setRecents((prev) => prev.filter((r) => r.id !== recent.id))
+    }
+  }
+
   return (
     <CommandDialog open={isOpen} onOpenChange={(open) => { if (!open) close() }}>
-      <CommandInput placeholder="Suchen oder Befehl…" />
+      <CommandInput
+        placeholder="Suchen oder Befehl…"
+        onValueChange={setInputValue}
+      />
       <CommandList>
         <CommandEmpty>Keine Treffer</CommandEmpty>
+        {recents.length > 0 && inputValue === '' && (
+          <CommandGroup heading="Zuletzt verwendet">
+            {recents.map((recent) => (
+              <CommandItem
+                key={recent.id}
+                value={recent.label}
+                onSelect={() => handleRecentSelect(recent)}
+              >
+                {recent.label}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
         <CommandGroup heading="Navigation">
           {navigationItems.map((item) => {
             const Icon = item.icon
