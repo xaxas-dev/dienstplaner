@@ -105,6 +105,13 @@ Details: docs/architecture.md
   `__eq__/__hash__` von `SolverDoctor` bleiben auf `doctor_id` — Snapshot ist
   kein Identitätsmerkmal. Neue logisch-harte Constraint = `mapping.py` erweitern
   + `constraints.py` ergänzen + `tarif_rules.py` ConstraintId + ADR.
+- **Soft-Score-Pattern (M8-004):** Neue Soft-Constraints folgen demselben
+  Snapshot-Pattern: Alle Inputs (FTE, Targets) vor dem Solve in `SolverDoctor`
+  ablegen (`fte_percentage: int`, `fair_targets: dict[int, int]`). Constraint
+  liest nur immutable problem facts — kein DB-Zugriff. `SOFT`-frozenset in
+  `tarif_rules.py` erweitern. `__eq__/__hash__` von `SolverDoctor` bleiben auf
+  `doctor_id`. Neue Soft-Constraint = `mapping.py` + `domain.py` + `constraints.py`
+  + `tarif_rules.py` + ADR + `employment_period_service.py` (wenn FTE nötig).
 - **Timefold-Python-API (empirisch verifiziert, timefold==1.24.0b0):**
   - Dekoratoren: `@planning_entity`, `@planning_solution`, `@constraint_provider`
   - Felder: `Annotated[Type, PlanningVariable(allows_unassigned=True)]`,
@@ -113,6 +120,7 @@ Details: docs/architecture.md
     `Annotated[list[E], PlanningEntityCollectionProperty]`
   - Score: `Annotated[HardSoftScore, PlanningScore]`
   - Constraint-Streams: `cf.for_each_unique_pair(..., Joiners.equal(...)).filter(...).penalize(...).as_constraint(name)`
+  - Constraint-Streams (group_by, verifiziert M8-004): `cf.for_each(E).filter(...).group_by(lambda e: key1, lambda e: key2, ConstraintCollectors.count()).filter(lambda k1, k2, count: ...).penalize(HardSoftScore.ONE_SOFT, lambda k1, k2, count: ...).as_constraint(name)` — 2-Key-groupBy + 3-Arg-Lambda in filter/penalize funktioniert in timefold==1.24.0b0
   - Config: `SolverConfig(solution_class=..., entity_class_list=[...], score_director_factory_config=ScoreDirectorFactoryConfig(constraint_provider_function=fn), termination_config=TerminationConfig(spent_limit=Duration(seconds=N)))`
   - Solve: `SolverFactory.create(config).build_solver().solve(problem)`
   - JVM-Prerequisite: Java 17+ (empfohlen: Eclipse Temurin 21)

@@ -112,16 +112,48 @@ in `SolverDoctor`. Der Constraint-Filter ist ein O(1)-Set-Lookup.
 **Wichtig:** `POST /apply` prüft ABSENT_DOCTOR nicht — weiche Validierung
 Phase A (ADR-033). Manuelle Zuweisung eines abwesenden Arztes bleibt möglich.
 
+### 3. FAIR_DISTRIBUTION (soft, ConstraintId.FAIR_DISTRIBUTION, M8-004)
+
+**Regel:** Pro (Arzt, Schichttyp)-Kombination wird ein FTE-proportionales
+Soll berechnet: `target(d, st) = floor(count_shifts_of_type(st) × fte(d) / sum_fte)`.
+Jede Schicht, die das Soll eines Arztes überschreitet, erzeugt −1 Soft-Penalty.
+
+**Klasse:** Soft — beeinflusst nur den Soft-Score, nie die Feasibility
+(`hard_score >= 0`).
+
+**FTE-Quelle:** `get_fte_for_period(db, doctor_id, plan_start, plan_end)` aus
+`employment_period_service.py`. Zeitanteilig gewichtetes Mittel aus `EmploymentPeriod`-
+Einträgen im Plan-Zeitraum. Fallback `100` wenn keine Period vorhanden.
+
+**Snapshot:** Targets werden in `to_solver()` vorberechnet und als
+`SolverDoctor.fair_targets: dict[int, int]` (shift_type_id → target_count)
+übergeben. Kein DB-Zugriff im Constraint (ADR-071-Pattern).
+
+**Implementierung:**
+```python
+cf.for_each(SolverShift)
+  .filter(lambda s: s.doctor is not None)
+  .group_by(lambda s: s.doctor, lambda s: s.shift_type_id, ConstraintCollectors.count())
+  .filter(lambda doc, st, count: count > doc.fair_targets.get(st, 0))
+  .penalize(HardSoftScore.ONE_SOFT, lambda doc, st, count: count - doc.fair_targets.get(st, 0))
+  .as_constraint(ConstraintId.FAIR_DISTRIBUTION)
+```
+
+**Nur Über-Soll penalisiert** (Over-Target-Only). Ärzte mit 0 Schichten eines
+Typs erscheinen nicht im Stream — keine Phantom-Pivot-Komplexität.
+
+**Pinned Shifts** zählen in `actual`. Manuelle Ungleichverteilung durch Pinning
+erzeugt unvermeidliche Penalty — erwartetes Verhalten.
+
 ### Folge-Milestones (noch nicht implementiert)
 
 | Constraint-ID | Klasse | Beschreibung |
 |---------------|--------|--------------|
 | max-weekly-hours | Regulatorisch-hart | ArbZG max. Wochenstunden |
 | min-rest-time | Regulatorisch-hart | Mindestruhezeit zwischen Diensten (TV-Ärzte/TdL) |
-| fairness-distribution | Soft | Gleichmäßige Dienstverteilung unter Ärzte |
 
 Keine Tarif-Werte dürfen ohne Rückfrage erfunden werden — alle regulatorischen
-Constraints kommen erst nach Klärung mit Domänenexperten.
+Constraints kommen erst nach Klärung mit Domänenexperten (OQ-006).
 
 ## Tarif-Validation-Framework (M5-001, Phase A)
 
@@ -152,7 +184,7 @@ dezenter als Konflikt-Dot (!, oben rechts). Klick öffnet ContextPanel mit
 | max-weekly-hours | Regulatorisch-hart | TV-Ärzte/TdL + ArbZG max. Wochenstunden |
 | min-rest-time | Regulatorisch-hart | Mindestruhezeit zwischen Diensten |
 | max-consecutive-days | Regulatorisch-hart | Max. aufeinanderfolgende Arbeitstage |
-| fairness-distribution | Soft | Gleichmäßige Dienstverteilung |
+| fairness-distribution | Soft | Implementiert (M8-004) — FTE-gewichtet, per ShiftType |
 
 ## Excel-Export (M6-001, Phase A)
 
