@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from timefold.solver.score import (
     Constraint,
+    ConstraintCollectors,
     ConstraintFactory,
     HardSoftScore,
     Joiners,
@@ -28,6 +29,7 @@ def constraint_definitions(cf: ConstraintFactory) -> list[Constraint]:
     return [
         double_booked(cf),
         absent_doctor(cf),
+        fair_distribution(cf),
     ]
 
 
@@ -42,6 +44,26 @@ def double_booked(cf: ConstraintFactory) -> Constraint:
         .filter(lambda s1, s2: s1.doctor is not None)
         .penalize(HardSoftScore.ONE_HARD)
         .as_constraint(ConstraintId.DOUBLE_BOOKED)
+    )
+
+
+def fair_distribution(cf: ConstraintFactory) -> Constraint:
+    # group_by(key1, key2, count()) + 3-arg lambda in filter/penalize:
+    # verifiziert (timefold==1.24.0b0)
+    return (
+        cf.for_each(SolverShift)
+        .filter(lambda s: s.doctor is not None)
+        .group_by(
+            lambda s: s.doctor,
+            lambda s: s.shift_type_id,
+            ConstraintCollectors.count(),
+        )
+        .filter(lambda doc, st, count: count > doc.fair_targets.get(st, 0))
+        .penalize(
+            HardSoftScore.ONE_SOFT,
+            lambda doc, st, count: count - doc.fair_targets.get(st, 0),
+        )
+        .as_constraint(ConstraintId.FAIR_DISTRIBUTION)
     )
 
 

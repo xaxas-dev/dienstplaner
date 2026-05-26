@@ -113,6 +113,44 @@ def test_solver_doctor_eq_ignoriert_unavailable_dates() -> None:
     assert hash(a) == hash(b)
 
 
+# --- SolverDoctor.fte_percentage + fair_targets (M8-004/B) ---
+
+
+def test_solver_doctor_default_fte_100() -> None:
+    d = SolverDoctor(doctor_id=1, name="Dr. Müller")
+    assert d.fte_percentage == 100
+
+
+def test_solver_doctor_default_fair_targets_leer() -> None:
+    """Zwei separate Instanzen bekommen eigene leere Dicts (nicht geteilt)."""
+    a = SolverDoctor(doctor_id=1, name="Alice")
+    b = SolverDoctor(doctor_id=2, name="Bob")
+    assert a.fair_targets == {}
+    assert b.fair_targets == {}
+    assert a.fair_targets is not b.fair_targets
+    a.fair_targets[1] = 999
+    assert 1 not in b.fair_targets
+
+
+def test_solver_doctor_fte_konfigurierbar() -> None:
+    d = SolverDoctor(doctor_id=3, name="Dr. Teilzeit", fte_percentage=50)
+    assert d.fte_percentage == 50
+
+
+def test_solver_doctor_fair_targets_konfigurierbar() -> None:
+    targets = {1: 3, 2: 1}
+    d = SolverDoctor(doctor_id=4, name="Dr. Weber", fair_targets=targets)
+    assert d.fair_targets == {1: 3, 2: 1}
+
+
+def test_solver_doctor_eq_ignoriert_neue_felder() -> None:
+    """Gleichheit basiert nur auf doctor_id — fte_percentage und fair_targets spielen keine Rolle."""
+    a = SolverDoctor(doctor_id=1, name="Alice", fte_percentage=100, fair_targets={1: 3})
+    b = SolverDoctor(doctor_id=1, name="Alice", fte_percentage=50, fair_targets={2: 7})
+    assert a == b
+    assert hash(a) == hash(b)
+
+
 # --- ShiftSchedule ---
 
 

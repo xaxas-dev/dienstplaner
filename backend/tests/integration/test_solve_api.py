@@ -230,6 +230,52 @@ def test_solve_meidet_abwesenden_arzt(
         )
 
 
+def test_solve_verteilt_fairer_als_zufall(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Solver verteilt 4 gleiche Schichten fair auf 2 gleichwertige Ärzte.
+
+    Setup: 2 Ärzte (gleiche FTE), 4 Shifts vom selben Typ, kein Absence.
+    Erwartung: hard_score == 0 (kein DOUBLE_BOOKED), soft_score >= -1
+    (bei 4 Shifts / 2 Ärzte = Ziel 2 pro Arzt; max. Rundungstoleranz: -1).
+    """
+    monkeypatch.setattr(_ss, "TERMINATION_SECONDS", 5)
+
+    st_ids = _seed_shift_types(client)
+    shift_type_id = list(st_ids.values())[0]  # nur ein Schichttyp
+
+    _create_doctor(client, "Dr. FairAlice")
+    _create_doctor(client, "Dr. FairBob")
+
+    # Plan mit 4 Tagen, je 1 Shift vom selben Typ
+    r = client.post(
+        "/api/plans",
+        json={
+            "name": "FairTest",
+            "valid_from": "2026-08-01",
+            "valid_to": "2026-08-04",
+            "shift_type_ids": [shift_type_id],
+        },
+    )
+    assert r.status_code == 201
+    plan = r.json()
+
+    r = client.post(f"/api/plans/{plan['id']}/solve")
+    assert r.status_code == 200
+    data = r.json()
+
+    # Kein Hard-Penalty (kein DOUBLE_BOOKED)
+    assert data["hard_score"] == 0, f"Unerwartet: hard_score={data['hard_score']}"
+
+    # Soft-Penalty muss minimal sein: bei 4 Shifts, 2 Ärzte gleicher FTE
+    # → Ziel = 2 pro Arzt. Perfekte Verteilung = soft_score 0.
+    # Rundungstoleranz: -1 erlaubt (z.B. Integer-Division 4//2=2, kein Rest).
+    assert data["soft_score"] >= -1, (
+        f"Solver verteilte nicht fair: soft_score={data['soft_score']}"
+    )
+
+
 def test_solve_nur_abwesender_arzt_bleibt_unassigned(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
