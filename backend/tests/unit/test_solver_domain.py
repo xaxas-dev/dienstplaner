@@ -128,6 +128,8 @@ def test_solver_doctor_default_fair_targets_leer() -> None:
     assert a.fair_targets == {}
     assert b.fair_targets == {}
     assert a.fair_targets is not b.fair_targets
+    a.fair_targets[1] = 999
+    assert 1 not in b.fair_targets
 
 
 def test_solver_doctor_fte_konfigurierbar() -> None:

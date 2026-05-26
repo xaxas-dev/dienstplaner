@@ -44,7 +44,7 @@ class SolverDoctor:
         self.name = name
         self.unavailable_dates = unavailable_dates
         self.fte_percentage = fte_percentage
-        self.fair_targets = fair_targets or {}
+        self.fair_targets = fair_targets if fair_targets is not None else {}
 
     def __repr__(self) -> str:
         return f"SolverDoctor(id={self.doctor_id}, name={self.name!r})"
