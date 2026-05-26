@@ -344,6 +344,15 @@ Punkte nennt.
 - **SelectItem darf keinen Leerstring als value haben** (`value=""` wirft Radix-Runtime-Error). Für „keine Auswahl" / nullable Felder Sentinel `"__none__"` verwenden und im `onValueChange`-Handler auf `null` mappen: `(v) => field.onChange(v === '__none__' ? null : v)`.
 - **MiniRail aktive Items:** Farbe `bg-[#C66A3D] text-[#FFF8EF]` (Terrakotta/Creme = Logo-Farben), nicht `bg-ink text-paper`.
 
+### Frontend — Command-Palette-Pattern (M1-012)
+- **`CommandPaletteProvider`** sitzt in `App.tsx` innerhalb `BrowserRouter`, außerhalb `<Routes>`. Registriert globalen `keydown`-Listener für `metaKey || ctrlKey + K`. Rendert `<CommandPalette />` intern.
+- **`useCommandPalette()`** aus `@/features/command-palette/useCommandPalette` — wirft außerhalb Provider. Liefert `{ isOpen, open, close, toggle }`.
+- **Hotkey-Pattern:** Ein Listener, beide Modifier (`metaKey || ctrlKey`) — kein OS-Branch. Nur Anzeige verzweigt via `lib/platform.ts`.
+- **Plattform-Helper:** `isMac()`, `getModifierKey()`, `getModifierGlyph()` in `frontend/src/lib/platform.ts`. Nicht verstreut. Mac → `⌘K`, Win/Linux → `Strg+K`.
+- **Entity-Items lazy:** `useEntityItems(isOpen)` — alle 3 Queries mit `enabled: isOpen`. Query-Keys (`doctorKeys`, `planKeys`, `departmentKeys`) aus Feature-Hooks wiederverwenden — nicht neu definieren.
+- **Recents:** Storage-Key `dp-command-palette-recents`, max 5, deduped per `id`. API: `getRecents()`, `pushRecent()`, `clearRecents()` in `features/command-palette/recents.ts`.
+- **Tests:** Pages mit `CommandBar` müssen `useCommandPalette` mocken: `vi.mock('@/features/command-palette/useCommandPalette', () => ({ useCommandPalette: () => ({ open: vi.fn(), close: vi.fn(), toggle: vi.fn(), isOpen: false }) }))`.
+
 ## Was Claude Code NICHT tun soll
 - Keine neuen Bibliotheken ohne explizite Rückfrage einführen
 - Keine Bibliotheksfunktionen verwenden, die nicht in der Doku existieren
