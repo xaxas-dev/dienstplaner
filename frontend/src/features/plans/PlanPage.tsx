@@ -32,20 +32,25 @@ import { usePlanConflicts } from './usePlanConflicts'
 import { usePlanRotations } from './usePlanRotations'
 import { useDoctorAvailability } from './useDoctorAvailability'
 import { useTarifWarnings } from './useTarifWarnings'
+import { usePlanAbsences } from './usePlanAbsences'
+import { useAssignShift, findShiftId } from './useAssignShift'
 import { useDoctors } from '@/features/doctors/useDoctors'
 import { useDepartments } from '@/features/departments/useDepartments'
-import { PlanGrid } from './components/PlanGrid'
+import { useShiftTypes } from '@/features/shift-types/useShiftTypes'
+import { UnifiedPlanGrid } from './components/UnifiedPlanGrid'
+import { ShiftTypeDragBar, parseShiftTypeDragId } from './components/ShiftTypeDragBar'
 import { ContextPanel } from './components/ContextPanel'
 import { DoctorAssignPopover } from './components/DoctorAssignPopover'
 import { DoctorDragSource, DoctorDragOverlayToken, parseDoctorDragId } from './components/DoctorDragSource'
-import { RotationGrid, parseRotationDropId } from './components/RotationGrid'
 import { RotationAssignPopover } from './components/RotationAssignPopover'
+import { parseBereichHeaderDropId } from './components/BereichHeaderRow'
 import type { ShiftWithDetails, TarifWarning } from '@/lib/types'
 
 interface ActiveCell {
-  shiftId: number | null
+  rotationId: number
   doctorId: number
   day: string
+  shiftId: number | null
 }
 
 export function PlanPage() {
@@ -53,7 +58,7 @@ export function PlanPage() {
   const navigate = useNavigate()
   const id = Number(planId)
 
-  const [view, setView] = useState<'bereiche' | 'dienste'>('bereiche')
+  const [focusMode, setFocusMode] = useState<'alle' | 'vn'>('alle')
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null)
   const [contextShift, setContextShift] = useState<ShiftWithDetails | null>(null)
   const [activeRotationCell, setActiveRotationCell] = useState<{
@@ -82,12 +87,15 @@ export function PlanPage() {
   const { data: doctors = [] } = useDoctors()
   const { data: departments = [] } = useDepartments()
   const { data: rotations = [] } = usePlanRotations(id)
+  const { data: absences = [] } = usePlanAbsences(id)
+  const { data: shiftTypes = [] } = useShiftTypes()
   const { data: dragAvailability } = useDoctorAvailability(
     activeDragDoctor?.id ?? null,
     plan?.valid_from ?? null,
     plan?.valid_to ?? null,
   )
   const { data: tarifWarningsData } = useTarifWarnings(id)
+  const assignShift = useAssignShift(id)
 
   const tarifWarningsByShift: Record<number, TarifWarning[]> = {}
   for (const w of tarifWarningsData?.warnings ?? []) {
@@ -102,14 +110,6 @@ export function PlanPage() {
       navigate('/plans')
     }
   }, [shiftsError, navigate])
-
-  useEffect(() => {
-    setActiveCell(null)
-    setActiveRotationCell(null)
-    setContextShift(null)
-    setPreselectedDragDoctorId(null)
-    setRotationPreview(null)
-  }, [view])
 
   const planTitle = plan
     ? format(new Date(plan.valid_from), 'MMMM yyyy', { locale: de })
@@ -134,9 +134,9 @@ export function PlanPage() {
     },
   ]
 
-  function handleCellClick(shiftId: number | null, doctorId: number, day: string) {
+  function handleCellClick(rotationId: number, doctorId: number, day: string, shiftId: number | null) {
     setContextShift(null)
-    setActiveCell({ shiftId, doctorId, day })
+    setActiveCell({ rotationId, doctorId, day, shiftId })
   }
 
   const sensors = useSensors(
@@ -156,12 +156,63 @@ export function PlanPage() {
     setActiveDragDoctor(null)
     const { active, over } = event
     if (!over) return
-    const doctorId = parseDoctorDragId(String(active.id))
-    if (doctorId === null) return
-    const target = parseRotationDropId(String(over.id))
-    if (target === null) return
-    setPreselectedDragDoctorId(doctorId)
-    setActiveRotationCell({ departmentId: target.departmentId, day: target.day, assignmentId: null })
+
+    const activeId = String(active.id)
+    const overId = String(over.id)
+
+    // ── Doctor → Bereich-Header-Drop ──────────────────────────────────────────
+    const doctorId = parseDoctorDragId(activeId)
+    if (doctorId !== null) {
+      const deptId = parseBereichHeaderDropId(overId)
+      if (deptId !== null) {
+        setPreselectedDragDoctorId(doctorId)
+        setActiveRotationCell({ departmentId: deptId, day: plan?.valid_from ?? '', assignmentId: null })
+      }
+      return
+    }
+
+    // ── ShiftType → Cell-Drop ─────────────────────────────────────────────────
+    const shiftTypeId = parseShiftTypeDragId(activeId)
+    if (shiftTypeId === null) return
+
+    // Ziel-Zelle parsen: cell-{rotationId}-{yyyy-MM-dd}
+    const cellMatch = overId.match(/^cell-(\d+)-(\d{4}-\d{2}-\d{2})$/)
+    if (!cellMatch) return
+    const rotationId = Number(cellMatch[1])
+    const dayKey = cellMatch[2]
+
+    // Arzt aus Rotation ermitteln
+    const rotation = rotations.find((r) => r.id === rotationId)
+    if (!rotation) return
+    const targetDoctorId = rotation.doctor_id
+
+    // Shift für diesen Tag + ShiftType suchen
+    const shiftId = findShiftId(shifts, dayKey, shiftTypeId)
+    if (shiftId === null) {
+      const st = shiftTypes.find((s) => s.id === shiftTypeId)
+      toast.error(`${st?.short_name ?? 'Dienst'} ist an diesem Tag nicht verfügbar`)
+      return
+    }
+
+    const shift = shifts.find((s) => s.id === shiftId)!
+    if (shift.is_pinned) {
+      toast.error('Dienst ist gepinnt — Pin zuerst entfernen')
+      return
+    }
+
+    if (shift.doctor_id != null && shift.doctor_id !== targetDoctorId) {
+      const prevDoctor = doctors.find((d) => d.id === shift.doctor_id)
+      const newDoctor = doctors.find((d) => d.id === targetDoctorId)
+      const confirmed = window.confirm(
+        `${prevDoctor?.name ?? 'Anderer Arzt'} wird durch ${newDoctor?.name ?? 'Arzt'} ersetzt. Fortfahren?`,
+      )
+      if (!confirmed) return
+    }
+
+    assignShift.mutate(
+      { shiftId, data: { doctor_id: targetDoctorId } },
+      { onError: () => toast.error('Fehler beim Speichern der Zuweisung') },
+    )
   }
 
   function handleDragCancel() {
@@ -178,25 +229,25 @@ export function PlanPage() {
       accessibility={{
         announcements: {
           onDragStart({ active }) {
-            const name = (active.data.current as { doctorName?: string } | undefined)?.doctorName ?? 'Arzt'
+            const name = (active.data.current as { doctorName?: string } | undefined)?.doctorName ?? 'Element'
             return `${name} wird gezogen.`
           },
           onDragOver({ active, over }) {
             if (!over) return
-            const name = (active.data.current as { doctorName?: string } | undefined)?.doctorName ?? 'Arzt'
+            const name = (active.data.current as { doctorName?: string } | undefined)?.doctorName ?? 'Element'
             const dept = (over.data.current as { departmentName?: string } | undefined)?.departmentName ?? 'Bereich'
             return `${name} über ${dept}.`
           },
           onDragEnd({ active, over }) {
-            const name = (active.data.current as { doctorName?: string } | undefined)?.doctorName ?? 'Arzt'
+            const name = (active.data.current as { doctorName?: string } | undefined)?.doctorName ?? 'Element'
             if (over) {
-              const dept = (over.data.current as { departmentName?: string } | undefined)?.departmentName ?? 'Bereich'
+              const dept = (over.data.current as { departmentName?: string } | undefined)?.departmentName ?? 'Ziel'
               return `${name} auf ${dept} abgelegt.`
             }
             return `${name}-Drag abgebrochen.`
           },
           onDragCancel({ active }) {
-            const name = (active.data.current as { doctorName?: string } | undefined)?.doctorName ?? 'Arzt'
+            const name = (active.data.current as { doctorName?: string } | undefined)?.doctorName ?? 'Element'
             return `${name}-Drag abgebrochen.`
           },
         },
@@ -222,56 +273,49 @@ export function PlanPage() {
       <div className="px-6 py-3">
         <KpiBar tiles={kpiTiles} />
       </div>
-      <div className="px-6 pb-2 flex gap-1">
-        {(['bereiche', 'dienste'] as const).map((v) => (
-          <button
-            key={v}
-            onClick={() => setView(v)}
-            className={[
-              'px-3 py-1 rounded-lg text-xs font-medium transition capitalize',
-              view === v
-                ? 'border-b-2 border-accent text-ink'
-                : 'text-ink-3 hover:bg-paper',
-            ].join(' ')}
-          >
-            {v === 'dienste' ? 'Dienste' : 'Bereiche'}
-          </button>
-        ))}
+
+      {/* ShiftType-DragBar + Fokus-Toggle */}
+      <div className="px-6 pb-2 flex items-center gap-3">
+        <div className="flex-1">
+          <ShiftTypeDragBar shiftTypes={shiftTypes} focusMode={focusMode} />
+        </div>
+        <button
+          onClick={() => setFocusMode((m) => (m === 'alle' ? 'vn' : 'alle'))}
+          className={[
+            'px-3 py-1.5 rounded-lg text-xs font-medium border transition',
+            focusMode === 'vn'
+              ? 'bg-accent text-white border-accent'
+              : 'bg-paper text-ink-3 border-line hover:bg-paper/80',
+          ].join(' ')}
+        >
+          {focusMode === 'vn' ? 'Fokus: V+N' : 'Alle Dienste'}
+        </button>
       </div>
+
       <div className="flex flex-1 overflow-hidden gap-4 px-6 pb-6">
-        {view === 'bereiche' && (
-          <DoctorDragSource doctors={doctors} />
-        )}
-        <div className="flex flex-1 min-w-0 overflow-hidden rounded-2xl border border-line bg-card">
-          {view === 'dienste' && plan && (
-            <PlanGrid
-              shifts={shifts}
-              doctors={doctors}
-              validFrom={plan.valid_from}
-              validTo={plan.valid_to}
-              onCellClick={handleCellClick}
-              onConflictDotClick={(shift) => {
-                setActiveCell(null)
-                setContextShift(shift)
-              }}
-              onTarifDotClick={(shift) => {
-                setActiveCell(null)
-                setContextShift(shift)
-              }}
-              tarifWarnings={tarifWarningsByShift}
-            />
-          )}
-          {view === 'bereiche' && plan && (
-            <RotationGrid
-              rotations={rotations}
+        <DoctorDragSource doctors={doctors} />
+        <div className="flex flex-1 min-w-0 overflow-hidden">
+          {plan && (
+            <UnifiedPlanGrid
               departments={departments}
+              rotations={rotations}
+              shifts={shifts}
+              absences={absences}
               validFrom={plan.valid_from}
               validTo={plan.valid_to}
-              onCellClick={(departmentId, day, assignmentId) =>
-                setActiveRotationCell({ departmentId, day, assignmentId })
-              }
-              preview={rotationPreview}
-              availability={activeDragDoctor ? dragAvailability : undefined}
+              tarifWarningsByShift={tarifWarningsByShift}
+              focusMode={focusMode}
+              onCellClick={handleCellClick}
+              onConflictDotClick={(shiftId) => {
+                const shift = shifts.find((s) => s.id === shiftId) ?? null
+                setActiveCell(null)
+                setContextShift(shift)
+              }}
+              onTarifDotClick={(shiftId) => {
+                const shift = shifts.find((s) => s.id === shiftId) ?? null
+                setActiveCell(null)
+                setContextShift(shift)
+              }}
             />
           )}
         </div>
@@ -283,6 +327,7 @@ export function PlanPage() {
           />
         )}
       </div>
+
       {activeCell && (
         <DoctorAssignPopover
           planId={id}
@@ -297,7 +342,8 @@ export function PlanPage() {
           onClose={() => setActiveCell(null)}
         />
       )}
-      {view === 'bereiche' && activeRotationCell && (() => {
+
+      {activeRotationCell && (() => {
         const dept = departments.find(d => d.id === activeRotationCell.departmentId)
         const existing = activeRotationCell.assignmentId
           ? rotations.find(r => r.id === activeRotationCell.assignmentId) ?? null

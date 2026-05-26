@@ -18,10 +18,9 @@ interface UnifiedPlanGridProps {
   validTo: string
   tarifWarningsByShift?: Record<number, TarifWarning[]>
   focusMode: 'alle' | 'vn'
-  onShiftClick?: (shiftId: number) => void
+  onCellClick?: (rotationId: number, doctorId: number, dayKey: string, shiftId: number | null) => void
   onConflictDotClick?: (shiftId: number) => void
   onTarifDotClick?: (shiftId: number) => void
-  onBereichDrop?: (departmentId: number, doctorId: number) => void
 }
 
 export function UnifiedPlanGrid({
@@ -33,7 +32,7 @@ export function UnifiedPlanGrid({
   validTo,
   tarifWarningsByShift = {},
   focusMode,
-  onShiftClick,
+  onCellClick,
   onConflictDotClick,
   onTarifDotClick,
 }: UnifiedPlanGridProps) {
@@ -171,7 +170,7 @@ export function UnifiedPlanGrid({
                     hasConflict={hasConflict}
                     hasTarifWarning={hasTarifWarning}
                     focusMode={focusMode}
-                    onClick={() => shift && onShiftClick?.(shift.id)}
+                    onClick={() => onCellClick?.(row.rotation.id, row.doctor.id, dk, shift?.id ?? null)}
                     onConflictDotClick={() => shift && onConflictDotClick?.(shift.id)}
                     onTarifDotClick={() => shift && onTarifDotClick?.(shift.id)}
                   />

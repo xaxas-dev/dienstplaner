@@ -6,6 +6,12 @@ export function makeBereichHeaderDropId(departmentId: number): string {
   return `rotation-header-${departmentId}`
 }
 
+export function parseBereichHeaderDropId(id: string): number | null {
+  if (!id.startsWith('rotation-header-')) return null
+  const n = Number(id.slice('rotation-header-'.length))
+  return Number.isFinite(n) ? n : null
+}
+
 interface BereichHeaderRowProps {
   department: Department
   colCount: number
