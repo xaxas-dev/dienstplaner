@@ -50,6 +50,8 @@ function makeRotation(
       doctor_type: 'INTERNAL',
       is_facharzt: false,
       active: true,
+      entry_date: null,
+      weiterbildungsjahr: null,
       created_at: '2026-01-01T00:00:00',
       updated_at: '2026-01-01T00:00:00',
     },
@@ -87,7 +89,7 @@ describe('buildUnifiedRows', () => {
       id: 2,
       doctor_id: 101,
       department_id: 1,
-      doctor: { id: 101, name: 'Dr. Zweiter', title: null, short_name: null, doctor_type: 'INTERNAL', is_facharzt: false, active: true, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
+      doctor: { id: 101, name: 'Dr. Zweiter', title: null, short_name: null, doctor_type: 'INTERNAL', is_facharzt: false, active: true, entry_date: null, weiterbildungsjahr: null, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
     })
     const rows = buildUnifiedRows([dept], [rot1, rot2])
     expect(rows).toHaveLength(3)
@@ -146,12 +148,13 @@ describe('resolveCell', () => {
       id: 50,
       plan_id: 10,
       shift_date: '2026-05-10',
+      shift_type_id: 1,
       doctor_id: 100,
       is_pinned: false,
       notes: null,
       created_at: '2026-01-01T00:00:00',
       updated_at: '2026-01-01T00:00:00',
-      shift_type: { id: 1, name: 'V-Dienst', short_name: 'V', applies_on_weekdays: true, applies_on_weekend: false, display_order: 1, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
+      shift_type: { id: 1, name: 'V-Dienst', short_name: 'V', applies_on_weekdays: true, applies_on_weekend: false, display_order: 1, active: true, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
       conflicts: [],
     }
     const cell = resolveCell(row, '2026-05-10', [shift], [])
@@ -164,12 +167,13 @@ describe('resolveCell', () => {
       id: 50,
       plan_id: 10,
       shift_date: '2026-05-10',
+      shift_type_id: 1,
       doctor_id: 100,
       is_pinned: false,
       notes: null,
       created_at: '2026-01-01T00:00:00',
       updated_at: '2026-01-01T00:00:00',
-      shift_type: { id: 1, name: 'V-Dienst', short_name: 'V', applies_on_weekdays: true, applies_on_weekend: false, display_order: 1, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
+      shift_type: { id: 1, name: 'V-Dienst', short_name: 'V', applies_on_weekdays: true, applies_on_weekend: false, display_order: 1, active: true, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
       conflicts: [],
     }
     const absence: Absence = {
