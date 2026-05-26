@@ -1,4 +1,4 @@
-"""Tests für solver/mapping.py: ORM → Solver-Domäne (Sub-Schritt C).
+"""Tests für solver/mapping.py: ORM → Solver-Domäne (Sub-Schritt C + D).
 
 Kein direkter Solver-Lauf, aber Import von app.solver.domain startet JVM.
 → JVM-Guard wie in test_solver_domain.py.
@@ -22,6 +22,7 @@ try:
         PlanStatus,
         RotationAssignment,
     )
+    from app.models.employment_period import EmploymentPeriod
     from app.models.shift import Shift
     from app.models.shift_type import ShiftType
     from app.solver.domain import SolverDoctor, SolverShift
@@ -325,3 +326,168 @@ def test_to_solver_snapshot_enthaelt_rotation_datum(
 
     alice_solver = next(sd for sd in schedule.doctors if sd.doctor_id == doctor_alice.id)
     assert shift_date in alice_solver.unavailable_dates
+
+
+# ---------------------------------------------------------------------------
+# FTE-Snapshot-Tests (M8-004/D)
+# ---------------------------------------------------------------------------
+
+
+def test_to_solver_fte_default_ohne_period(
+    db: Session, plan: "Plan", shift_type_v: "ShiftType", doctor_alice: "Doctor"
+) -> None:
+    """Arzt ohne EmploymentPeriod im Plan-Bereich → fte_percentage == 100 (Fallback)."""
+    shift = Shift(
+        plan_id=plan.id,
+        shift_date=date(2026, 6, 1),
+        shift_type_id=shift_type_v.id,
+    )
+    db.add(shift)
+    db.flush()
+
+    schedule = to_solver(db, plan.id)
+
+    alice_solver = next(sd for sd in schedule.doctors if sd.doctor_id == doctor_alice.id)
+    assert alice_solver.fte_percentage == 100
+
+
+def test_to_solver_fte_aus_period(
+    db: Session, plan: "Plan", shift_type_v: "ShiftType", doctor_alice: "Doctor"
+) -> None:
+    """Arzt mit 50%-EmploymentPeriod im Plan-Bereich → fte_percentage == 50."""
+    ep = EmploymentPeriod(
+        doctor_id=doctor_alice.id,
+        valid_from=date(2026, 6, 1),
+        valid_to=date(2026, 6, 30),
+        employment_percentage=50,
+    )
+    shift = Shift(
+        plan_id=plan.id,
+        shift_date=date(2026, 6, 1),
+        shift_type_id=shift_type_v.id,
+    )
+    db.add_all([ep, shift])
+    db.flush()
+
+    schedule = to_solver(db, plan.id)
+
+    alice_solver = next(sd for sd in schedule.doctors if sd.doctor_id == doctor_alice.id)
+    assert alice_solver.fte_percentage == 50
+
+
+def test_to_solver_fair_targets_floor_division(
+    db: Session,
+    plan: "Plan",
+    shift_type_v: "ShiftType",
+    doctor_alice: "Doctor",
+    doctor_bob: "Doctor",
+) -> None:
+    """2 Ärzte (100% + 50%), 6 Shifts gleichen Typs → Ziele (4, 2) per Ganzzahl-Division.
+
+    Summe FTE = 150.
+    Alice (100%): (6 * 100) // 150 = 4
+    Bob   (50%):  (6 *  50) // 150 = 2
+    """
+    ep_bob = EmploymentPeriod(
+        doctor_id=doctor_bob.id,
+        valid_from=date(2026, 6, 1),
+        valid_to=date(2026, 6, 30),
+        employment_percentage=50,
+    )
+    db.add(ep_bob)
+    # Alice hat keine EmploymentPeriod → Fallback 100%
+
+    for day in range(1, 7):
+        db.add(
+            Shift(
+                plan_id=plan.id,
+                shift_date=date(2026, 6, day),
+                shift_type_id=shift_type_v.id,
+            )
+        )
+    db.flush()
+
+    schedule = to_solver(db, plan.id)
+
+    alice_solver = next(sd for sd in schedule.doctors if sd.doctor_id == doctor_alice.id)
+    bob_solver = next(sd for sd in schedule.doctors if sd.doctor_id == doctor_bob.id)
+
+    assert alice_solver.fair_targets[shift_type_v.id] == 4
+    assert bob_solver.fair_targets[shift_type_v.id] == 2
+
+
+def test_to_solver_fair_targets_pro_shifttype_getrennt(
+    db: Session,
+    plan: "Plan",
+    shift_type_v: "ShiftType",
+    shift_type_t: "ShiftType",
+    doctor_alice: "Doctor",
+    doctor_bob: "Doctor",
+) -> None:
+    """2 Shift-Typen mit unterschiedlichen Counts → jeder Arzt hat separate Ziele pro Typ."""
+    # 4 Shifts Typ V, 2 Shifts Typ T → Gesamtverteilung je nach FTE
+    # Alice 100%, Bob 100% → sum_fte=200; Typ V: (4*100)//200=2 je; Typ T: (2*100)//200=1 je
+    for day in range(1, 5):
+        db.add(
+            Shift(
+                plan_id=plan.id,
+                shift_date=date(2026, 6, day),
+                shift_type_id=shift_type_v.id,
+            )
+        )
+    for day in range(5, 7):
+        db.add(
+            Shift(
+                plan_id=plan.id,
+                shift_date=date(2026, 6, day),
+                shift_type_id=shift_type_t.id,
+            )
+        )
+    db.flush()
+
+    schedule = to_solver(db, plan.id)
+
+    alice_solver = next(sd for sd in schedule.doctors if sd.doctor_id == doctor_alice.id)
+    bob_solver = next(sd for sd in schedule.doctors if sd.doctor_id == doctor_bob.id)
+
+    # Beide Schlüssel vorhanden
+    assert shift_type_v.id in alice_solver.fair_targets
+    assert shift_type_t.id in alice_solver.fair_targets
+    assert shift_type_v.id in bob_solver.fair_targets
+    assert shift_type_t.id in bob_solver.fair_targets
+
+    # Korrekte Werte: (4*100)//200=2, (2*100)//200=1
+    assert alice_solver.fair_targets[shift_type_v.id] == 2
+    assert alice_solver.fair_targets[shift_type_t.id] == 1
+    assert bob_solver.fair_targets[shift_type_v.id] == 2
+    assert bob_solver.fair_targets[shift_type_t.id] == 1
+
+
+def test_to_solver_fair_targets_leer_bei_leerem_plan(
+    db: Session, plan: "Plan", doctor_alice: "Doctor"
+) -> None:
+    """Plan ohne Shifts → fair_targets == {} für jeden Arzt (counts_by_type leer)."""
+    schedule = to_solver(db, plan.id)
+
+    alice_solver = next(sd for sd in schedule.doctors if sd.doctor_id == doctor_alice.id)
+    assert alice_solver.fair_targets == {}
+
+
+def test_to_solver_fair_targets_leer_bei_keinem_aktiven_arzt(
+    db: Session, plan: "Plan", shift_type_v: "ShiftType"
+) -> None:
+    """Keine aktiven Ärzte (leerer Werte-Bereich) → kein Crash, leere Doctors-Liste."""
+    # Keine Doktoren hinzugefügt → list_doctors liefert [] → sum_fte=0
+    shift = Shift(
+        plan_id=plan.id,
+        shift_date=date(2026, 6, 1),
+        shift_type_id=shift_type_v.id,
+    )
+    db.add(shift)
+    db.flush()
+
+    # Kein Crash erwartet; Doctors-Liste ist leer
+    schedule = to_solver(db, plan.id)
+
+    assert schedule.doctors == []
+    assert len(schedule.shifts) == 1

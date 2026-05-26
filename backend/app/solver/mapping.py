@@ -7,10 +7,13 @@ Liest read-only über bestehende Repositories; keine eigenen DB-Queries.
 """
 from __future__ import annotations
 
+from collections import Counter
+
 from sqlalchemy.orm import Session
 
 from app.repositories.doctor_repository import list_doctors
 from app.repositories.shift_repository import list_shifts_for_plan
+from app.services.employment_period_service import get_fte_for_period
 from app.services.ina_availability_service import get_ina_availability_for_period
 from app.solver.domain import ShiftSchedule, SolverDoctor, SolverShift
 
@@ -41,6 +44,31 @@ def to_solver(db: Session, plan_id: int) -> ShiftSchedule:
 
     # --- Ärzte: Werte-Bereich + Availability-Snapshot ---
     orm_doctors = list_doctors(db, include_inactive=False)
+
+    # FTE pro Arzt — einmalig pro Plan abgerufen (nicht pro Schichttyp/Tag)
+    if plan_start is None:
+        fte_per_doctor = {d.id: 100 for d in orm_doctors}
+    else:
+        fte_per_doctor = {
+            d.id: get_fte_for_period(db, d.id, plan_start, plan_end)
+            for d in orm_doctors
+        }
+
+    # Shift-Anzahl pro Schichttyp — einmalig für den gesamten Plan
+    counts_by_type: Counter[int] = Counter(s.shift_type_id for s in orm_shifts)
+
+    # Gesamt-FTE aller aktiven Ärzte (Nenner für Ziel-Berechnung)
+    sum_fte = sum(fte_per_doctor.values())
+
+    def _targets(doctor_id: int) -> dict[int, int]:
+        if sum_fte == 0 or not counts_by_type:
+            return {}
+        fte = fte_per_doctor[doctor_id]
+        return {
+            st: (count * fte) // sum_fte
+            for st, count in counts_by_type.items()
+        }
+
     solver_doctors: dict[int, SolverDoctor] = {}
     for d in orm_doctors:
         if plan_start is not None:
@@ -51,7 +79,11 @@ def to_solver(db: Session, plan_id: int) -> ShiftSchedule:
         else:
             unavailable_dates = frozenset()
         solver_doctors[d.id] = SolverDoctor(
-            doctor_id=d.id, name=d.name, unavailable_dates=unavailable_dates
+            doctor_id=d.id,
+            name=d.name,
+            unavailable_dates=unavailable_dates,
+            fte_percentage=fte_per_doctor[d.id],
+            fair_targets=_targets(d.id),
         )
 
     # --- Schichten mappen ---
