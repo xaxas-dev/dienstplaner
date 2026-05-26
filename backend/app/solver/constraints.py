@@ -48,16 +48,8 @@ def double_booked(cf: ConstraintFactory) -> Constraint:
 
 
 def fair_distribution(cf: ConstraintFactory) -> Constraint:
-    """Soft-Constraint: Penalisiert Überbesetzung relativ zu FTE-proportionalem Soll.
-
-    Für jeden (Arzt, Schichttyp)-Kombination, bei der die tatsächliche Anzahl
-    zugewiesener Schichten das FTE-proportionale Ziel (SolverDoctor.fair_targets)
-    überschreitet, wird die Überschreitung als Soft-Penalty erfasst.
-
-    Spiked und verifiziert (timefold==1.24.0b0):
-      group_by(key1_fn, key2_fn, ConstraintCollectors.count()) mit 3-Argument-Lambda
-      in filter und penalize funktioniert korrekt.
-    """
+    # group_by(key1, key2, count()) + 3-arg lambda in filter/penalize:
+    # verifiziert (timefold==1.24.0b0)
     return (
         cf.for_each(SolverShift)
         .filter(lambda s: s.doctor is not None)
