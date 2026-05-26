@@ -5,6 +5,9 @@ import { MemoryRouter } from 'react-router-dom'
 import { QualificationListPage } from '../QualificationListPage'
 
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }))
+vi.mock('@/features/command-palette/useCommandPalette', () => ({
+  useCommandPalette: () => ({ open: vi.fn(), close: vi.fn(), toggle: vi.fn(), isOpen: false }),
+}))
 vi.mock('../useQualifications', () => ({
   useQualifications: () => ({ data: [], isLoading: false, isError: false, refetch: vi.fn() }),
   useDeleteQualification: () => ({ mutate: vi.fn(), isPending: false }),

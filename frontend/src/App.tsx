@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AtelierShell } from '@/components/layout/AtelierShell'
+import { CommandPaletteProvider } from '@/features/command-palette'
 import { DoctorListPage } from '@/features/doctors/DoctorListPage'
 import { DoctorCreatePage } from '@/features/doctors/DoctorCreatePage'
 import { DoctorDetailPage } from '@/features/doctors/DoctorDetailPage'
@@ -27,6 +28,7 @@ function NotFoundPage() {
 
 export default function App() {
   return (
+    <CommandPaletteProvider>
     <Routes>
       <Route element={<AtelierShell />}>
         <Route index element={<Navigate to="/heute" replace />} />
@@ -45,5 +47,6 @@ export default function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
+    </CommandPaletteProvider>
   )
 }
