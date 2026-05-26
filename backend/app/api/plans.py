@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.plan import PlanStatus
 from app.repositories import plan_repository as plan_repo
+from app.schemas.absence import AbsenceResponse
 from app.schemas.conflict import PlanConflicts
 from app.schemas.dashboard import DashboardSummary
 from app.schemas.plan import (
@@ -19,7 +20,13 @@ from app.schemas.plan import (
     PlanWithRelations,
 )
 from app.schemas.solve import ApplyRequest, ApplyResult, SolveResult
-from app.services import conflict_service, dashboard_service, plan_export_service, plan_service
+from app.services import (
+    conflict_service,
+    dashboard_service,
+    plan_absence_service,
+    plan_export_service,
+    plan_service,
+)
 from app.services.exceptions import PlanNotFoundError
 
 router = APIRouter(prefix="/plans", tags=["plans"])
@@ -92,6 +99,11 @@ def get_dashboard_summary(
 ) -> DashboardSummary:
     target = today or date.today()
     return dashboard_service.build_dashboard_summary(db, plan_id, target)
+
+
+@router.get("/{plan_id}/absences", response_model=list[AbsenceResponse])
+def get_plan_absences(plan_id: int, db: Session = Depends(get_db)) -> list:
+    return plan_absence_service.get_absences_for_plan(db, plan_id)
 
 
 @router.get("/{plan_id}/conflicts", response_model=PlanConflicts)
