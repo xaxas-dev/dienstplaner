@@ -166,8 +166,114 @@
 
 ---
 
+## Gruppe D — Undo/Redo + Absence-DnD
+
+### D1: Undo/Redo (global, localStorage-persistiert)
+
+**Ziel:** Alle relevanten Planungsaktionen rückgängig machen und wiederherstellen.
+
+**Command-Pattern — serialisierbare Einträge:**
+
+```typescript
+type HistoryEntry =
+  | { type: 'ASSIGN_SHIFT'; shiftId: number; oldDoctorId: number | null; newDoctorId: number | null; description: string }
+  | { type: 'CREATE_ROTATION'; rotationId: number; planId: number; description: string }
+  | { type: 'DELETE_ROTATION'; rotation: RotationAssignmentWithDetails; description: string }
+  | { type: 'UPDATE_ROTATION'; rotationId: number; old: Partial<RotationUpdate>; new: Partial<RotationUpdate>; description: string }
+  | { type: 'UPDATE_PLAN_STATUS'; planId: number; oldStatus: PlanStatus; newStatus: PlanStatus; description: string }
+  | { type: 'CREATE_ABSENCE'; absenceId: number; doctorId: number; description: string }
+  | { type: 'DELETE_ABSENCE'; absence: AbsenceWithDetails; description: string }
+  | { type: 'UPDATE_ABSENCE'; absenceId: number; old: Partial<AbsenceUpdate>; new: Partial<AbsenceUpdate>; description: string }
+```
+
+**Store `useHistoryStore`** (`frontend/src/stores/useHistoryStore.ts`, Zustand + localStorage `dp-history`):
+- `past: HistoryEntry[]` (max 50), `future: HistoryEntry[]`
+- `push(entry)`: schreibt in `past`, leert `future`
+- `undo()`: pop aus `past` → Umkehr-API-Call → Query-Invalidierung → push auf `future`
+- `redo()`: pop aus `future` → Original-API-Call → Query-Invalidierung → push auf `past`
+- Undo/Redo-Handler sind kontextlos (keine React-Hook-Aufrufe) — nutzen `fetch`/`apiPatch` direkt
+
+**Undo-Logik pro Entry-Typ:**
+
+| Entry | Undo-Call | Redo-Call |
+|-------|-----------|-----------|
+| ASSIGN_SHIFT | PATCH shift {oldDoctorId} | PATCH shift {newDoctorId} |
+| CREATE_ROTATION | DELETE rotation/{id} | POST rotation (gespeicherte Daten) |
+| DELETE_ROTATION | POST rotation (gespeicherte Daten) | DELETE rotation/{id} |
+| UPDATE_ROTATION | PATCH rotation/{id} {old} | PATCH rotation/{id} {new} |
+| UPDATE_PLAN_STATUS | PATCH plan/{id} {oldStatus} | PATCH plan/{id} {newStatus} |
+| CREATE_ABSENCE | DELETE absence/{id} | POST absence (gespeicherte Daten) |
+| DELETE_ABSENCE | POST absence (gespeicherte Daten) | DELETE absence/{id} |
+| UPDATE_ABSENCE | PATCH absence/{id} {old} | PATCH absence/{id} {new} |
+
+**Integration in bestehende Mutations:** Jede Mutation (useAssignShift, useCreateRotation, useDeleteRotation, useUpdateRotation, Absence-Mutations) ruft in `onSuccess` `historyStore.push(entry)` auf.
+
+**UI:**
+- `Ctrl+Z` (undo), `Ctrl+Y` / `Ctrl+Shift+Z` (redo) — globaler `keydown`-Listener in `App.tsx`
+- Undo + Redo Icon-Buttons in PlanPage CommandBar (disabled wenn Stack leer, Tooltip zeigt `entry.description`)
+- **Plan-Löschung ausgeschlossen:** stattdessen Bestätigung durch Eintippen des Plannamens (siehe C2)
+
+---
+
+### D2: Absence-DnD im Planungsmodus
+
+**Ziel:** Abwesenheiten per Drag & Drop direkt aus der Planansicht erstellen.
+
+**Layout-Änderung ShiftTypeDragBar → zwei Zonen:**
+
+```
+┌──────────────────────────────┬──────────────────────────────────────┐
+│  Dienste                     │  Abwesenheiten                       │
+│  [V] [T] [N] … [Alle]       │  [U] [K] [Fo] [EZ] [MuSchu] [EA]   │
+└──────────────────────────────┴──────────────────────────────────────┘
+```
+
+- „Alle Dienste"-Button wandert in die linke Dienste-Zone (war bisher außerhalb)
+- Rechte Zone: Absence-Chips für alle 6 Typen — amber/warm Farbgebung zur Unterscheidung von Shift-Chips
+- Beide Zonen im selben `DndContext` wie bisher
+
+**Drag-IDs:**
+- Source: `absence-type-{URLAUB|KRANKHEIT|FORTBILDUNG|ELTERNZEIT|MUTTERSCHUTZ|SONSTIGES}`
+- Helpers: `makeAbsenceTypeDragId` / `parseAbsenceTypeDragId` in neuer Datei `AbsenceTypeDragBar.tsx`
+- Drop-Target: bestehende `cell-{rotationId}-{date}` — kein neues Drop-Target
+
+**Drop-Logik (`PlanPage.handleDragEnd` — Erweiterung):**
+1. Erkennt `absence-type-*` Source + `cell-{rotationId}-{date}` Target
+2. Ermittelt `doctorId` aus Rotationen-Map
+3. Öffnet `AbsenceAssignDialog` (neue Komponente analog `RotationAssignPopover`):
+   - Vorbelegt: `doctorName`, `absenceType`, `valid_from = date`, `valid_to = date`
+   - User passt Zeitraum an → bestätigt → POST `/api/absences`
+   - Erfolg → invalidiert `planAbsenceKeys` + `availabilityKeys` + `push({ type: 'CREATE_ABSENCE', ... })`
+4. Abbruch: kein API-Call
+
+**Visuell während Drag:**
+- Absence-Chips zeigen `ring-2 ring-amber-400` beim Hover über Rotationszellen
+- Keine Conflict-Highlight-Logik für Absence-Drops (Abwesenheiten können sich überschneiden — keine harte Validierung)
+
+---
+
+## Technische Abhängigkeiten (aktualisiert)
+
+| Feature | Backend-Change | Frontend-Change |
+|---------|---------------|-----------------|
+| A1 Dev-Toggle | – | useAppSettings Store + SettingsPage |
+| A2 Volle Namen | – | TodayPage |
+| B1 Konflikt-Drag | – | PlanPage + UnifiedPlanGrid + UnifiedShiftCell |
+| B2 Doppelklick | – | UnifiedShiftCell (300ms-Delay-Pattern) |
+| B3 Tastenkürzel | – | PlanPage + ShiftTypeDragBar |
+| B4 Hover-Buttons | – | UnifiedPlanGrid (Tailwind group/row hover) |
+| C1 Status-Toggle | – | PlanPage CommandBar + useUpdatePlan |
+| C2 Plan löschen | DELETE /api/plans/{id} | PlanListPage + PlanPage + useDeletePlan |
+| C3 Tile-Navigation | – | TodayPage + PlanPage (Summaryleiste + scroll) |
+| D1 Undo/Redo | – | useHistoryStore + alle Mutations + CommandBar |
+| D2 Absence-DnD | – | AbsenceTypeDragBar + AbsenceAssignDialog + PlanPage |
+
+**Backend-Änderungen gesamt:** Nur `DELETE /api/plans/{id}`
+
+---
+
 ## Nicht im Scope
 
-- Gruppe D (Undo/Redo, Absence-DnD) — separater Milestone
 - ARCHIVED-Status — kein UI geplant
 - Harte Constraint-Prüfung im Schreibpfad (Phase A bleibt soft)
+- Plan-Löschung als Undo-Aktion (zu komplex — durch Namens-Bestätigung geschützt)
