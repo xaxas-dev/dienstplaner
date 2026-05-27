@@ -39,7 +39,7 @@ export function TodayPage() {
               sub="gefüllte Schichten"
             />
             {planSlug && openCount > 0 ? (
-              <Link to={`/plans/${planSlug}?highlight=open`} className="block">
+              <Link to={`/plans/${planSlug}?highlight=open`} className="block rounded-tile focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                 <KpiTile
                   value={openCount}
                   label="Offen"
@@ -56,7 +56,7 @@ export function TodayPage() {
               />
             )}
             {planSlug && conflictCount > 0 ? (
-              <Link to={`/plans/${planSlug}?highlight=conflict`} className="block">
+              <Link to={`/plans/${planSlug}?highlight=conflict`} className="block rounded-tile focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                 <KpiTile
                   value={conflictCount}
                   label="Konflikte"
