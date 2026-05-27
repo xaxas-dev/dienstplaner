@@ -26,10 +26,13 @@ import { ApiError } from '@/lib/api'
 import { useCreateDepartment, useUpdateDepartment } from './useDepartments'
 import type { Department } from '@/lib/types'
 
+const COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/
+
 const schema = z
   .object({
     name: z.string().min(1, 'Name ist erforderlich').max(200, 'Maximal 200 Zeichen'),
     short_name: z.string().max(50, 'Maximal 50 Zeichen').nullable().optional(),
+    color: z.string().regex(COLOR_REGEX, 'Ungültiger Hex-Farbcode').nullable().optional(),
     is_external: z.boolean(),
     is_shift_relevant: z.boolean(),
     display_order: z.number({ error: 'Zahl erforderlich' }).int(),
@@ -71,6 +74,7 @@ export function DepartmentFormDialog({ open, onOpenChange, department }: Departm
     defaultValues: {
       name: department?.name ?? '',
       short_name: department?.short_name ?? null,
+      color: department?.color ?? null,
       is_external: department?.is_external ?? false,
       is_shift_relevant: department?.is_shift_relevant ?? true,
       display_order: department?.display_order ?? 0,
@@ -89,6 +93,7 @@ export function DepartmentFormDialog({ open, onOpenChange, department }: Departm
       form.reset({
         name: department?.name ?? '',
         short_name: department?.short_name ?? null,
+        color: department?.color ?? null,
         is_external: department?.is_external ?? false,
         is_shift_relevant: department?.is_shift_relevant ?? true,
         display_order: department?.display_order ?? 0,
@@ -107,6 +112,7 @@ export function DepartmentFormDialog({ open, onOpenChange, department }: Departm
     const payload = {
       ...values,
       short_name: values.short_name || null,
+      color: values.color || null,
       notes: values.notes || null,
       min_headcount: values.min_headcount ?? null,
       max_headcount: values.max_headcount ?? null,
@@ -173,6 +179,42 @@ export function DepartmentFormDialog({ open, onOpenChange, department }: Departm
                   <FormControl>
                     <Input placeholder="z.B. ICU" {...field} value={field.value ?? ''} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="color"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Bereichsfarbe</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        className="h-9 w-14 cursor-pointer rounded border border-input p-0.5"
+                        value={field.value ?? '#e2e8f0'}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                      <span className="text-sm text-muted-foreground font-mono">
+                        {field.value ?? '—'}
+                      </span>
+                      {field.value && (
+                        <button
+                          type="button"
+                          className="text-xs text-muted-foreground underline hover:text-ink"
+                          onClick={() => field.onChange(null)}
+                        >
+                          Zurücksetzen
+                        </button>
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormDescription className="text-xs">
+                    Leer lassen für automatische Farbe aus der Standardpalette.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

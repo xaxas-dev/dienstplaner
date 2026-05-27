@@ -30,7 +30,6 @@ import { usePlan } from './usePlans'
 import { usePlanShifts } from './usePlanShifts'
 import { usePlanConflicts } from './usePlanConflicts'
 import { usePlanRotations } from './usePlanRotations'
-import { useDoctorAvailability } from './useDoctorAvailability'
 import { useTarifWarnings } from './useTarifWarnings'
 import { usePlanAbsences } from './usePlanAbsences'
 import { useAssignShift, findShiftId } from './useAssignShift'
@@ -72,15 +71,6 @@ export function PlanPage() {
     name: string
     shortName?: string | null
   } | null>(null)
-  const [rotationPreview, setRotationPreview] = useState<{
-    departmentId: number
-    doctorId: number
-    doctorName: string
-    doctorShortName?: string | null
-    dateFrom: string
-    dateTo: string
-  } | null>(null)
-
   const { data: plan } = usePlan(id)
   const { data: shifts = [], isError: shiftsError } = usePlanShifts(id)
   const { data: conflicts } = usePlanConflicts(id)
@@ -89,11 +79,6 @@ export function PlanPage() {
   const { data: rotations = [] } = usePlanRotations(id)
   const { data: absences = [] } = usePlanAbsences(id)
   const { data: shiftTypes = [] } = useShiftTypes()
-  const { data: dragAvailability } = useDoctorAvailability(
-    activeDragDoctor?.id ?? null,
-    plan?.valid_from ?? null,
-    plan?.valid_to ?? null,
-  )
   const { data: tarifWarningsData } = useTarifWarnings(id)
   const assignShift = useAssignShift(id)
 
@@ -358,26 +343,9 @@ export function PlanPage() {
             existingAssignment={existing}
             blocksIna={dept.blocks_ina_weekdays || dept.blocks_ina_weekends}
             preselectedDoctorId={preselectedDragDoctorId ?? undefined}
-            onPreviewChange={(preview) => {
-              if (preview === null) {
-                setRotationPreview(null)
-                return
-              }
-              const doctor = doctors.find((d) => d.id === preview.doctorId)
-              if (!doctor) return
-              setRotationPreview({
-                departmentId: activeRotationCell.departmentId,
-                doctorId: doctor.id,
-                doctorName: doctor.name,
-                doctorShortName: doctor.short_name,
-                dateFrom: preview.dateFrom,
-                dateTo: preview.dateTo,
-              })
-            }}
             onClose={() => {
               setActiveRotationCell(null)
               setPreselectedDragDoctorId(null)
-              setRotationPreview(null)
             }}
           />
         ) : null
