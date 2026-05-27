@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import { MoreHorizontal, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { CommandBar } from '@/components/dp/CommandBar'
 import { usePlans } from './usePlans'
 import { useDeletePlan } from './useDeletePlan'
@@ -24,6 +25,19 @@ function PlanCard({ plan, onClick }: { plan: Plan; onClick: () => void }) {
   const [showDelete, setShowDelete] = useState(false)
   const deletePlan = useDeletePlan()
   const title = format(new Date(plan.valid_from), 'MMMM yyyy', { locale: de })
+
+  const handleDelete = () => {
+    deletePlan.mutate(plan.id, {
+      onSuccess: () => {
+        toast.success('Plan gelöscht')
+        setShowDelete(false)
+      },
+      onError: () => {
+        toast.error('Löschen fehlgeschlagen')
+      },
+    })
+  }
+
   return (
     <>
       <div className="group relative rounded-2xl bg-card border border-line hover:border-accent transition">
@@ -54,11 +68,11 @@ function PlanCard({ plan, onClick }: { plan: Plan; onClick: () => void }) {
             <AlertDialogCancel>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               className="bg-red-600 hover:bg-red-700 text-white"
-              onClick={() => deletePlan.mutate(plan.id)}
+              onClick={handleDelete}
               disabled={deletePlan.isPending}
             >
               <Trash2 className="size-4 mr-1" />
-              Löschen
+              {deletePlan.isPending ? 'Wird gelöscht…' : 'Löschen'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
