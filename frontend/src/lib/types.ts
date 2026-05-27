@@ -63,6 +63,7 @@ export interface INAAvailability {
 
 export type Plan = components['schemas']['PlanResponse']
 export type PlanCreate = components['schemas']['PlanCreate']
+export type PlanUpdate = components['schemas']['PlanUpdate']
 export type PlanWithRelations = components['schemas']['PlanWithRelations']
 export type PlanStatus = components['schemas']['PlanStatus']
 export type ShiftWithDetails = components['schemas']['ShiftWithDetails']
