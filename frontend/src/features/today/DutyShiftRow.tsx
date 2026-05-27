@@ -14,12 +14,15 @@ export function DutyShiftRow({ shift }: { shift: DutyShift }) {
       {shift.time_label && (
         <span className="text-xs font-mono text-ink-3">{shift.time_label}</span>
       )}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         {shift.doctors.length === 0 ? (
           <span className="text-xs text-ink-3 italic">unbesetzt</span>
         ) : (
           shift.doctors.map(doc => (
-            <Avatar key={doc.id} id={doc.id} name={doc.name} size={24} />
+            <span key={doc.id} className="flex items-center gap-1">
+              <Avatar id={doc.id} name={doc.name} size={24} />
+              <span className="text-xs text-ink-2">{doc.name}</span>
+            </span>
           ))
         )}
       </div>

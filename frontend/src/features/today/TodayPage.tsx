@@ -1,5 +1,7 @@
 import { CommandBar } from '@/components/dp/CommandBar'
 import { KpiTile } from '@/components/dp/KpiTile'
+import { planToSlug } from '@/features/plans/planSlug'
+import { Link } from 'react-router-dom'
 import { AttentionRow } from './AttentionRow'
 import { CoverageBar } from './CoverageBar'
 import { CtaCard } from './CtaCard'
@@ -16,6 +18,9 @@ export function TodayPage() {
 
   const hasPlan = currentPlan != null
   const kpis = summary?.kpis
+  const planSlug = currentPlan ? planToSlug(currentPlan) : null
+  const openCount = hasPlan && kpis ? kpis.open_shifts : 0
+  const conflictCount = hasPlan && kpis ? kpis.conflicts : 0
 
   return (
     <div className="flex flex-col flex-1 overflow-y-auto">
@@ -33,18 +38,40 @@ export function TodayPage() {
               label="Abdeckung"
               sub="gefüllte Schichten"
             />
-            <KpiTile
-              value={hasPlan && kpis ? kpis.open_shifts : '—'}
-              label="Offen"
-              sub="unbesetzte Schichten"
-              tone={hasPlan && kpis && kpis.open_shifts > 0 ? 'warn' : 'default'}
-            />
-            <KpiTile
-              value={hasPlan && kpis ? kpis.conflicts : '—'}
-              label="Konflikte"
-              sub="Regelkonflikte"
-              tone={hasPlan && kpis && kpis.conflicts > 0 ? 'warn' : 'default'}
-            />
+            {planSlug && openCount > 0 ? (
+              <Link to={`/plans/${planSlug}?highlight=open`} className="block">
+                <KpiTile
+                  value={openCount}
+                  label="Offen"
+                  sub="unbesetzte Schichten"
+                  tone="warn"
+                />
+              </Link>
+            ) : (
+              <KpiTile
+                value={hasPlan && kpis ? kpis.open_shifts : '—'}
+                label="Offen"
+                sub="unbesetzte Schichten"
+                tone={openCount > 0 ? 'warn' : 'default'}
+              />
+            )}
+            {planSlug && conflictCount > 0 ? (
+              <Link to={`/plans/${planSlug}?highlight=conflict`} className="block">
+                <KpiTile
+                  value={conflictCount}
+                  label="Konflikte"
+                  sub="Regelkonflikte"
+                  tone="warn"
+                />
+              </Link>
+            ) : (
+              <KpiTile
+                value={hasPlan && kpis ? kpis.conflicts : '—'}
+                label="Konflikte"
+                sub="Regelkonflikte"
+                tone={conflictCount > 0 ? 'warn' : 'default'}
+              />
+            )}
             <KpiTile
               value={hasPlan && kpis ? kpis.on_leave : '—'}
               label="Im Urlaub"
