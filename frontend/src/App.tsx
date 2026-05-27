@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { AtelierShell } from '@/components/layout/AtelierShell'
 import { CommandPaletteProvider } from '@/features/command-palette'
 import { DoctorListPage } from '@/features/doctors/DoctorListPage'
@@ -12,10 +13,16 @@ import { SettingsPage } from '@/features/settings/SettingsPage'
 import { TodayPage } from '@/features/today/TodayPage'
 import { PlanListPage } from '@/features/plans/PlanListPage'
 import { PlanPage } from '@/features/plans/PlanPage'
+import { useAppSettings } from '@/stores/useAppSettings'
 
 import { PlaygroundPage } from '@/features/playground/PlaygroundPage'
 
 const isDev = import.meta.env.DEV
+
+function AppDevTools() {
+  const { devMode } = useAppSettings()
+  return devMode ? <ReactQueryDevtools initialIsOpen={false} /> : null
+}
 
 function NotFoundPage() {
   return (
@@ -47,6 +54,7 @@ export default function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
+    <AppDevTools />
     </CommandPaletteProvider>
   )
 }
