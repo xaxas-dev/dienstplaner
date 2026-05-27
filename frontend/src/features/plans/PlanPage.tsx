@@ -24,6 +24,8 @@ const avatarTopModifier: Modifier = ({ activatorEvent, draggingNodeRect, transfo
   return { ...transform, x: transform.x + offsetX - 14, y: transform.y + offsetY }
 }
 import { FileDown } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +46,7 @@ import { usePlanRotations } from './usePlanRotations'
 import { useTarifWarnings } from './useTarifWarnings'
 import { usePlanAbsences } from './usePlanAbsences'
 import { useAssignShift, findShiftId } from './useAssignShift'
+import { useUpdatePlan } from './useUpdatePlan'
 import { useDoctors } from '@/features/doctors/useDoctors'
 import { useDepartments } from '@/features/departments/useDepartments'
 import { useShiftTypes } from '@/features/shift-types/useShiftTypes'
@@ -106,6 +109,16 @@ export function PlanPage() {
   const { data: shiftTypes = [] } = useShiftTypes()
   const { data: tarifWarningsData } = useTarifWarnings(id)
   const assignShift = useAssignShift(id)
+  const updatePlan = useUpdatePlan(id)
+
+  function handleStatusToggle() {
+    if (!plan) return
+    const newStatus = plan.status === 'DRAFT' ? 'RELEASED' : 'DRAFT'
+    updatePlan.mutate({ status: newStatus })
+  }
+
+  const statusLabel = plan?.status === 'RELEASED' ? 'Freigegeben' : 'Entwurf'
+  const statusToggleLabel = plan?.status === 'RELEASED' ? 'Zurück zu Entwurf' : 'Freigeben'
 
   const tarifWarningsByShift: Record<number, TarifWarning[]> = {}
   for (const w of tarifWarningsData?.warnings ?? []) {
@@ -299,6 +312,26 @@ export function PlanPage() {
               }
             : undefined
         }
+        extras={plan ? (
+          <div className="flex items-center gap-2">
+            <span className={cn(
+              'text-xs px-2 py-0.5 rounded-full font-medium border',
+              plan.status === 'RELEASED'
+                ? 'bg-green-50 text-green-700 border-green-200'
+                : 'bg-gray-50 text-gray-600 border-gray-200'
+            )}>
+              {statusLabel}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleStatusToggle}
+              disabled={updatePlan.isPending}
+            >
+              {statusToggleLabel}
+            </Button>
+          </div>
+        ) : undefined}
       />
       <div className="px-6 py-3">
         <KpiBar tiles={kpiTiles} />
