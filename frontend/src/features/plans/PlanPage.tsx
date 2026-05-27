@@ -23,7 +23,7 @@ const avatarTopModifier: Modifier = ({ activatorEvent, draggingNodeRect, transfo
   const offsetY = activatorEvent.clientY - draggingNodeRect.top
   return { ...transform, x: transform.x + offsetX - 14, y: transform.y + offsetY }
 }
-import { FileDown } from 'lucide-react'
+import { FileDown, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -47,6 +47,7 @@ import { useTarifWarnings } from './useTarifWarnings'
 import { usePlanAbsences } from './usePlanAbsences'
 import { useAssignShift, findShiftId } from './useAssignShift'
 import { useUpdatePlan } from './useUpdatePlan'
+import { useDeletePlan } from './useDeletePlan'
 import { useDoctors } from '@/features/doctors/useDoctors'
 import { useDepartments } from '@/features/departments/useDepartments'
 import { useShiftTypes } from '@/features/shift-types/useShiftTypes'
@@ -110,6 +111,20 @@ export function PlanPage() {
   const { data: tarifWarningsData } = useTarifWarnings(id)
   const assignShift = useAssignShift(id)
   const updatePlan = useUpdatePlan(id)
+  const deletePlan = useDeletePlan()
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+  function handleDeletePlan() {
+    deletePlan.mutate(id, {
+      onSuccess: () => {
+        toast.success('Plan gelöscht')
+        navigate('/plans')
+      },
+      onError: () => {
+        toast.error('Löschen fehlgeschlagen')
+      },
+    })
+  }
 
   function handleStatusToggle() {
     if (!plan) return
@@ -330,6 +345,15 @@ export function PlanPage() {
             >
               {statusToggleLabel}
             </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowDeleteDialog(true)}
+              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              aria-label="Plan löschen"
+            >
+              <Trash2 className="size-4" />
+            </Button>
           </div>
         ) : undefined}
       />
@@ -462,6 +486,27 @@ export function PlanPage() {
             }}
           >
             Ersetzen
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Plan löschen?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Dieser Plan wird unwiderruflich gelöscht — inklusive aller Schichten und Rotationen.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-red-600 hover:bg-red-700 text-white"
+            onClick={handleDeletePlan}
+            disabled={deletePlan.isPending}
+          >
+            {deletePlan.isPending ? 'Wird gelöscht…' : 'Löschen'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
