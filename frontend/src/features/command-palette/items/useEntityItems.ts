@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { apiGet } from '@/lib/api'
 import { doctorKeys } from '@/features/doctors/useDoctors'
 import { planKeys } from '@/features/plans/usePlans'
+import { planToSlug } from '@/features/plans/planSlug'
 import { departmentKeys } from '@/features/departments/useDepartments'
 import type { Doctor, Plan, Department } from '@/lib/types'
 import type { CommandItemDef } from './types'
@@ -47,7 +48,7 @@ export function useEntityItems(enabled: boolean): EntityItems {
     label: p.name,
     group: 'plans',
     keywords: [String(p.id), p.valid_from ?? '', p.valid_to ?? ''].filter(Boolean),
-    onSelect: () => navigate(`/plans/${p.id}`),
+    onSelect: () => navigate(`/plans/${planToSlug(p)}`),
   }))
 
   const departmentItems: CommandItemDef[] = departments.slice(0, 10).map((dep) => ({

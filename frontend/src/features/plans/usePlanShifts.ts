@@ -10,5 +10,6 @@ export function usePlanShifts(planId: number) {
   return useQuery({
     queryKey: shiftQueryKeys.byPlan(planId),
     queryFn: () => apiGet<ShiftWithDetails[]>(`/api/plans/${planId}/shifts`),
+    enabled: !isNaN(planId) && planId > 0,
   })
 }

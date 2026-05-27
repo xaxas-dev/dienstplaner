@@ -361,6 +361,20 @@ Punkte nennt.
 - **Recents:** Storage-Key `dp-command-palette-recents`, max 5, deduped per `id`. API: `getRecents()`, `pushRecent()`, `clearRecents()` in `features/command-palette/recents.ts`.
 - **Tests:** Pages mit `CommandBar` müssen `useCommandPalette` mocken: `vi.mock('@/features/command-palette/useCommandPalette', () => ({ useCommandPalette: () => ({ open: vi.fn(), close: vi.fn(), toggle: vi.fn(), isOpen: false }) }))`.
 
+### Frontend — Unified Plan Grid (M2-007)
+- **Kein Dual-Tab mehr:** `PlanPage` hat keinen `view`-State und keine Tab-UI. `UnifiedPlanGrid` ist die einzige Grid-Komponente. `PlanGrid.tsx`, `RotationGrid.tsx`, `planGridUtils.ts`, `rotationGridUtils.ts` sind gelöscht.
+- **Row-Derivation:** `buildUnifiedRows(departments, rotations)` in `unifiedGridUtils.ts` (pure Funktion). Gibt `UnifiedRow[]` zurück — drei Typen: `header`, `placeholder`, `rotation`. Für jeden aktiven Bereich: ein Header + Rotation-Zeile pro `RotationAssignment` (oder Placeholder wenn leer). Mehrere Ärzte pro Bereich = mehrere Zeilen unter demselben Header.
+- **Cell-Rendering-Priorität:** `resolveCell(row, dayKey, shifts, absences)` → Absence-Code vor Shift-Code vor leer. Absence-Code-Mapping in `absenceCode()`: URLAUB→U, KRANKHEIT→K, FORTBILDUNG→Fo, ELTERNZEIT→EZ, MUTTERSCHUTZ→MuSchu, SONSTIGES→EA. `inRotation`-Flag steuert Hintergrundfarbe + Opacity.
+- **Bereichsfarbe:** `getDepartmentColor(department)` in `bereichColors.ts` — eigene Farbe wenn gesetzt, sonst `display_order % 8` auf 8-Farben-Fallback-Palette. `getDepartmentColorMuted(department)` gibt Hex + `'40'` (25% Alpha).
+- **DnD-ID-Konventionen (ergänzt M3-001-Konventionen):**
+  - Drag-Source ShiftType: `shift-{shiftTypeId}` — Helpers `makeShiftTypeDragId` / `parseShiftTypeDragId` in `ShiftTypeDragBar.tsx`
+  - Drop-Target Bereich-Header: `rotation-header-{deptId}` — Helpers `makeBereichHeaderDropId` / `parseBereichHeaderDropId` in `BereichHeaderRow.tsx`
+  - Drop-Target Tag-Zelle: `cell-{rotationId}-{yyyy-MM-dd}` — Helper `makeCellDropId` in `UnifiedShiftCell.tsx`; Parsen inline in `PlanPage` via Regex
+- **ShiftType-Drop-Auflösung:** Drop `shift-{id}` auf `cell-{rotationId}-{day}` → rotationId → doctor_id → Shift via `findShiftId(shifts, day, shiftTypeId)` → Toast (nicht verfügbar) / Toast (gepinnt) / confirm (Überschreiben) / PATCH. Keine harte Verfügbarkeitsprüfung (ADR-080).
+- **Fokus-V/N-Toggle:** `focusMode: 'alle' | 'vn'` als Session-State in `PlanPage`. `UnifiedShiftCell` dimmt Nicht-V/N-Zellen bei `focusMode === 'vn'`. `ShiftTypeDragBar` dimmt Nicht-V/N-Chips. Kein URL-Param.
+- **`GET /api/plans/{id}/absences`:** Liefert alle Abwesenheiten von Ärzten mit aktiver Rotation im Plan, deren Periode den Plan-Zeitraum überlappt. Hook `usePlanAbsences` mit Query-Key `planAbsenceKeys.byPlan(planId)`.
+- **`Department.color`:** Nullable Hex-String (`VARCHAR(9)`). Frontend: `<input type="color">` + Reset-Button in `DepartmentFormDialog`. Backend: in `DepartmentBase`, `DepartmentUpdate`, `DepartmentRead` als `color: str | None`.
+
 ## Was Claude Code NICHT tun soll
 - Keine neuen Bibliotheken ohne explizite Rückfrage einführen
 - Keine Bibliotheksfunktionen verwenden, die nicht in der Doku existieren

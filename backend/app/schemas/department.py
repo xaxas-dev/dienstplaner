@@ -16,6 +16,7 @@ class DepartmentBase(BaseModel):
     blocks_ina_weekdays: bool = False
     blocks_ina_weekends: bool = False
     notes: str | None = None
+    color: str | None = Field(default=None, max_length=9)
 
 
 class DepartmentCreate(DepartmentBase): ...
@@ -34,6 +35,7 @@ class DepartmentUpdate(BaseModel):
     blocks_ina_weekdays: bool | None = None
     blocks_ina_weekends: bool | None = None
     notes: str | None = None
+    color: str | None = Field(default=None, max_length=9)
 
 
 class DepartmentResponse(DepartmentBase):

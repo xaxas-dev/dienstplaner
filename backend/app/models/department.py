@@ -27,3 +27,4 @@ class Department(Base):
     blocks_ina_weekdays: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     blocks_ina_weekends: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    color: Mapped[str | None] = mapped_column(String(9), nullable=True)

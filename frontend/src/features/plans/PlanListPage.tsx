@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import { CommandBar } from '@/components/dp/CommandBar'
 import { usePlans } from './usePlans'
+import { planToSlug } from './planSlug'
 import { PlanCreateDialog } from './components/PlanCreateDialog'
 import type { Plan } from '@/lib/types'
 
@@ -58,7 +59,7 @@ export function PlanListPage() {
               <PlanCard
                 key={plan.id}
                 plan={plan}
-                onClick={() => navigate(`/plans/${plan.id}`)}
+                onClick={() => navigate(`/plans/${planToSlug(plan)}`)}
               />
             ))}
           </div>

@@ -10,5 +10,6 @@ export function usePlanConflicts(planId: number) {
   return useQuery({
     queryKey: conflictQueryKeys.byPlan(planId),
     queryFn: () => apiGet<PlanConflicts>(`/api/plans/${planId}/conflicts`),
+    enabled: !isNaN(planId) && planId > 0,
   })
 }

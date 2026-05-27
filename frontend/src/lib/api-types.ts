@@ -770,6 +770,8 @@ export interface components {
             blocks_ina_weekends: boolean;
             /** Notes */
             notes?: string | null;
+            /** Color */
+            color?: string | null;
         };
         /** DepartmentResponse */
         DepartmentResponse: {
@@ -818,6 +820,8 @@ export interface components {
             blocks_ina_weekends: boolean;
             /** Notes */
             notes?: string | null;
+            /** Color */
+            color?: string | null;
             /** Id */
             id: number;
             /**
@@ -857,6 +861,8 @@ export interface components {
             blocks_ina_weekends?: boolean | null;
             /** Notes */
             notes?: string | null;
+            /** Color */
+            color?: string | null;
         };
         /** DoctorCreate */
         DoctorCreate: {

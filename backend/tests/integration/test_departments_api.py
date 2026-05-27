@@ -207,3 +207,36 @@ def test_department_zero_max_allowed(client: TestClient) -> None:
     assert r.status_code == 201
     assert r.json()["min_headcount"] == 0
     assert r.json()["max_headcount"] == 1
+
+
+# ── Color-Feld ─────────────────────────────────────────────────────────────────
+
+
+def test_department_color_default_none(client: TestClient) -> None:
+    r = client.post("/api/departments", json={"name": "Farblos"})
+    assert r.status_code == 201
+    assert r.json()["color"] is None
+
+
+def test_department_color_create_and_read(client: TestClient) -> None:
+    r = client.post("/api/departments", json={"name": "ITS-Farbe", "color": "#3B82F6"})
+    assert r.status_code == 201
+    data = r.json()
+    assert data["color"] == "#3B82F6"
+
+    r2 = client.get(f"/api/departments/{data['id']}")
+    assert r2.status_code == 200
+    assert r2.json()["color"] == "#3B82F6"
+
+
+def test_department_color_update(client: TestClient) -> None:
+    dept = _create_dept(client, name="Farb-Update")
+    assert dept["color"] is None
+
+    r = client.patch(f"/api/departments/{dept['id']}", json={"color": "#F97316"})
+    assert r.status_code == 200
+    assert r.json()["color"] == "#F97316"
+
+    r2 = client.patch(f"/api/departments/{dept['id']}", json={"color": None})
+    assert r2.status_code == 200
+    assert r2.json()["color"] is None

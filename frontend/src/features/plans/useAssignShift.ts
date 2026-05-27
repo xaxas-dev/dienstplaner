@@ -17,3 +17,15 @@ export function useAssignShift(planId: number) {
     },
   })
 }
+
+/**
+ * Findet den Shift für einen bestimmten Tag+ShiftType aus dem Cache und gibt dessen ID zurück.
+ * Null wenn kein passender Shift gefunden.
+ */
+export function findShiftId(
+  shifts: ShiftWithDetails[],
+  date: string,
+  shiftTypeId: number,
+): number | null {
+  return shifts.find((s) => s.shift_date === date && s.shift_type_id === shiftTypeId)?.id ?? null
+}

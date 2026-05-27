@@ -1,16 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useCreateRotation, useUpdateRotation, useDeleteRotation } from '../usePlanRotations'
 import { useDoctors } from '@/features/doctors/useDoctors'
 import type { RotationAssignmentWithDetails } from '@/lib/types'
-
-interface PreviewState {
-  doctorId: number
-  dateFrom: string
-  dateTo: string
-}
 
 interface Props {
   planId: number
@@ -21,7 +16,6 @@ interface Props {
   existingAssignment: RotationAssignmentWithDetails | null
   blocksIna: boolean
   preselectedDoctorId?: number
-  onPreviewChange?: (preview: PreviewState | null) => void
   onClose: () => void
 }
 
@@ -34,7 +28,6 @@ export function RotationAssignPopover({
   existingAssignment,
   blocksIna,
   preselectedDoctorId,
-  onPreviewChange,
   onClose,
 }: Props) {
   const { mutate: createMutate, isPending: isCreating } = useCreateRotation(planId)
@@ -50,6 +43,9 @@ export function RotationAssignPopover({
   const [dateTo, setDateTo] = useState(existingAssignment?.valid_to ?? validTo)
   const [isEinarbeitung, setIsEinarbeitung] = useState(
     existingAssignment?.is_einarbeitung ?? false,
+  )
+  const [showDoctorPicker, setShowDoctorPicker] = useState(
+    preselectedDoctorId == null && existingAssignment == null,
   )
 
   const cardRef = useRef<HTMLDivElement>(null)
@@ -72,31 +68,13 @@ export function RotationAssignPopover({
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  const onPreviewChangeRef = useRef(onPreviewChange)
-  useEffect(() => {
-    onPreviewChangeRef.current = onPreviewChange
-  })
-
-  useEffect(() => {
-    const fn = onPreviewChangeRef.current
-    if (!fn) return
-    if (selectedDoctorId !== null) {
-      fn({ doctorId: selectedDoctorId, dateFrom, dateTo })
-    } else {
-      fn(null)
-    }
-  }, [selectedDoctorId, dateFrom, dateTo])
-
-  // Vorschau beim Unmount (Abbrechen) zuverlässig löschen
-  useEffect(() => {
-    return () => { onPreviewChangeRef.current?.(null) }
-  }, [])
-
   const isPending = isCreating || isUpdating || isDeleting
 
   const filteredDoctors = doctors.filter(
     (d) => d.active && d.name.toLowerCase().includes(search.toLowerCase()),
   )
+
+  const selectedDoctorName = doctors.find((d) => d.id === selectedDoctorId)?.name
 
   function handleSave() {
     if (selectedDoctorId === null) return
@@ -164,37 +142,68 @@ export function RotationAssignPopover({
         ref={cardRef}
         className="bg-card border border-line rounded-2xl shadow-lg w-80 p-4 space-y-3"
       >
-        <p className="text-xs font-medium text-ink-3">{departmentName}</p>
+        {/* Bereich-Label */}
+        <p className="text-[10px] font-semibold text-ink-3 uppercase tracking-wide">{departmentName}</p>
 
-        {/* Arzt-Auswahl */}
+        {/* Ausgewählter Arzt */}
         <div className="space-y-1.5">
-          <p className="text-xs text-ink-3 font-medium">Arzt auswählen</p>
-          <Input
-            placeholder="Suchen…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-7 text-xs"
-          />
-          <ul className="max-h-40 overflow-y-auto space-y-0.5">
-            {filteredDoctors.map((d) => (
-              <li key={d.id}>
-                <button
-                  disabled={isPending}
-                  onClick={() => setSelectedDoctorId(d.id)}
-                  className={`w-full text-left px-2 py-1 rounded-md text-xs transition ${
-                    selectedDoctorId === d.id
-                      ? 'bg-accent text-accent-foreground'
-                      : 'hover:bg-paper'
-                  }`}
-                >
-                  {d.name}
-                </button>
-              </li>
-            ))}
-          </ul>
+          {selectedDoctorId !== null ? (
+            <div className="flex items-center gap-2 px-3 py-2 bg-paper rounded-lg border border-line">
+              <span className="text-sm font-semibold text-ink flex-1 truncate">
+                {selectedDoctorName}
+              </span>
+            </div>
+          ) : (
+            <div className="px-3 py-2 rounded-lg border border-dashed border-line text-xs text-muted-foreground italic">
+              Kein Arzt ausgewählt
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setShowDoctorPicker((v) => !v)}
+            className="flex items-center gap-1.5 text-xs font-medium text-ink-2 border border-line rounded-md px-2 py-1 bg-paper hover:bg-paper/70 transition-colors"
+          >
+            {showDoctorPicker ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+            {selectedDoctorId !== null ? 'Anderen Arzt auswählen' : 'Arzt auswählen'}
+          </button>
+
+          {showDoctorPicker && (
+            <div className="space-y-1.5 border border-line rounded-lg p-2">
+              <Input
+                placeholder="Suchen…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-7 text-xs"
+                autoFocus
+              />
+              <ul className="max-h-36 overflow-y-auto space-y-0.5">
+                {filteredDoctors.map((d) => (
+                  <li key={d.id}>
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => {
+                        setSelectedDoctorId(d.id)
+                        setShowDoctorPicker(false)
+                        setSearch('')
+                      }}
+                      className={`w-full text-left px-2 py-1 rounded-md text-xs transition ${
+                        selectedDoctorId === d.id
+                          ? 'bg-accent text-accent-foreground'
+                          : 'hover:bg-paper'
+                      }`}
+                    >
+                      {d.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
-        {/* Datum-Felder */}
+        {/* Zeitraum */}
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
             <label className="text-[10px] text-ink-3">Von</label>
@@ -237,7 +246,6 @@ export function RotationAssignPopover({
           </p>
         )}
 
-        {/* Speichern */}
         <Button
           size="sm"
           className="w-full"
@@ -247,7 +255,6 @@ export function RotationAssignPopover({
           Speichern
         </Button>
 
-        {/* Entfernen */}
         {existingAssignment !== null && (
           <Button
             variant="ghost"
