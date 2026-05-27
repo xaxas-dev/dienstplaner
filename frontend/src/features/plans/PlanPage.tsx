@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
@@ -114,6 +114,7 @@ export function PlanPage() {
   const deletePlan = useDeletePlan()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function handleDeletePlan() {
     deletePlan.mutate(id, {
@@ -150,6 +151,13 @@ export function PlanPage() {
     }
   }, [shiftsError, navigate])
 
+  // Cleanup highlight timer on unmount
+  useEffect(() => {
+    return () => {
+      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current)
+    }
+  }, [])
+
   const scrollToFirstMatch = useCallback((type: 'open' | 'conflict') => {
     const candidateIds: number[] =
       type === 'open'
@@ -164,7 +172,11 @@ export function PlanPage() {
 
     el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     el.classList.add('dp-highlight-pulse')
-    setTimeout(() => el.classList.remove('dp-highlight-pulse'), 2000)
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current)
+    highlightTimerRef.current = setTimeout(() => {
+      el.classList.remove('dp-highlight-pulse')
+      highlightTimerRef.current = null
+    }, 2000)
   }, [conflicts])
 
   useEffect(() => {
