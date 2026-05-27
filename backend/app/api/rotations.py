@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.repositories import rotation_assignment_repository as rotation_repo
+from app.repositories import shift_repository as shift_repo
 from app.schemas.rotation_assignment import (
     RotationAssignmentCreate,
     RotationAssignmentResponse,
@@ -39,7 +40,11 @@ def update_rotation(
 
 @rotations_router.delete("/{rotation_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_rotation(rotation_id: int, db: Session = Depends(get_db)) -> None:
-    deleted = rotation_repo.delete_rotation(db, rotation_id)
-    if not deleted:
+    ra = rotation_repo.get_rotation(db, rotation_id)
+    if ra is None:
         raise RotationNotFoundError(rotation_id)
+    shift_repo.clear_doctor_from_shifts_in_range(
+        db, ra.plan_id, ra.doctor_id, ra.valid_from, ra.valid_to
+    )
+    rotation_repo.delete_rotation(db, rotation_id)
     db.commit()

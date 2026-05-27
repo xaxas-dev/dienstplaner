@@ -19,6 +19,7 @@ export function usePlan(planId: number) {
   return useQuery({
     queryKey: planKeys.detail(planId),
     queryFn: () => apiGet<PlanWithRelations>(`/api/plans/${planId}`),
+    enabled: !isNaN(planId) && planId > 0,
   })
 }
 

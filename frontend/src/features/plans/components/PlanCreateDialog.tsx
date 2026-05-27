@@ -12,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { useCreatePlan } from '../usePlans'
+import { planToSlug } from '../planSlug'
 
 const MONTHS = [
   'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
@@ -46,7 +47,7 @@ export function PlanCreateDialog({ open, onClose }: Props) {
         onSuccess: (plan) => {
           toast.success(`Plan "${planName}" erstellt`)
           onClose()
-          navigate(`/plans/${plan.id}`)
+          navigate(`/plans/${planToSlug(plan)}`)
         },
         onError: (err) => {
           toast.error(err instanceof Error ? err.message : 'Fehler beim Erstellen')

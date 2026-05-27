@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
 import type { PlanWithRelations } from '@/lib/types'
+import { planToSlug } from '@/features/plans/planSlug'
 
 export function CtaCard({ plan }: { plan: PlanWithRelations | null }) {
-  const href = plan ? `/plans/${plan.id}` : '/plans/new'
+  const href = plan ? `/plans/${planToSlug(plan)}` : '/plans/new'
   const label = plan ? `Zum Plan: ${plan.name}` : 'Plan anlegen'
   const sub = plan
     ? 'Plan öffnen und Schichten bearbeiten'

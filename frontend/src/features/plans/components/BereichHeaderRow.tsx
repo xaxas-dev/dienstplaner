@@ -5,10 +5,27 @@ import type { Department } from '@/lib/types'
 export function makeBereichHeaderDropId(departmentId: number): string {
   return `rotation-header-${departmentId}`
 }
-
 export function parseBereichHeaderDropId(id: string): number | null {
   if (!id.startsWith('rotation-header-')) return null
   const n = Number(id.slice('rotation-header-'.length))
+  return Number.isFinite(n) ? n : null
+}
+
+export function makePlaceholderDropId(departmentId: number): string {
+  return `rotation-placeholder-${departmentId}`
+}
+export function parsePlaceholderDropId(id: string): number | null {
+  if (!id.startsWith('rotation-placeholder-')) return null
+  const n = Number(id.slice('rotation-placeholder-'.length))
+  return Number.isFinite(n) ? n : null
+}
+
+export function makeRotationMemberDropId(rotationId: number): string {
+  return `rotation-member-${rotationId}`
+}
+export function parseRotationMemberDropId(id: string): number | null {
+  if (!id.startsWith('rotation-member-')) return null
+  const n = Number(id.slice('rotation-member-'.length))
   return Number.isFinite(n) ? n : null
 }
 
@@ -25,17 +42,14 @@ export function BereichHeaderRow({ department, colCount }: BereichHeaderRowProps
   })
 
   return (
-    <div
-      ref={setNodeRef}
-      className="contents"
-      style={{ '--bereich-color': color } as React.CSSProperties}
-    >
-      {/* Erste Spalte: Bereich-Name mit Farbleiste */}
+    <div className="contents">
+      {/* Erste Spalte: Bereich-Name + Drop-Target */}
       <div
-        className="sticky left-0 z-10 flex items-center gap-2 px-3 py-1.5 bg-card border-b border-line"
+        ref={setNodeRef}
+        className="sticky left-0 z-10 flex items-center gap-2 px-3 py-1.5 border-b border-line"
         style={{
           borderLeft: `4px solid ${color}`,
-          backgroundColor: isOver ? `${color}30` : undefined,
+          backgroundColor: isOver ? `${color}35` : `${color}18`,
         }}
       >
         <span className="text-xs font-semibold text-ink truncate leading-none">
@@ -46,8 +60,8 @@ export function BereichHeaderRow({ department, colCount }: BereichHeaderRowProps
       {Array.from({ length: colCount }).map((_, i) => (
         <div
           key={i}
-          className="border-b border-line"
-          style={{ backgroundColor: isOver ? `${color}30` : `${color}18` }}
+          className="border-b border-r border-line"
+          style={{ backgroundColor: isOver ? `${color}35` : `${color}18` }}
         />
       ))}
     </div>

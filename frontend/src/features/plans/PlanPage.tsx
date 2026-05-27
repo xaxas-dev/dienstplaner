@@ -24,9 +24,20 @@ const avatarTopModifier: Modifier = ({ activatorEvent, draggingNodeRect, transfo
   return { ...transform, x: transform.x + offsetX - 14, y: transform.y + offsetY }
 }
 import { FileDown } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { CommandBar } from '@/components/dp/CommandBar'
 import { KpiBar } from '@/components/dp/KpiBar'
-import { usePlan } from './usePlans'
+import { usePlan, usePlans } from './usePlans'
+import { planToSlug } from './planSlug'
 import { usePlanShifts } from './usePlanShifts'
 import { usePlanConflicts } from './usePlanConflicts'
 import { usePlanRotations } from './usePlanRotations'
@@ -42,7 +53,7 @@ import { ContextPanel } from './components/ContextPanel'
 import { DoctorAssignPopover } from './components/DoctorAssignPopover'
 import { DoctorDragSource, DoctorDragOverlayToken, parseDoctorDragId } from './components/DoctorDragSource'
 import { RotationAssignPopover } from './components/RotationAssignPopover'
-import { parseBereichHeaderDropId } from './components/BereichHeaderRow'
+import { parseBereichHeaderDropId, parsePlaceholderDropId, parseRotationMemberDropId } from './components/BereichHeaderRow'
 import type { ShiftWithDetails, TarifWarning } from '@/lib/types'
 
 interface ActiveCell {
@@ -53,9 +64,17 @@ interface ActiveCell {
 }
 
 export function PlanPage() {
-  const { planId } = useParams<{ planId: string }>()
+  const { planId: planSlug } = useParams<{ planId: string }>()
   const navigate = useNavigate()
-  const id = Number(planId)
+  const { data: allPlans = [] } = usePlans()
+
+  // Slug (z. B. "mai2026") oder numerische ID akzeptieren
+  const id: number = (() => {
+    const numeric = parseInt(planSlug ?? '', 10)
+    if (!isNaN(numeric) && String(numeric) === planSlug) return numeric
+    const matched = allPlans.find((p) => planToSlug(p) === planSlug)
+    return matched?.id ?? NaN
+  })()
 
   const [focusMode, setFocusMode] = useState<'alle' | 'vn'>('alle')
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null)
@@ -70,6 +89,12 @@ export function PlanPage() {
     id: number
     name: string
     shortName?: string | null
+  } | null>(null)
+  const [pendingShiftAssign, setPendingShiftAssign] = useState<{
+    shiftId: number
+    doctorId: number
+    prevDoctorName: string
+    newDoctorName: string
   } | null>(null)
   const { data: plan } = usePlan(id)
   const { data: shifts = [], isError: shiftsError } = usePlanShifts(id)
@@ -152,6 +177,22 @@ export function PlanPage() {
       if (deptId !== null) {
         setPreselectedDragDoctorId(doctorId)
         setActiveRotationCell({ departmentId: deptId, day: plan?.valid_from ?? '', assignmentId: null })
+        return
+      }
+      const placeholderDeptId = parsePlaceholderDropId(overId)
+      if (placeholderDeptId !== null) {
+        setPreselectedDragDoctorId(doctorId)
+        setActiveRotationCell({ departmentId: placeholderDeptId, day: plan?.valid_from ?? '', assignmentId: null })
+        return
+      }
+      const memberRotId = parseRotationMemberDropId(overId)
+      if (memberRotId !== null) {
+        const rot = rotations.find((r) => r.id === memberRotId)
+        if (rot) {
+          setPreselectedDragDoctorId(doctorId)
+          setActiveRotationCell({ departmentId: rot.department_id, day: plan?.valid_from ?? '', assignmentId: null })
+        }
+        return
       }
       return
     }
@@ -188,10 +229,13 @@ export function PlanPage() {
     if (shift.doctor_id != null && shift.doctor_id !== targetDoctorId) {
       const prevDoctor = doctors.find((d) => d.id === shift.doctor_id)
       const newDoctor = doctors.find((d) => d.id === targetDoctorId)
-      const confirmed = window.confirm(
-        `${prevDoctor?.name ?? 'Anderer Arzt'} wird durch ${newDoctor?.name ?? 'Arzt'} ersetzt. Fortfahren?`,
-      )
-      if (!confirmed) return
+      setPendingShiftAssign({
+        shiftId,
+        doctorId: targetDoctorId,
+        prevDoctorName: prevDoctor?.name ?? 'Anderer Arzt',
+        newDoctorName: newDoctor?.name ?? 'Arzt',
+      })
+      return
     }
 
     assignShift.mutate(
@@ -205,6 +249,7 @@ export function PlanPage() {
   }
 
   return (
+    <>
     <DndContext
       sensors={sensors}
       collisionDetection={pointerWithin}
@@ -361,5 +406,33 @@ export function PlanPage() {
         )}
       </DragOverlay>
     </DndContext>
+
+    <AlertDialog open={pendingShiftAssign !== null} onOpenChange={(open) => { if (!open) setPendingShiftAssign(null) }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Zuweisung ersetzen?</AlertDialogTitle>
+          <AlertDialogDescription>
+            <strong>{pendingShiftAssign?.prevDoctorName}</strong> wird durch{' '}
+            <strong>{pendingShiftAssign?.newDoctorName}</strong> ersetzt.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => setPendingShiftAssign(null)}>Abbrechen</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              if (!pendingShiftAssign) return
+              assignShift.mutate(
+                { shiftId: pendingShiftAssign.shiftId, data: { doctor_id: pendingShiftAssign.doctorId } },
+                { onError: () => toast.error('Fehler beim Speichern der Zuweisung') },
+              )
+              setPendingShiftAssign(null)
+            }}
+          >
+            Ersetzen
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   )
 }

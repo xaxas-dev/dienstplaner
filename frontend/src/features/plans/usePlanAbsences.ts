@@ -10,5 +10,6 @@ export function usePlanAbsences(planId: number) {
   return useQuery({
     queryKey: planAbsenceKeys.byPlan(planId),
     queryFn: () => apiGet<Absence[]>(`/api/plans/${planId}/absences`),
+    enabled: !isNaN(planId) && planId > 0,
   })
 }

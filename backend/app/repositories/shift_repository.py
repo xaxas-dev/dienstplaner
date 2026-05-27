@@ -1,3 +1,5 @@
+from datetime import date
+
 from sqlalchemy import asc
 from sqlalchemy.orm import Session, joinedload, selectinload
 
@@ -47,6 +49,27 @@ def bulk_create_shifts(db: Session, shifts: list[dict]) -> list[Shift]:
     db.add_all(objs)
     db.flush()
     return objs
+
+
+def clear_doctor_from_shifts_in_range(
+    db: Session, plan_id: int, doctor_id: int, date_from: date, date_to: date
+) -> int:
+    """Entfernt doctor_id von nicht-gepinnten Shifts in einem Datumsbereich."""
+    shifts = (
+        db.query(Shift)
+        .filter(
+            Shift.plan_id == plan_id,
+            Shift.doctor_id == doctor_id,
+            Shift.shift_date >= date_from,
+            Shift.shift_date <= date_to,
+            Shift.is_pinned.is_(False),
+        )
+        .all()
+    )
+    for s in shifts:
+        s.doctor_id = None
+    db.flush()
+    return len(shifts)
 
 
 def delete_shifts_for_plan(db: Session, plan_id: int) -> int:

@@ -23,6 +23,7 @@ export function usePlanRotations(planId: number) {
   return useQuery({
     queryKey: rotationQueryKeys.byPlan(planId),
     queryFn: () => apiGet<RotationAssignmentWithDetails[]>(`/api/plans/${planId}/rotations`),
+    enabled: !isNaN(planId) && planId > 0,
   })
 }
 

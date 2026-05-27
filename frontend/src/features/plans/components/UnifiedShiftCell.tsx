@@ -18,6 +18,9 @@ interface UnifiedShiftCellProps {
   hasConflict?: boolean
   hasTarifWarning?: boolean
   focusMode: 'alle' | 'vn'
+  isHoveredRow?: boolean
+  isHoveredCol?: boolean
+  onMouseEnter?: () => void
   onClick?: () => void
   onConflictDotClick?: () => void
   onTarifDotClick?: () => void
@@ -34,6 +37,9 @@ export function UnifiedShiftCell({
   hasConflict,
   hasTarifWarning,
   focusMode,
+  isHoveredRow,
+  isHoveredCol,
+  onMouseEnter,
   onClick,
   onConflictDotClick,
   onTarifDotClick,
@@ -47,13 +53,15 @@ export function UnifiedShiftCell({
   const isVN = text === 'V' || text === 'N'
   const isAbsenceCode = ['U', 'K', 'Fo', 'EZ', 'MuSchu', 'EA'].includes(text)
   const dimmed = focusMode === 'vn' && text !== '' && !isVN && !isAbsenceCode
+  const showCrosshair = (isHoveredRow || isHoveredCol) && !dimmed
 
-  const bg = inRotation ? bereichColor : undefined
-  const opacity = inRotation ? 1 : 0.3
+  // Background: full color in rotation, faint tint outside
+  const bg = inRotation ? bereichColor : `${bereichColor}28`
 
   return (
     <div
       ref={setNodeRef}
+      onMouseEnter={onMouseEnter}
       className={cn(
         'relative h-full min-h-[28px] flex items-center justify-center',
         'border-b border-r border-line cursor-pointer select-none',
@@ -62,17 +70,33 @@ export function UnifiedShiftCell({
         isOver && 'ring-2 ring-inset ring-blue-400',
         dimmed && 'opacity-30 grayscale',
       )}
-      style={{ backgroundColor: bg, opacity }}
+      style={{ backgroundColor: bg }}
       onClick={onClick}
     >
+      {/* Crosshair-Highlight */}
+      {showCrosshair && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ backgroundColor: 'rgba(198,106,61,0.09)' }}
+        />
+      )}
+
       {text && (
-        <span className={cn(isWeekend ? 'text-gray-600' : 'text-gray-800')}>{text}</span>
+        <span
+          className={cn(
+            'relative z-[1]',
+            isWeekend ? 'text-gray-600' : 'text-gray-800',
+            !inRotation && 'opacity-50',
+          )}
+        >
+          {text}
+        </span>
       )}
 
       {/* Tarif-Dot (Sand, oben links) */}
       {hasTarifWarning && (
         <button
-          className="absolute top-0.5 left-0.5 w-2 h-2 rounded-full bg-sand border border-warn-line text-[7px] flex items-center justify-center"
+          className="absolute top-0.5 left-0.5 w-2 h-2 rounded-full bg-sand border border-warn-line text-[7px] flex items-center justify-center z-[2]"
           onClick={(e) => { e.stopPropagation(); onTarifDotClick?.() }}
           aria-label="Tarif-Warnung"
         >
@@ -83,7 +107,7 @@ export function UnifiedShiftCell({
       {/* Konflikt-Dot (Warn, oben rechts) */}
       {hasConflict && (
         <button
-          className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-warn text-[7px] flex items-center justify-center text-white"
+          className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-warn text-[7px] flex items-center justify-center text-white z-[2]"
           onClick={(e) => { e.stopPropagation(); onConflictDotClick?.() }}
           aria-label="Konflikt"
         >
