@@ -118,6 +118,17 @@ export function UnifiedPlanGrid({
     return idx
   }, [shifts])
 
+  // Index for unassigned shifts: first unassigned shift per date (for data-shift-id on open cells)
+  const unassignedShiftByDate = useMemo(() => {
+    const idx = new Map<string, ShiftWithDetails>()
+    for (const s of shifts) {
+      if (s.doctor_id == null && !idx.has(s.shift_date)) {
+        idx.set(s.shift_date, s)
+      }
+    }
+    return idx
+  }, [shifts])
+
   const colCount = days.length
 
   // During drag, derive crosshair from dnd-kit over state (mouse events don't fire under overlay)
@@ -223,6 +234,8 @@ export function UnifiedPlanGrid({
                 const hasTarifWarning = shift ? (tarifWarningsByShift[shift.id]?.length ?? 0) > 0 : false
                 const day = days[dayKeys.indexOf(dk)]
 
+                const cellShiftId = shift?.id ?? unassignedShiftByDate.get(dk)?.id
+
                 return (
                   <UnifiedShiftCell
                     key={dk}
@@ -238,6 +251,7 @@ export function UnifiedPlanGrid({
                     focusMode={focusMode}
                     isHoveredRow={isRowHovered}
                     isHoveredCol={effectiveHoverDay === dk}
+                    shiftId={cellShiftId}
                     onMouseEnter={() => { setHoverRow(row.rowKey); setHoverDay(dk) }}
                     onClick={() => onCellClick?.(row.rotation.id, row.doctor.id, dk, shift?.id ?? null)}
                     onConflictDotClick={() => shift && onConflictDotClick?.(shift.id)}

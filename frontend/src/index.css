@@ -75,3 +75,18 @@
 @media (prefers-reduced-motion: reduce) {
   [data-pulse] .dp-logo-bars [data-bar] { animation: none; }
 }
+
+/* ── Shift-Cell Highlight-Pulse (Summary-Bar Scroll-Navigation) ──── */
+@keyframes dp-highlight-pulse {
+  0%, 100% { outline: 3px solid transparent; }
+  50%       { outline: 3px solid rgba(234, 179, 8, 0.7); }
+}
+
+.dp-highlight-pulse {
+  animation: dp-highlight-pulse 0.5s ease-in-out 3;
+  animation-fill-mode: forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dp-highlight-pulse { animation: none; }
+}

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
@@ -113,6 +113,7 @@ export function PlanPage() {
   const updatePlan = useUpdatePlan(id)
   const deletePlan = useDeletePlan()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
 
   function handleDeletePlan() {
     deletePlan.mutate(id, {
@@ -149,26 +150,53 @@ export function PlanPage() {
     }
   }, [shiftsError, navigate])
 
+  const scrollToFirstMatch = useCallback((type: 'open' | 'conflict') => {
+    const candidateIds: number[] =
+      type === 'open'
+        ? (conflicts?.open_shifts?.map((s) => s.shift_id) ?? [])
+        : (conflicts?.conflicts?.map((c) => c.shift_id) ?? [])
+
+    const firstId = candidateIds[0]
+    if (firstId == null) return
+
+    const el = document.querySelector(`[data-shift-id="${firstId}"]`)
+    if (!el) return
+
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el.classList.add('dp-highlight-pulse')
+    setTimeout(() => el.classList.remove('dp-highlight-pulse'), 2000)
+  }, [conflicts])
+
+  useEffect(() => {
+    const highlight = searchParams.get('highlight')
+    if (!highlight) return
+    if (highlight !== 'open' && highlight !== 'conflict') return
+    const t = setTimeout(() => {
+      scrollToFirstMatch(highlight as 'open' | 'conflict')
+      setSearchParams({}, { replace: true })
+    }, 200)
+    return () => clearTimeout(t)
+  }, [searchParams, scrollToFirstMatch, setSearchParams])
+
   const planTitle = plan
     ? format(new Date(plan.valid_from), 'MMMM yyyy', { locale: de })
     : '…'
+
+  const openCount = conflicts?.open_shift_count ?? 0
+  const conflictCount = conflicts?.conflict_count ?? 0
 
   const kpiTiles = [
     { label: 'Ärzte', value: doctors.length },
     { label: 'Schichten', value: shifts.length },
     {
       label: 'Offen',
-      value: conflicts?.open_shift_count ?? 0,
-      tone: (conflicts?.open_shift_count ?? 0) > 0
-        ? ('warn' as const)
-        : ('default' as const),
+      value: openCount,
+      tone: openCount > 0 ? ('warn' as const) : ('default' as const),
     },
     {
       label: 'Konflikte',
-      value: conflicts?.conflict_count ?? 0,
-      tone: (conflicts?.conflict_count ?? 0) > 0
-        ? ('warn' as const)
-        : ('default' as const),
+      value: conflictCount,
+      tone: conflictCount > 0 ? ('warn' as const) : ('default' as const),
     },
   ]
 
@@ -360,6 +388,28 @@ export function PlanPage() {
       <div className="px-6 py-3">
         <KpiBar tiles={kpiTiles} />
       </div>
+
+      {/* Summary Bar */}
+      {plan && (openCount > 0 || conflictCount > 0) && (
+        <div className="flex gap-4 px-10 py-1.5 bg-paper border-b border-line text-xs">
+          {openCount > 0 && (
+            <button
+              className="font-medium text-warn-ink hover:underline"
+              onClick={() => scrollToFirstMatch('open')}
+            >
+              {openCount} offen
+            </button>
+          )}
+          {conflictCount > 0 && (
+            <button
+              className="font-medium text-red-600 hover:underline"
+              onClick={() => scrollToFirstMatch('conflict')}
+            >
+              {conflictCount} Konflikte
+            </button>
+          )}
+        </div>
+      )}
 
       {/* ShiftType-DragBar + Fokus-Toggle */}
       <div className="px-6 pb-2 flex items-center gap-3">

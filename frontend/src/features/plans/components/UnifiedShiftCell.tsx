@@ -20,6 +20,7 @@ interface UnifiedShiftCellProps {
   focusMode: 'alle' | 'vn'
   isHoveredRow?: boolean
   isHoveredCol?: boolean
+  shiftId?: number
   onMouseEnter?: () => void
   onClick?: () => void
   onConflictDotClick?: () => void
@@ -39,6 +40,7 @@ export function UnifiedShiftCell({
   focusMode,
   isHoveredRow,
   isHoveredCol,
+  shiftId,
   onMouseEnter,
   onClick,
   onConflictDotClick,
@@ -62,6 +64,7 @@ export function UnifiedShiftCell({
     <div
       ref={setNodeRef}
       onMouseEnter={onMouseEnter}
+      {...(shiftId !== undefined ? { 'data-shift-id': String(shiftId) } : {})}
       className={cn(
         'relative h-full min-h-[28px] flex items-center justify-center',
         'border-b border-r border-line cursor-pointer select-none',
