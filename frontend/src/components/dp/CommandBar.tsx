@@ -29,6 +29,7 @@ interface CommandBarProps {
     onClick: () => void
   }
   showSearch?: boolean
+  extras?: React.ReactNode
   className?: string
 }
 
@@ -39,6 +40,7 @@ export function CommandBar({
   filters,
   primaryAction,
   showSearch = true,
+  extras,
   className,
 }: CommandBarProps) {
   const { open } = useCommandPalette()
@@ -91,33 +93,39 @@ export function CommandBar({
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Suchfeld */}
-      {showSearch && (
-        <button
-          type="button"
-          onClick={handleSearchClick}
-          className="flex items-center gap-2 h-8 px-3 rounded-full border border-line bg-card text-ink-3 text-sm hover:border-line-2 hover:text-ink transition-colors"
-        >
-          <Search className="size-3.5 shrink-0" />
-          <span className="text-xs hidden sm:inline">Suchen</span>
-          <span className="font-mono text-[10px] bg-line rounded px-1 py-0.5 leading-none">
-            {isMac() ? `${getModifierGlyph()}K` : `${getModifierGlyph()}+K`}
-          </span>
-        </button>
-      )}
+      {/* Right side actions */}
+      <div className="flex items-center gap-2">
+        {/* Suchfeld */}
+        {showSearch && (
+          <button
+            type="button"
+            onClick={handleSearchClick}
+            className="flex items-center gap-2 h-8 px-3 rounded-full border border-line bg-card text-ink-3 text-sm hover:border-line-2 hover:text-ink transition-colors"
+          >
+            <Search className="size-3.5 shrink-0" />
+            <span className="text-xs hidden sm:inline">Suchen</span>
+            <span className="font-mono text-[10px] bg-line rounded px-1 py-0.5 leading-none">
+              {isMac() ? `${getModifierGlyph()}K` : `${getModifierGlyph()}+K`}
+            </span>
+          </button>
+        )}
 
-      {/* Primärbutton */}
-      {primaryAction && (
-        <Button
-          variant="accent"
-          size="sm"
-          onClick={primaryAction.onClick}
-          className="shrink-0"
-        >
-          {primaryAction.icon && <primaryAction.icon className="size-4" />}
-          {primaryAction.label}
-        </Button>
-      )}
+        {/* Extras */}
+        {extras}
+
+        {/* Primärbutton */}
+        {primaryAction && (
+          <Button
+            variant="accent"
+            size="sm"
+            onClick={primaryAction.onClick}
+            className="shrink-0"
+          >
+            {primaryAction.icon && <primaryAction.icon className="size-4" />}
+            {primaryAction.label}
+          </Button>
+        )}
+      </div>
     </div>
   )
 }
