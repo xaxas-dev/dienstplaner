@@ -1,4 +1,6 @@
+import { useRef } from 'react'
 import { useDroppable } from '@dnd-kit/core'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { getDepartmentColor } from '@/lib/bereichColors'
 import type { Department } from '@/lib/types'
@@ -22,8 +24,11 @@ interface UnifiedShiftCellProps {
   isHoveredCol?: boolean
   shiftId?: number
   isConflictTarget?: boolean
+  isPinned?: boolean
+  shiftAssigned?: boolean
   onMouseEnter?: () => void
   onClick?: () => void
+  onDoubleClickRemove?: () => void
   onConflictDotClick?: () => void
   onTarifDotClick?: () => void
 }
@@ -43,15 +48,41 @@ export function UnifiedShiftCell({
   isHoveredCol,
   shiftId,
   isConflictTarget,
+  isPinned,
+  shiftAssigned,
   onMouseEnter,
   onClick,
+  onDoubleClickRemove,
   onConflictDotClick,
   onTarifDotClick,
 }: UnifiedShiftCellProps) {
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const { setNodeRef, isOver } = useDroppable({
     id: makeCellDropId(rotationId, dayKey),
     data: { rotationId, dayKey },
   })
+
+  function handleClick() {
+    if (onDoubleClickRemove && shiftAssigned) {
+      clickTimerRef.current = setTimeout(() => { onClick?.() }, 300)
+    } else {
+      onClick?.()
+    }
+  }
+
+  function handleDoubleClick() {
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current)
+      clickTimerRef.current = null
+    }
+    if (!shiftAssigned) return
+    if (isPinned) {
+      toast.info('Gepinnte Schicht — erst entpinnen')
+      return
+    }
+    onDoubleClickRemove?.()
+  }
 
   const bereichColor = getDepartmentColor(department)
   const isVN = text === 'V' || text === 'N'
@@ -77,7 +108,8 @@ export function UnifiedShiftCell({
         dimmed && 'opacity-30 grayscale',
       )}
       style={{ backgroundColor: isConflictTarget ? undefined : bg }}
-      onClick={onClick}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
     >
       {/* Crosshair-Highlight */}
       {showCrosshair && (

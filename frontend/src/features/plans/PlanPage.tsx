@@ -94,6 +94,7 @@ export function PlanPage() {
     name: string
     shortName?: string | null
   } | null>(null)
+  const [dragConflictMap, setDragConflictMap] = useState<Map<number, Set<string>> | null>(null)
   const [pendingShiftAssign, setPendingShiftAssign] = useState<{
     shiftId: number
     doctorId: number
@@ -223,15 +224,42 @@ export function PlanPage() {
   )
 
   function handleDragStart(event: DragStartEvent) {
-    const doctorId = parseDoctorDragId(String(event.active.id))
-    if (doctorId === null) return
-    const doctor = doctors.find((d) => d.id === doctorId)
-    const name = (event.active.data.current as { doctorName?: string } | undefined)?.doctorName ?? doctor?.name ?? ''
-    setActiveDragDoctor({ id: doctorId, name, shortName: doctor?.short_name })
+    const activeId = String(event.active.id)
+
+    const doctorId = parseDoctorDragId(activeId)
+    if (doctorId !== null) {
+      const doctor = doctors.find((d) => d.id === doctorId)
+      const name = (event.active.data.current as { doctorName?: string } | undefined)?.doctorName ?? doctor?.name ?? ''
+      setActiveDragDoctor({ id: doctorId, name, shortName: doctor?.short_name })
+      return
+    }
+
+    const shiftTypeId = parseShiftTypeDragId(activeId)
+    if (shiftTypeId !== null) {
+      const map = new Map<number, Set<string>>()
+
+      // Build map: doctorId → Set of dates with existing shifts
+      shifts?.forEach((shift) => {
+        if (shift.doctor_id == null) return
+        const dates = map.get(shift.doctor_id) ?? new Set<string>()
+        dates.add(shift.shift_date)
+        map.set(shift.doctor_id, dates)
+      })
+
+      // Also mark dates from known conflicts
+      conflicts?.conflicts?.forEach((conflict) => {
+        const dates = map.get(conflict.doctor_id) ?? new Set<string>()
+        dates.add(String(conflict.shift_date))
+        map.set(conflict.doctor_id, dates)
+      })
+
+      setDragConflictMap(map)
+    }
   }
 
   function handleDragEnd(event: DragEndEvent) {
     setActiveDragDoctor(null)
+    setDragConflictMap(null)
     const { active, over } = event
     if (!over) return
 
@@ -314,6 +342,7 @@ export function PlanPage() {
 
   function handleDragCancel() {
     setActiveDragDoctor(null)
+    setDragConflictMap(null)
   }
 
   return (
@@ -454,7 +483,11 @@ export function PlanPage() {
               validTo={plan.valid_to}
               tarifWarningsByShift={tarifWarningsByShift}
               focusMode={focusMode}
+              dragConflictMap={dragConflictMap}
               onCellClick={handleCellClick}
+              onDoubleClickRemove={(shiftId) => {
+                assignShift.mutate({ shiftId, data: { doctor_id: null } })
+              }}
               onConflictDotClick={(shiftId) => {
                 const shift = shifts.find((s) => s.id === shiftId) ?? null
                 setActiveCell(null)

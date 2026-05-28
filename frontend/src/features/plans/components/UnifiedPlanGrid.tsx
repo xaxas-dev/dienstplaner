@@ -20,7 +20,9 @@ interface UnifiedPlanGridProps {
   validTo: string
   tarifWarningsByShift?: Record<number, TarifWarning[]>
   focusMode: 'alle' | 'vn'
+  dragConflictMap?: Map<number, Set<string>> | null
   onCellClick?: (rotationId: number, doctorId: number, dayKey: string, shiftId: number | null) => void
+  onDoubleClickRemove?: (shiftId: number) => void
   onConflictDotClick?: (shiftId: number) => void
   onTarifDotClick?: (shiftId: number) => void
 }
@@ -90,7 +92,9 @@ export function UnifiedPlanGrid({
   validTo,
   tarifWarningsByShift = {},
   focusMode,
+  dragConflictMap,
   onCellClick,
+  onDoubleClickRemove,
   onConflictDotClick,
   onTarifDotClick,
 }: UnifiedPlanGridProps) {
@@ -236,6 +240,10 @@ export function UnifiedPlanGrid({
 
                 const cellShiftId = shift?.id ?? unassignedShiftByDate.get(dk)?.id
 
+                const isConflictTarget =
+                  dragConflictMap != null &&
+                  !!(dragConflictMap.get(row.doctor.id)?.has(dk))
+
                 return (
                   <UnifiedShiftCell
                     key={dk}
@@ -252,8 +260,16 @@ export function UnifiedPlanGrid({
                     isHoveredRow={isRowHovered}
                     isHoveredCol={effectiveHoverDay === dk}
                     shiftId={cellShiftId}
+                    isConflictTarget={isConflictTarget}
+                    shiftAssigned={shift != null && shift.doctor_id != null}
+                    isPinned={shift?.is_pinned ?? false}
                     onMouseEnter={() => { setHoverRow(row.rowKey); setHoverDay(dk) }}
                     onClick={() => onCellClick?.(row.rotation.id, row.doctor.id, dk, shift?.id ?? null)}
+                    onDoubleClickRemove={
+                      shift?.id != null
+                        ? () => onDoubleClickRemove?.(shift.id)
+                        : undefined
+                    }
                     onConflictDotClick={() => shift && onConflictDotClick?.(shift.id)}
                     onTarifDotClick={() => shift && onTarifDotClick?.(shift.id)}
                   />
