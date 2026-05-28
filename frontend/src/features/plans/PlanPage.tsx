@@ -42,7 +42,7 @@ import { usePlan, usePlans } from './usePlans'
 import { planToSlug } from './planSlug'
 import { usePlanShifts } from './usePlanShifts'
 import { usePlanConflicts } from './usePlanConflicts'
-import { usePlanRotations } from './usePlanRotations'
+import { usePlanRotations, useDeleteRotation } from './usePlanRotations'
 import { useTarifWarnings } from './useTarifWarnings'
 import { usePlanAbsences } from './usePlanAbsences'
 import { useAssignShift, findShiftId } from './useAssignShift'
@@ -58,7 +58,7 @@ import { DoctorAssignPopover } from './components/DoctorAssignPopover'
 import { DoctorDragSource, DoctorDragOverlayToken, parseDoctorDragId } from './components/DoctorDragSource'
 import { RotationAssignPopover } from './components/RotationAssignPopover'
 import { parseBereichHeaderDropId, parsePlaceholderDropId, parseRotationMemberDropId } from './components/BereichHeaderRow'
-import type { ShiftWithDetails, TarifWarning } from '@/lib/types'
+import type { ShiftWithDetails, TarifWarning, RotationAssignmentWithDetails } from '@/lib/types'
 
 interface ActiveCell {
   rotationId: number
@@ -114,7 +114,9 @@ export function PlanPage() {
   const assignShift = useAssignShift(id)
   const updatePlan = useUpdatePlan(id)
   const deletePlan = useDeletePlan()
+  const deleteRotation = useDeleteRotation(id)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [pendingDeleteRotation, setPendingDeleteRotation] = useState<RotationAssignmentWithDetails | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -502,6 +504,17 @@ export function PlanPage() {
               onDoubleClickRemove={(shiftId) => {
                 assignShift.mutate({ shiftId, data: { doctor_id: null } })
               }}
+              onDeleteRotation={(rotationId) => {
+                const rotation = rotations.find((r) => r.id === rotationId)
+                if (rotation) setPendingDeleteRotation(rotation)
+              }}
+              onEditRotation={(rotation) => {
+                setActiveRotationCell({
+                  departmentId: rotation.department_id,
+                  day: rotation.valid_from,
+                  assignmentId: rotation.id,
+                })
+              }}
               onConflictDotClick={(shiftId) => {
                 const shift = shifts.find((s) => s.id === shiftId) ?? null
                 setActiveCell(null)
@@ -595,6 +608,31 @@ export function PlanPage() {
             }}
           >
             Ersetzen
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    <AlertDialog open={pendingDeleteRotation !== null} onOpenChange={(o) => !o && setPendingDeleteRotation(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Arzt aus Bereich entfernen?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Nicht-gepinnte Schichtzuweisungen im Zeitraum werden ebenfalls gelöscht.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-red-600 hover:bg-red-700 text-white"
+            onClick={() => {
+              if (pendingDeleteRotation) {
+                deleteRotation.mutate(pendingDeleteRotation.id)
+                setPendingDeleteRotation(null)
+              }
+            }}
+          >
+            Entfernen
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

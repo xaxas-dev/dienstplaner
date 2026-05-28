@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useDndContext, useDroppable } from '@dnd-kit/core'
 import { eachDayOfInterval, format, isToday, isWeekend, parseISO } from 'date-fns'
+import { Pencil, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getDepartmentColor } from '@/lib/bereichColors'
 import { buildUnifiedRows, resolveCell } from '../unifiedGridUtils'
@@ -23,6 +24,8 @@ interface UnifiedPlanGridProps {
   dragConflictMap?: Map<number, Set<string>> | null
   onCellClick?: (rotationId: number, doctorId: number, dayKey: string, shiftId: number | null) => void
   onDoubleClickRemove?: (shiftId: number) => void
+  onDeleteRotation?: (rotationId: number) => void
+  onEditRotation?: (rotation: RotationAssignmentWithDetails) => void
   onConflictDotClick?: (shiftId: number) => void
   onTarifDotClick?: (shiftId: number) => void
 }
@@ -53,10 +56,14 @@ function RotationLabelCell({
   row,
   isHovered,
   onMouseEnter,
+  onDelete,
+  onEdit,
 }: {
   row: RotationRow
   isHovered: boolean
   onMouseEnter: () => void
+  onDelete?: () => void
+  onEdit?: () => void
 }) {
   const color = getDepartmentColor(row.department)
   const { setNodeRef, isOver } = useDroppable({
@@ -68,7 +75,7 @@ function RotationLabelCell({
       ref={setNodeRef}
       onMouseEnter={onMouseEnter}
       className={cn(
-        'sticky left-0 z-10 flex items-center gap-1.5 pr-2 pl-8 py-1 border-b border-line truncate transition-colors',
+        'sticky left-0 z-10 flex items-center gap-1 pr-1 pl-8 py-1 border-b border-line min-w-0 transition-colors',
         !isOver && isHovered ? 'bg-paper' : 'bg-card',
       )}
       style={{
@@ -76,9 +83,27 @@ function RotationLabelCell({
         ...(isOver && { backgroundColor: `${color}20` }),
       }}
     >
-      <span className="text-[11px] font-medium text-ink truncate">
+      <span className="flex-1 text-[11px] font-medium text-ink truncate">
         {row.doctor.name}
       </span>
+      <div className={cn('flex items-center gap-0.5 shrink-0', !isHovered && 'invisible')}>
+        <button
+          className="p-0.5 rounded hover:bg-blue-50 text-ink-3 hover:text-blue-600 transition-colors"
+          title="Zeitraum bearbeiten"
+          onClick={(e) => { e.stopPropagation(); onEdit?.() }}
+          aria-label="Rotationszeitraum bearbeiten"
+        >
+          <Pencil className="size-3" />
+        </button>
+        <button
+          className="p-0.5 rounded hover:bg-red-50 text-ink-3 hover:text-red-600 transition-colors"
+          title="Arzt aus Bereich entfernen"
+          onClick={(e) => { e.stopPropagation(); onDelete?.() }}
+          aria-label="Rotation löschen"
+        >
+          <X className="size-3" />
+        </button>
+      </div>
     </div>
   )
 }
@@ -95,6 +120,8 @@ export function UnifiedPlanGrid({
   dragConflictMap,
   onCellClick,
   onDoubleClickRemove,
+  onDeleteRotation,
+  onEditRotation,
   onConflictDotClick,
   onTarifDotClick,
 }: UnifiedPlanGridProps) {
@@ -229,6 +256,8 @@ export function UnifiedPlanGrid({
                 row={row}
                 isHovered={isRowHovered}
                 onMouseEnter={() => { setHoverRow(row.rowKey); setHoverDay(null) }}
+                onDelete={() => onDeleteRotation?.(row.rotation.id)}
+                onEdit={() => onEditRotation?.(row.rotation)}
               />
 
               {dayKeys.map((dk) => {
