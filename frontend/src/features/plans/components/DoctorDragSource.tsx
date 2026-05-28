@@ -17,24 +17,67 @@ export function parseDoctorDragId(id: string): number | null {
 
 interface DoctorDragSourceProps {
   doctors: Doctor[]
+  rotationDoctorIds?: Set<number>
+  highlightedDoctorId?: number | null
+  onHighlightDoctor?: (doctorId: number | null) => void
 }
 
-export function DoctorDragSource({ doctors }: DoctorDragSourceProps) {
+export function DoctorDragSource({
+  doctors,
+  rotationDoctorIds = new Set(),
+  highlightedDoctorId,
+  onHighlightDoctor,
+}: DoctorDragSourceProps) {
+  const activeDoctors = doctors.filter((d) => d.active)
+  const assigned = activeDoctors.filter((d) => rotationDoctorIds.has(d.id))
+  const available = activeDoctors.filter((d) => !rotationDoctorIds.has(d.id))
+
   return (
     <aside
-      aria-label="Ärzte zum Ziehen"
-      className="w-48 shrink-0 flex flex-col gap-2 p-3 rounded-2xl border border-line bg-card overflow-y-auto"
+      aria-label="Ärzte"
+      className="w-48 shrink-0 flex flex-col gap-3 p-3 rounded-2xl border border-line bg-card overflow-y-auto"
     >
-      <div className="text-xs font-medium text-ink-3 uppercase tracking-wide">
-        Ärzte
-      </div>
-      <ul className="flex flex-col gap-1">
-        {doctors.map((doctor) => (
-          <li key={doctor.id}>
-            <DoctorToken doctor={doctor} />
-          </li>
-        ))}
-      </ul>
+      {assigned.length > 0 && (
+        <section>
+          <div className="text-xs font-medium text-ink-3 uppercase tracking-wide mb-1">
+            Zugeteilt
+          </div>
+          <ul className="flex flex-col gap-0.5">
+            {assigned.map((doctor) => (
+              <li key={doctor.id}>
+                <AssignedDoctorToken
+                  doctor={doctor}
+                  isHighlighted={highlightedDoctorId === doctor.id}
+                  onHighlight={() =>
+                    onHighlightDoctor?.(
+                      highlightedDoctorId === doctor.id ? null : doctor.id,
+                    )
+                  }
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {available.length > 0 && (
+        <section>
+          <div className="text-xs font-medium text-ink-3 uppercase tracking-wide mb-1">
+            Verfügbar
+          </div>
+          <ul className="flex flex-col gap-1">
+            {available.map((doctor) => (
+              <li key={doctor.id}>
+                <DoctorToken doctor={doctor} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {assigned.length === 0 && available.length === 0 && (
+        <p className="text-xs text-ink-3 italic">Keine aktiven Ärzte.</p>
+      )}
     </aside>
   )
 }
@@ -47,6 +90,32 @@ interface DoctorDragOverlayTokenProps {
 
 export function DoctorDragOverlayToken({ name, shortName, id }: DoctorDragOverlayTokenProps) {
   return <Avatar name={name} shortName={shortName} id={id} size={28} />
+}
+
+interface AssignedDoctorTokenProps {
+  doctor: Doctor
+  isHighlighted: boolean
+  onHighlight: () => void
+}
+
+function AssignedDoctorToken({ doctor, isHighlighted, onHighlight }: AssignedDoctorTokenProps) {
+  return (
+    <button
+      type="button"
+      onClick={onHighlight}
+      title="Im Grid markieren"
+      className={[
+        'w-full flex items-center gap-2 px-2 py-1 rounded-lg text-left transition',
+        'focus:outline-none focus:ring-2 focus:ring-accent',
+        isHighlighted
+          ? 'bg-accent/10 ring-1 ring-accent/40'
+          : 'hover:bg-paper',
+      ].join(' ')}
+    >
+      <Avatar name={doctor.name} shortName={doctor.short_name} id={doctor.id} size={24} />
+      <span className="text-sm text-ink truncate">{doctor.name}</span>
+    </button>
+  )
 }
 
 interface DoctorTokenProps {
