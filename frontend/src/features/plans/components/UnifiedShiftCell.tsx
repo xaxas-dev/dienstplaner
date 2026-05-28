@@ -21,6 +21,7 @@ interface UnifiedShiftCellProps {
   isHoveredRow?: boolean
   isHoveredCol?: boolean
   shiftId?: number
+  isConflictTarget?: boolean
   onMouseEnter?: () => void
   onClick?: () => void
   onConflictDotClick?: () => void
@@ -41,6 +42,7 @@ export function UnifiedShiftCell({
   isHoveredRow,
   isHoveredCol,
   shiftId,
+  isConflictTarget,
   onMouseEnter,
   onClick,
   onConflictDotClick,
@@ -71,9 +73,10 @@ export function UnifiedShiftCell({
         'text-[11px] font-medium leading-none',
         isToday && 'ring-1 ring-inset ring-accent',
         isOver && 'ring-2 ring-inset ring-blue-400',
+        isConflictTarget && 'border-red-400 bg-red-50 ring-1 ring-inset ring-red-300',
         dimmed && 'opacity-30 grayscale',
       )}
-      style={{ backgroundColor: bg }}
+      style={{ backgroundColor: isConflictTarget ? undefined : bg }}
       onClick={onClick}
     >
       {/* Crosshair-Highlight */}
