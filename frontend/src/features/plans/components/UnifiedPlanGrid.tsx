@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useDndContext, useDroppable } from '@dnd-kit/core'
 import { eachDayOfInterval, format, isToday, isWeekend, parseISO } from 'date-fns'
-import { Pencil, X } from 'lucide-react'
+import { ExternalLink, Pencil, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getDepartmentColor } from '@/lib/bereichColors'
 import { buildUnifiedRows, resolveCell } from '../unifiedGridUtils'
@@ -22,10 +23,14 @@ interface UnifiedPlanGridProps {
   tarifWarningsByShift?: Record<number, TarifWarning[]>
   focusMode: 'alle' | 'vn'
   dragConflictMap?: Map<number, Set<string>> | null
-  onCellClick?: (rotationId: number, doctorId: number, dayKey: string, shiftId: number | null) => void
+  selectedCellKeys?: Set<string>
+  highlightedDoctorId?: number | null
+  onCellClick?: (rotationId: number, doctorId: number, dayKey: string, shiftId: number | null, shiftKey: boolean) => void
   onDoubleClickRemove?: (shiftId: number) => void
+  onDoubleClickRemoveAbsence?: (absenceId: number) => void
   onDeleteRotation?: (rotationId: number) => void
   onEditRotation?: (rotation: RotationAssignmentWithDetails) => void
+  onRangeSelected?: (rotationId: number, doctorId: number, dayKeys: string[]) => void
   onConflictDotClick?: (shiftId: number) => void
   onTarifDotClick?: (shiftId: number) => void
 }
@@ -55,16 +60,19 @@ function PlaceholderLabelCell({ department }: { department: Department }) {
 function RotationLabelCell({
   row,
   isHovered,
+  isHighlighted,
   onMouseEnter,
   onDelete,
   onEdit,
 }: {
   row: RotationRow
   isHovered: boolean
+  isHighlighted: boolean
   onMouseEnter: () => void
   onDelete?: () => void
   onEdit?: () => void
 }) {
+  const navigate = useNavigate()
   const color = getDepartmentColor(row.department)
   const { setNodeRef, isOver } = useDroppable({
     id: makeRotationMemberDropId(row.rotation.id),
@@ -76,17 +84,28 @@ function RotationLabelCell({
       onMouseEnter={onMouseEnter}
       className={cn(
         'sticky left-0 z-10 flex items-center gap-1 pr-1 pl-8 py-1 border-b border-line min-w-0 transition-colors',
-        !isOver && isHovered ? 'bg-paper' : 'bg-card',
+        isOver ? '' : isHighlighted ? 'bg-accent/8' : isHovered ? 'bg-paper' : 'bg-card',
       )}
       style={{
-        borderLeft: `4px solid ${color}`,
+        borderLeft: `4px solid ${isHighlighted ? color : `${color}${isHovered ? 'cc' : '80'}`}`,
         ...(isOver && { backgroundColor: `${color}20` }),
       }}
     >
-      <span className="flex-1 text-[11px] font-medium text-ink truncate">
+      <span className={cn(
+        'flex-1 text-[11px] font-medium truncate',
+        isHighlighted ? 'text-ink' : 'text-ink',
+      )}>
         {row.doctor.name}
       </span>
       <div className={cn('flex items-center gap-0.5 shrink-0', !isHovered && 'invisible')}>
+        <button
+          className="p-0.5 rounded hover:bg-paper text-ink-3 hover:text-ink-2 transition-colors"
+          title="Arzt-Profil öffnen"
+          onClick={(e) => { e.stopPropagation(); navigate(`/doctors/${row.doctor.id}`) }}
+          aria-label="Arzt-Profil öffnen"
+        >
+          <ExternalLink className="size-3" />
+        </button>
         <button
           className="p-0.5 rounded hover:bg-blue-50 text-ink-3 hover:text-blue-600 transition-colors"
           title="Zeitraum bearbeiten"
@@ -118,8 +137,12 @@ export function UnifiedPlanGrid({
   tarifWarningsByShift = {},
   focusMode,
   dragConflictMap,
+  selectedCellKeys,
+  highlightedDoctorId,
   onCellClick,
+  onRangeSelected,
   onDoubleClickRemove,
+  onDoubleClickRemoveAbsence,
   onDeleteRotation,
   onEditRotation,
   onConflictDotClick,
@@ -127,6 +150,13 @@ export function UnifiedPlanGrid({
 }: UnifiedPlanGridProps) {
   const [hoverRow, setHoverRow] = useState<string | null>(null)
   const [hoverDay, setHoverDay] = useState<string | null>(null)
+  const [mouseSelectState, setMouseSelectState] = useState<{
+    rotationId: number
+    doctorId: number
+    anchorDayKey: string
+    currentDayKey: string
+  } | null>(null)
+  const dragSelectFiredRef = useRef(false)
 
   const { active, over } = useDndContext()
 
@@ -139,6 +169,38 @@ export function UnifiedPlanGrid({
 
   const rows = useMemo(() => buildUnifiedRows(departments, rotations), [departments, rotations])
 
+  const mouseSelectKeys = useMemo((): Set<string> => {
+    if (!mouseSelectState) return new Set()
+    const { rotationId, anchorDayKey, currentDayKey } = mouseSelectState
+    const ai = dayKeys.indexOf(anchorDayKey)
+    const ci = dayKeys.indexOf(currentDayKey)
+    if (ai < 0 || ci < 0) return new Set()
+    const start = Math.min(ai, ci)
+    const end = Math.max(ai, ci)
+    return new Set(dayKeys.slice(start, end + 1).map((dk) => `${rotationId}-${dk}`))
+  }, [mouseSelectState, dayKeys])
+
+  useEffect(() => {
+    if (!mouseSelectState) return
+    function handleMouseUp() {
+      const state = mouseSelectState
+      if (!state) return
+      const { rotationId, doctorId, anchorDayKey, currentDayKey } = state
+      const ai = dayKeys.indexOf(anchorDayKey)
+      const ci = dayKeys.indexOf(currentDayKey)
+      const start = Math.min(ai, ci)
+      const end = Math.max(ai, ci)
+      const range = dayKeys.slice(start, end + 1)
+      if (range.length >= 2) {
+        dragSelectFiredRef.current = true
+        onRangeSelected?.(rotationId, doctorId, range)
+      }
+      setMouseSelectState(null)
+    }
+    document.addEventListener('mouseup', handleMouseUp)
+    return () => document.removeEventListener('mouseup', handleMouseUp)
+  }, [mouseSelectState, dayKeys, onRangeSelected])
+
   const shiftIndex = useMemo(() => {
     const idx = new Map<string, ShiftWithDetails>()
     for (const s of shifts) {
@@ -149,7 +211,6 @@ export function UnifiedPlanGrid({
     return idx
   }, [shifts])
 
-  // Index for unassigned shifts: first unassigned shift per date (for data-shift-id on open cells)
   const unassignedShiftByDate = useMemo(() => {
     const idx = new Map<string, ShiftWithDetails>()
     for (const s of shifts) {
@@ -162,7 +223,6 @@ export function UnifiedPlanGrid({
 
   const colCount = days.length
 
-  // During drag, derive crosshair from dnd-kit over state (mouse events don't fire under overlay)
   let effectiveHoverRow = hoverRow
   let effectiveHoverDay = hoverDay
 
@@ -249,12 +309,14 @@ export function UnifiedPlanGrid({
 
           // kind === 'rotation'
           const isRowHovered = effectiveHoverRow === row.rowKey
+          const isRowHighlighted = highlightedDoctorId != null && row.doctor.id === highlightedDoctorId
 
           return (
             <div key={row.rowKey} className="contents">
               <RotationLabelCell
                 row={row}
                 isHovered={isRowHovered}
+                isHighlighted={isRowHighlighted}
                 onMouseEnter={() => { setHoverRow(row.rowKey); setHoverDay(null) }}
                 onDelete={() => onDeleteRotation?.(row.rotation.id)}
                 onEdit={() => onEditRotation?.(row.rotation)}
@@ -271,7 +333,11 @@ export function UnifiedPlanGrid({
 
                 const isConflictTarget =
                   dragConflictMap != null &&
-                  !!(dragConflictMap.get(row.doctor.id)?.has(dk))
+                  !!(dragConflictMap.get(row.doctor.id)?.has(dk)) &&
+                  cell.text === ''
+
+                const cellKey = `${row.rotation.id}-${dk}`
+                const isSelected = selectedCellKeys?.has(cellKey) ?? false
 
                 return (
                   <UnifiedShiftCell
@@ -292,13 +358,37 @@ export function UnifiedPlanGrid({
                     isConflictTarget={isConflictTarget}
                     shiftAssigned={shift != null && shift.doctor_id != null}
                     isPinned={shift?.is_pinned ?? false}
-                    onMouseEnter={() => { setHoverRow(row.rowKey); setHoverDay(dk) }}
-                    onClick={() => onCellClick?.(row.rotation.id, row.doctor.id, dk, shift?.id ?? null)}
+                    isSelected={isSelected || mouseSelectKeys.has(cellKey)}
+                    isHighlightedRow={isRowHighlighted}
+                    onMouseDown={() => {
+                      setMouseSelectState({
+                        rotationId: row.rotation.id,
+                        doctorId: row.doctor.id,
+                        anchorDayKey: dk,
+                        currentDayKey: dk,
+                      })
+                    }}
+                    onMouseEnter={() => {
+                      setHoverRow(row.rowKey)
+                      setHoverDay(dk)
+                      if (mouseSelectState?.rotationId === row.rotation.id) {
+                        setMouseSelectState((prev) => prev ? { ...prev, currentDayKey: dk } : null)
+                      }
+                    }}
+                    onClick={(shiftKey) => {
+                      if (dragSelectFiredRef.current) {
+                        dragSelectFiredRef.current = false
+                        return
+                      }
+                      onCellClick?.(row.rotation.id, row.doctor.id, dk, shift?.id ?? null, shiftKey)
+                    }}
+                    absenceId={cell.absenceId ?? undefined}
                     onDoubleClickRemove={
                       shift?.id != null
                         ? () => onDoubleClickRemove?.(shift.id)
                         : undefined
                     }
+                    onDoubleClickRemoveAbsence={onDoubleClickRemoveAbsence}
                     onConflictDotClick={() => shift && onConflictDotClick?.(shift.id)}
                     onTarifDotClick={() => shift && onTarifDotClick?.(shift.id)}
                   />
