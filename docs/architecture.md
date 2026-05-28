@@ -34,8 +34,13 @@ frontend/src/
   features/
     plans/
       components/
-        PlanGrid.tsx         → Haupt-Grid-Komponente (Dienste-Ansicht)
-        RotationGrid.tsx     → Bereiche-Ansicht mit DnD-Drop-Targets
+        UnifiedPlanGrid.tsx    → Unified Grid (Rotation + Schicht + Absence)
+        UnifiedShiftCell.tsx   → einzelne Tageszelle mit DnD-Drop-Target
+        BereichHeaderRow.tsx   → Bereichs-Header-Zeile mit Doctor-Drop-Target
+        ShiftTypeDragBar.tsx   → Sidebar: Schichttyp-Drag-Chips + Fokus-Toggle
+        DoctorDragSource.tsx   → Sidebar: Arzt-Drag-Tokens (zugeteilt/verfügbar)
+        AbsenceTypeDragBar.tsx → Sidebar: Abwesenheitstyp-Drag-Chips
+        AbsenceAssignPopover.tsx → Abwesenheits-Zuweisung nach Drop
         DoctorAssignPopover.tsx
         ContextPanel.tsx
       PlanPage.tsx
@@ -46,7 +51,8 @@ frontend/src/
       useAssignShift.ts
       useTarifWarnings.ts
       usePlanRotations.ts
-      planGridUtils.ts       → pure Transformationsfunktion, kein React
+      usePlanAbsences.ts     → GET /api/plans/{id}/absences
+      unifiedGridUtils.ts    → buildUnifiedRows(), resolveCell() — kein React
     doctors/
       useDoctorAvailability.ts → GET /api/doctors/{id}/ina-availability
       useAvailabilityForDate.ts → useQueries für Mehrfach-Doctor-Lookup
@@ -105,7 +111,8 @@ Hooks co-located in `features/<feature>/`: Query-Key-Objekte exportieren,
 damit andere Consumer invalidieren können. Nach Shift-Mutation werden
 `shifts`, `conflicts` und `tarifWarnings` invalidiert.
 
-### DnD-Pattern (Bereiche-Ansicht)
-Drop auf RotationGrid-Zelle öffnet `RotationAssignPopover` (kein direkter
-DB-Write im Drop-Handler, ADR-054). Drag-IDs: `doctor-{id}` und
-`rotation-{departmentId}-{yyyy-MM-dd}`.
+### DnD-Pattern (UnifiedPlanGrid)
+`PlanPage` ist der einzige `DndContext`-Wrapper. Drei Drop-Pfade:
+- **Doctor → Bereich-Header:** öffnet `RotationAssignPopover` (ADR-054, kein direkter DB-Write). Drag-ID: `doctor-{id}`, Drop-ID: `rotation-header-{deptId}`.
+- **ShiftType → Tag-Zelle:** löst `PATCH /api/shifts/{id}` aus (ADR-080, weiche Validierung). Drag-ID: `shift-{shiftTypeId}`, Drop-ID: `cell-{rotationId}-{yyyy-MM-dd}`.
+- **AbsenceType → Tag-Zelle:** öffnet `AbsenceAssignPopover`. Drop-ID identisch mit ShiftType-Pfad.
