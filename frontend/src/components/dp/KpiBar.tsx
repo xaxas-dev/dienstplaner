@@ -6,6 +6,7 @@ interface KpiBarTile {
   value: string | number
   sub?: string
   tone?: 'default' | 'warn' | 'ok'
+  onClick?: () => void
 }
 
 interface KpiBarProps {
@@ -23,6 +24,7 @@ export function KpiBar({ tiles }: KpiBarProps) {
               label={tile.label}
               sub={tile.sub}
               tone={tile.tone}
+              onClick={tile.onClick}
             />
           </div>
         ))}

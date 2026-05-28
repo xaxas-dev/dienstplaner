@@ -46,7 +46,9 @@ function PlanCard({ plan, onClick }: { plan: Plan; onClick: () => void }) {
           className="w-full p-5 text-left"
         >
           <p className="font-serif text-xl capitalize">{title}</p>
-          <p className="text-xs text-ink-3 mt-1 uppercase tracking-wide">{plan.status}</p>
+          <p className="text-xs text-ink-3 mt-1 uppercase tracking-wide">
+            {plan.status === 'RELEASED' ? 'Freigegeben' : 'Entwurf'}
+          </p>
         </button>
         <button
           className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-line"
