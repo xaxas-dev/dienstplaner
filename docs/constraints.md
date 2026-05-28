@@ -4,6 +4,22 @@ Constraint-Klassen: logisch hart (nie overridebar), regulatorisch hart
 (overridebar per Override-Mechanismus A/B/C), soft (Optimierungsziele).
 Alle Tarifregeln sind zentral in `backend/app/solver/tarif_rules.py` definiert.
 
+## Inhaltsverzeichnis
+
+- [Read-only Konflikt-Engine (M2-005)](#read-only-konflikt-engine-m2-005-vor-dem-solver)
+- [Rotations-Zuweisung via Drag & Drop (M3-001)](#rotations-zuweisung-via-drag--drop-m3-001-phase-a)
+- [INA-Verfügbarkeitsanzeige (M4-001)](#ina-verfügbarkeitsanzeige-m4-001-phase-a)
+- [Solver-Constraints (M8-001, Timefold)](#solver-constraints-m8-001-timefold-integration)
+  - [1. DOUBLE_BOOKED](#1-double_booked-logisch-hart-constraintiddouble_booked)
+  - [Apply-Endpoint (M8-002)](#apply-endpoint-m8-002)
+  - [2. ABSENT_DOCTOR](#2-absent_doctor-logisch-hart-constraintidabsent_doctor-m8-003)
+  - [3. FAIR_DISTRIBUTION](#3-fair_distribution-soft-constraintidfair_distribution-m8-004)
+  - [Folge-Milestones](#folge-milestones-noch-nicht-implementiert)
+- [Tarif-Validation-Framework (M5-001)](#tarif-validation-framework-m5-001-phase-a)
+- [Excel-Export (M6-001)](#excel-export-m6-001-phase-a)
+
+---
+
 ## Read-only Konflikt-Engine (M2-005, vor dem Solver)
 
 Vor der Solver-Integration existiert eine read-only Konflikt-Engine mit zwei Typen:
