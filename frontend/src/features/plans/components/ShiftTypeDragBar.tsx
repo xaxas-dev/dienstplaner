@@ -18,10 +18,10 @@ export function parseShiftTypeDragId(id: string): number | null {
 interface ShiftTypeDragBarProps {
   shiftTypes: ShiftType[]
   focusMode: 'alle' | 'vn'
-  selectedIndex?: number | null
+  onFocusToggle: () => void
 }
 
-export function ShiftTypeDragBar({ shiftTypes, focusMode, selectedIndex }: ShiftTypeDragBarProps) {
+export function ShiftTypeDragBar({ shiftTypes, focusMode, onFocusToggle }: ShiftTypeDragBarProps) {
   return (
     <div
       className="flex flex-wrap gap-2 p-3 rounded-xl border border-line bg-card"
@@ -30,17 +30,27 @@ export function ShiftTypeDragBar({ shiftTypes, focusMode, selectedIndex }: Shift
       <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide self-center">
         Dienste
       </span>
-      {shiftTypes.map((st, idx) => {
+      {shiftTypes.map((st) => {
         const isVN = st.short_name === 'V' || st.short_name === 'N'
         return (
           <ShiftTypeChip
             key={st.id}
             shiftType={st}
             dimmed={focusMode === 'vn' && !isVN}
-            isSelected={selectedIndex === idx}
           />
         )
       })}
+      <button
+        onClick={onFocusToggle}
+        className={[
+          'ml-auto px-3 py-1 rounded-lg text-xs font-medium border transition self-center',
+          focusMode === 'vn'
+            ? 'bg-accent text-white border-accent'
+            : 'bg-paper text-ink-3 border-line hover:bg-paper/80',
+        ].join(' ')}
+      >
+        {focusMode === 'vn' ? 'Fokus: V+N' : 'Alle Dienste'}
+      </button>
     </div>
   )
 }
@@ -48,10 +58,9 @@ export function ShiftTypeDragBar({ shiftTypes, focusMode, selectedIndex }: Shift
 interface ShiftTypeChipProps {
   shiftType: ShiftType
   dimmed: boolean
-  isSelected?: boolean
 }
 
-function ShiftTypeChip({ shiftType, dimmed, isSelected }: ShiftTypeChipProps) {
+function ShiftTypeChip({ shiftType, dimmed }: ShiftTypeChipProps) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: makeShiftTypeDragId(shiftType.id),
     data: { shiftTypeId: shiftType.id, shiftTypeName: shiftType.name, shortName: shiftType.short_name },
@@ -67,7 +76,6 @@ function ShiftTypeChip({ shiftType, dimmed, isSelected }: ShiftTypeChipProps) {
         'bg-paper text-ink hover:bg-accent/10 active:cursor-grabbing',
         isDragging && 'opacity-40 cursor-grabbing',
         dimmed && 'opacity-40',
-        isSelected && 'ring-2 ring-accent ring-offset-1',
       )}
       title={shiftType.name}
     >
