@@ -81,6 +81,7 @@ export function PlanPage() {
   })()
 
   const [focusMode, setFocusMode] = useState<'alle' | 'vn'>('alle')
+  const [selectedShiftTypeIndex, setSelectedShiftTypeIndex] = useState<number | null>(null)
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null)
   const [contextShift, setContextShift] = useState<ShiftWithDetails | null>(null)
   const [activeRotationCell, setActiveRotationCell] = useState<{
@@ -157,6 +158,19 @@ export function PlanPage() {
     return () => {
       if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current)
     }
+  }, [])
+
+  // Tastenkürzel 0–9 für Schichttyp-Auswahl
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const tag = (document.activeElement as HTMLElement | null)?.tagName?.toUpperCase()
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      const digit = parseInt(e.key, 10)
+      if (isNaN(digit)) return
+      setSelectedShiftTypeIndex(digit === 0 ? null : digit - 1)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
 
   const scrollToFirstMatch = useCallback((type: 'open' | 'conflict') => {
@@ -455,7 +469,7 @@ export function PlanPage() {
       {/* ShiftType-DragBar + Fokus-Toggle */}
       <div className="px-6 pb-2 flex items-center gap-3">
         <div className="flex-1">
-          <ShiftTypeDragBar shiftTypes={shiftTypes} focusMode={focusMode} />
+          <ShiftTypeDragBar shiftTypes={shiftTypes} focusMode={focusMode} selectedIndex={selectedShiftTypeIndex} />
         </div>
         <button
           onClick={() => setFocusMode((m) => (m === 'alle' ? 'vn' : 'alle'))}
