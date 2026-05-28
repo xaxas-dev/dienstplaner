@@ -74,7 +74,7 @@ Die App verwendet `AtelierShell` als Layout-Wrapper (ersetzt die alte `AppShell`
 
 Aktuelle Seiten-Status:
 - `/heute`: Dashboard (Heute-Ansicht)
-- `/plans`: Plan-Editor mit Dienste- und Bereiche-Ansicht (PlanGrid, RotationGrid)
+- `/plans`: Plan-Editor mit Unified Grid — Rotation, Schicht-Zuweisung und Abwesenheiten in einer Ansicht (UnifiedPlanGrid, ShiftTypeDragBar, DoctorDragSource, AbsenceTypeDragBar)
 - Stammdaten-Pages (Ärzte, Stationen, Schichttypen, Qualifikationen, Sonderregelungen):
   vollständig auf Atelier-Look migriert (M1-011):
   - **Ärzte-Liste**: 3-spaltiges Card-Grid mit Avatar, Qualifikations-Chips, 14-Tage-Heatmap
