@@ -28,6 +28,8 @@ interface UnifiedShiftCellProps {
   shiftAssigned?: boolean
   isSelected?: boolean
   isHighlightedRow?: boolean
+  absenceId?: number
+  onDoubleClickRemoveAbsence?: (absenceId: number) => void
   onMouseEnter?: () => void
   onMouseDown?: () => void
   onClick?: (shiftKey: boolean) => void
@@ -55,6 +57,8 @@ export function UnifiedShiftCell({
   shiftAssigned,
   isSelected,
   isHighlightedRow,
+  absenceId,
+  onDoubleClickRemoveAbsence,
   onMouseEnter,
   onMouseDown,
   onClick,
@@ -71,7 +75,11 @@ export function UnifiedShiftCell({
 
   function handleClick(e: React.MouseEvent) {
     const { shiftKey } = e
-    if (onDoubleClickRemove && shiftAssigned) {
+    const needsDoubleClickDelay =
+      (onDoubleClickRemove && shiftAssigned) ||
+      (onDoubleClickRemoveAbsence && absenceId !== undefined)
+
+    if (needsDoubleClickDelay) {
       if (clickTimerRef.current) {
         clearTimeout(clickTimerRef.current)
         clickTimerRef.current = null
@@ -86,6 +94,11 @@ export function UnifiedShiftCell({
     if (clickTimerRef.current) {
       clearTimeout(clickTimerRef.current)
       clickTimerRef.current = null
+    }
+    // Absence-Delete hat Vorrang vor Shift-Delete
+    if (absenceId !== undefined) {
+      onDoubleClickRemoveAbsence?.(absenceId)
+      return
     }
     if (!shiftAssigned) return
     if (isPinned) {
