@@ -46,6 +46,7 @@ desktop.ini
 !.vscode/settings.json
 !.vscode/extensions.json
 !.vscode/launch.json
+.superpowers/*
 
 # Testdaten (keine echten Klinikdaten ins Repo)
 **/testdata/real/
