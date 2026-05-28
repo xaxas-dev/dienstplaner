@@ -39,11 +39,16 @@ export function DoctorAssignPopover({
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') { onClose(); return }
+      const digit = parseInt(e.key, 10)
+      if (!isNaN(digit) && digit >= 1 && digit <= openShiftsForDay.length && !isPending) {
+        const shift = openShiftsForDay[digit - 1]
+        if (shift) assign(shift.id, doctorId)
+      }
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  }, [onClose, openShiftsForDay, doctorId, isPending, assign])
 
   function assign(shiftId: number, newDoctorId: number | null) {
     mutate(
@@ -77,13 +82,19 @@ export function DoctorAssignPopover({
           <div className="space-y-1.5">
             <p className="text-xs text-ink-3 font-medium">Schicht auswählen</p>
             <div className="flex flex-wrap gap-1.5">
-              {openShiftsForDay.map((s) => (
+              {openShiftsForDay.map((s, idx) => (
                 <button
                   key={s.id}
                   disabled={isPending}
                   onClick={() => assign(s.id, doctorId)}
-                  className="px-2.5 py-1 rounded-full text-xs font-bold bg-paper border border-line hover:border-accent transition"
+                  title={idx < 9 ? `Taste ${idx + 1}` : undefined}
+                  className="relative px-2.5 py-1 rounded-full text-xs font-bold bg-paper border border-line hover:border-accent transition"
                 >
+                  {idx < 9 && (
+                    <span className="absolute -top-1.5 -right-1 text-[8px] font-normal text-ink-3 leading-none bg-card border border-line rounded px-0.5">
+                      {idx + 1}
+                    </span>
+                  )}
                   {s.shift_type?.short_name ?? s.shift_type_id}
                 </button>
               ))}
