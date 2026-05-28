@@ -6,6 +6,28 @@
 
 ---
 
+## Inhaltsverzeichnis
+
+- [0 · Lies das zuerst](#0--lies-das-zuerst)
+- [1 · Design-Tokens (Tailwind config + index.css)](#1--design-tokens-tailwind-config--indexcss)
+- [2 · Schicht-Farbsystem](#2--schicht-farbsystem)
+- [3 · Layout-Shell (AtelierShell)](#3--layout-shell-implementiert-als-atelierShell)
+- [4 · Top-Command-Bar](#4--top-command-bar-über-jeder-seite)
+- [5 · KPI-Sub-Bar](#5--kpi-sub-bar-auf-plan--und-dashboard-seite)
+- [6 · Komponenten-Inventar](#6--komponenten-inventar-zu-bauen--shadcn-anpassen)
+- [7 · Plan-Grid (Herzstück)](#7--plan-grid-herzstück)
+- [8 · Dashboard (Route `/heute`)](#8--dashboard-route-heute)
+- [9 · Ärzte-Liste (Route `/doctors`)](#9--ärzte-liste-route-doctors)
+- [10 · Restliche Listen](#10--restliche-listen-stationen--schichttypen--qualifikationen--regeln)
+- [11 · ⌘K Command Palette](#11--k-command-palette-neu)
+- [12 · Routing & Page-Mapping](#12--routing--page-mapping)
+- [13 · Reihenfolge der Implementierung](#13--reihenfolge-der-implementierung-für-claude-code)
+- [14 · Was bewusst NICHT geändert wird](#14--was-bewusst-nicht-geändert-wird)
+- [15 · Handoff-Pakete](#15--handoff-pakete-vorgefertigt-direkt-übernehmen)
+- [16 · Prompt für Claude Code zum Starten](#16--prompt-für-claude-code-zum-starten)
+
+---
+
 ## 0 · Lies das zuerst
 
 1. Die finale Designrichtung steht in `Dienstplaner Redesign.html`,
