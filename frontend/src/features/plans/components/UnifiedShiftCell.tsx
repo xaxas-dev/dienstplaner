@@ -26,8 +26,11 @@ interface UnifiedShiftCellProps {
   isConflictTarget?: boolean
   isPinned?: boolean
   shiftAssigned?: boolean
+  isSelected?: boolean
+  isHighlightedRow?: boolean
   onMouseEnter?: () => void
-  onClick?: () => void
+  onMouseDown?: () => void
+  onClick?: (shiftKey: boolean) => void
   onDoubleClickRemove?: () => void
   onConflictDotClick?: () => void
   onTarifDotClick?: () => void
@@ -50,7 +53,10 @@ export function UnifiedShiftCell({
   isConflictTarget,
   isPinned,
   shiftAssigned,
+  isSelected,
+  isHighlightedRow,
   onMouseEnter,
+  onMouseDown,
   onClick,
   onDoubleClickRemove,
   onConflictDotClick,
@@ -63,11 +69,16 @@ export function UnifiedShiftCell({
     data: { rotationId, dayKey },
   })
 
-  function handleClick() {
+  function handleClick(e: React.MouseEvent) {
+    const { shiftKey } = e
     if (onDoubleClickRemove && shiftAssigned) {
-      clickTimerRef.current = setTimeout(() => { onClick?.() }, 300)
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current)
+        clickTimerRef.current = null
+      }
+      clickTimerRef.current = setTimeout(() => { onClick?.(shiftKey) }, 300)
     } else {
-      onClick?.()
+      onClick?.(shiftKey)
     }
   }
 
@@ -86,17 +97,17 @@ export function UnifiedShiftCell({
 
   const bereichColor = getDepartmentColor(department)
   const isVN = text === 'V' || text === 'N'
-  const isAbsenceCode = ['U', 'K', 'Fo', 'EZ', 'MuSchu', 'EA'].includes(text)
+  const isAbsenceCode = ['U', 'K', 'FB', 'EZ', 'MuSchu', 'EA'].includes(text)
   const dimmed = focusMode === 'vn' && text !== '' && !isVN && !isAbsenceCode
   const showCrosshair = (isHoveredRow || isHoveredCol) && !dimmed
 
-  // Background: full color in rotation, faint tint outside
   const bg = inRotation ? bereichColor : `${bereichColor}28`
 
   return (
     <div
       ref={setNodeRef}
       onMouseEnter={onMouseEnter}
+      onMouseDown={onMouseDown}
       {...(shiftId !== undefined ? { 'data-shift-id': String(shiftId) } : {})}
       className={cn(
         'relative h-full min-h-[28px] flex items-center justify-center',
@@ -104,18 +115,35 @@ export function UnifiedShiftCell({
         'text-[11px] font-medium leading-none',
         isToday && 'ring-1 ring-inset ring-accent',
         isOver && 'ring-2 ring-inset ring-blue-400',
-        isConflictTarget && 'border-red-400 bg-red-50 ring-1 ring-inset ring-red-300',
+        isConflictTarget && 'bg-red-50/70 ring-1 ring-inset ring-red-400/50',
+        isSelected && 'ring-2 ring-inset ring-accent',
         dimmed && 'opacity-30 grayscale',
       )}
-      style={{ backgroundColor: isConflictTarget ? undefined : bg }}
+      style={{ backgroundColor: isConflictTarget || isSelected ? undefined : bg }}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >
       {/* Crosshair-Highlight */}
-      {showCrosshair && (
+      {showCrosshair && !isSelected && (
         <div
           className="absolute inset-0 pointer-events-none"
           style={{ backgroundColor: 'rgba(198,106,61,0.09)' }}
+        />
+      )}
+
+      {/* Highlighted-Row-Tint */}
+      {isHighlightedRow && !isSelected && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ backgroundColor: 'rgba(198,106,61,0.12)' }}
+        />
+      )}
+
+      {/* Selected-Overlay */}
+      {isSelected && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ backgroundColor: 'rgba(198,106,61,0.15)' }}
         />
       )}
 

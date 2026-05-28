@@ -71,7 +71,7 @@ export function buildUnifiedRows(
 const ABSENCE_CODES: Record<AbsenceType, string> = {
   URLAUB: 'U',
   KRANKHEIT: 'K',
-  FORTBILDUNG: 'Fo',
+  FORTBILDUNG: 'FB',
   ELTERNZEIT: 'EZ',
   MUTTERSCHUTZ: 'MuSchu',
   SONSTIGES: 'EA',
