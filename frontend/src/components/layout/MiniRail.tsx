@@ -52,9 +52,9 @@ export function MiniRail() {
   return (
     <aside className="w-[60px] shrink-0 h-screen bg-card border-r border-line flex flex-col items-center py-3 gap-1">
       {/* Logo-Tile */}
-      <div className="mb-1 shrink-0">
+      <NavLink to="/heute" aria-label="Dashboard" className="mb-1 shrink-0 rounded-xl transition-opacity hover:opacity-80">
         <LogoMark size={38} radius={12} />
-      </div>
+      </NavLink>
 
       {/* Divider */}
       <div className="w-6 h-px bg-line my-1 shrink-0" />
