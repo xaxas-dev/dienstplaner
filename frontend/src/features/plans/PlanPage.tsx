@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { useQueries } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { format } from 'date-fns'
+import { eachDayOfInterval, format, parseISO, isWeekend } from 'date-fns'
 import { de } from 'date-fns/locale'
 import {
   DndContext,
@@ -55,16 +56,28 @@ import { UnifiedPlanGrid } from './components/UnifiedPlanGrid'
 import { ShiftTypeDragBar, parseShiftTypeDragId } from './components/ShiftTypeDragBar'
 import { ContextPanel } from './components/ContextPanel'
 import { DoctorAssignPopover } from './components/DoctorAssignPopover'
+import { ShiftBlockPopover } from './components/ShiftBlockPopover'
+import { AbsenceTypeDragBar, parseAbsenceDragId } from './components/AbsenceTypeDragBar'
+import { AbsenceAssignPopover } from './components/AbsenceAssignPopover'
+import { useDeleteAbsence } from './useDeleteAbsence'
+import type { AbsenceType } from '@/lib/types'
 import { DoctorDragSource, DoctorDragOverlayToken, parseDoctorDragId } from './components/DoctorDragSource'
 import { RotationAssignPopover } from './components/RotationAssignPopover'
 import { parseBereichHeaderDropId, parsePlaceholderDropId, parseRotationMemberDropId } from './components/BereichHeaderRow'
-import type { ShiftWithDetails, TarifWarning, RotationAssignmentWithDetails } from '@/lib/types'
+import { apiGet } from '@/lib/api'
+import type { ShiftWithDetails, TarifWarning, RotationAssignmentWithDetails, INAExclusion } from '@/lib/types'
 
 interface ActiveCell {
   rotationId: number
   doctorId: number
   day: string
   shiftId: number | null
+}
+
+interface SelectedCell {
+  rotationId: number
+  doctorId: number
+  dayKey: string
 }
 
 export function PlanPage() {
@@ -81,7 +94,6 @@ export function PlanPage() {
   })()
 
   const [focusMode, setFocusMode] = useState<'alle' | 'vn'>('alle')
-  const [selectedShiftTypeIndex, setSelectedShiftTypeIndex] = useState<number | null>(null)
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null)
   const [contextShift, setContextShift] = useState<ShiftWithDetails | null>(null)
   const [activeRotationCell, setActiveRotationCell] = useState<{
@@ -102,6 +114,33 @@ export function PlanPage() {
     prevDoctorName: string
     newDoctorName: string
   } | null>(null)
+  const [selectedCells, setSelectedCells] = useState<SelectedCell[]>([])
+  const [multiPopoverOpen, setMultiPopoverOpen] = useState(false)
+  const [highlightedDoctorId, setHighlightedDoctorId] = useState<number | null>(null)
+  const [activeAbsenceCell, setActiveAbsenceCell] = useState<{
+    type: AbsenceType
+    doctorId: number
+    doctorName: string
+    dayKey: string
+  } | null>(null)
+  const [pendingDeleteAbsence, setPendingDeleteAbsence] = useState<{
+    id: number
+    label: string
+    from: string
+    to: string
+  } | null>(null)
+
+  const deleteAbsence = useDeleteAbsence(id)
+
+  const ABSENCE_TYPE_LABELS: Record<AbsenceType, string> = {
+    URLAUB:       'Urlaub',
+    KRANKHEIT:    'Krankheit',
+    FORTBILDUNG:  'Fortbildung',
+    ELTERNZEIT:   'Elternzeit',
+    MUTTERSCHUTZ: 'Mutterschutz',
+    SONSTIGES:    'Sonstiges',
+  }
+
   const { data: plan } = usePlan(id)
   const { data: shifts = [], isError: shiftsError } = usePlanShifts(id)
   const { data: conflicts } = usePlanConflicts(id)
@@ -119,6 +158,40 @@ export function PlanPage() {
   const [pendingDeleteRotation, setPendingDeleteRotation] = useState<RotationAssignmentWithDetails | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cycleIdxRef = useRef({ open: 0, conflict: 0 })
+
+  // INA-Exclusions für alle Rotationsärzte laden (für dragConflictMap)
+  const rotationDoctorIds = useMemo(
+    () => [...new Set(rotations.map((r) => r.doctor_id))],
+    [rotations],
+  )
+
+  const inaExclusionQueries = useQueries({
+    queries: rotationDoctorIds.map((doctorId) => ({
+      queryKey: ['ina-exclusions', doctorId] as const,
+      queryFn: () => apiGet<INAExclusion[]>(`/api/doctors/${doctorId}/ina-exclusions`),
+    })),
+  })
+
+  const inaExclusionsByDoctor = useMemo(() => {
+    const map = new Map<number, INAExclusion[]>()
+    rotationDoctorIds.forEach((doctorId, i) => {
+      map.set(doctorId, inaExclusionQueries[i]?.data ?? [])
+    })
+    return map
+  }, [rotationDoctorIds, inaExclusionQueries])
+
+  // Zugeteilt-Set für DoctorDragSource
+  const assignedDoctorIds = useMemo(
+    () => new Set(rotations.map((r) => r.doctor_id)),
+    [rotations],
+  )
+
+  // Ausgewählte Zellen als Set-Key für schnelles Lookup
+  const selectedCellKeys = useMemo(
+    () => new Set(selectedCells.map((c) => `${c.rotationId}-${c.dayKey}`)),
+    [selectedCells],
+  )
 
   function handleDeletePlan() {
     deletePlan.mutate(id, {
@@ -155,25 +228,28 @@ export function PlanPage() {
     }
   }, [shiftsError, navigate])
 
-  // Cleanup highlight timer on unmount
+  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current)
     }
   }, [])
 
-  // Tastenkürzel 0–9 für Schichttyp-Auswahl
+  // Cycle-Index zurücksetzen wenn sich Konflikte ändern
+  useEffect(() => {
+    cycleIdxRef.current = { open: 0, conflict: 0 }
+  }, [conflicts])
+
+  // ESC-Taste: Mehrfach-Auswahl aufheben
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      const tag = (document.activeElement as HTMLElement | null)?.tagName?.toUpperCase()
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
-      const digit = parseInt(e.key, 10)
-      if (isNaN(digit)) return
-      setSelectedShiftTypeIndex(digit === 0 ? null : digit - 1)
+      if (e.key === 'Escape' && selectedCells.length > 0 && !multiPopoverOpen) {
+        setSelectedCells([])
+      }
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [selectedCells.length, multiPopoverOpen])
 
   const scrollToFirstMatch = useCallback((type: 'open' | 'conflict') => {
     const candidateIds: number[] =
@@ -181,10 +257,13 @@ export function PlanPage() {
         ? (conflicts?.open_shifts?.map((s) => s.shift_id) ?? [])
         : (conflicts?.conflicts?.map((c) => c.shift_id) ?? [])
 
-    const firstId = candidateIds[0]
-    if (firstId == null) return
+    if (!candidateIds.length) return
 
-    const el = document.querySelector(`[data-shift-id="${firstId}"]`)
+    const idx = cycleIdxRef.current[type] % candidateIds.length
+    cycleIdxRef.current[type] = idx + 1
+
+    const shiftId = candidateIds[idx]
+    const el = document.querySelector(`[data-shift-id="${shiftId}"]`)
     if (!el) return
 
     el.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -221,17 +300,99 @@ export function PlanPage() {
       label: 'Offen',
       value: openCount,
       tone: openCount > 0 ? ('warn' as const) : ('default' as const),
+      onClick: openCount > 0 ? () => scrollToFirstMatch('open') : undefined,
     },
     {
       label: 'Konflikte',
       value: conflictCount,
       tone: conflictCount > 0 ? ('warn' as const) : ('default' as const),
+      onClick: conflictCount > 0 ? () => scrollToFirstMatch('conflict') : undefined,
     },
   ]
 
-  function handleCellClick(rotationId: number, doctorId: number, day: string, shiftId: number | null) {
+  function handleCellClick(
+    rotationId: number,
+    doctorId: number,
+    day: string,
+    shiftId: number | null,
+    shiftKey: boolean,
+  ) {
+    if (shiftKey) {
+      // Shift+Klick: Zelle zur Mehrfach-Auswahl hinzufügen / entfernen
+      setSelectedCells((prev) => {
+        const exists = prev.some((c) => c.rotationId === rotationId && c.dayKey === day)
+        if (exists) return prev.filter((c) => !(c.rotationId === rotationId && c.dayKey === day))
+        return [...prev, { rotationId, doctorId, dayKey: day }]
+      })
+      return
+    }
+
+    if (selectedCells.length > 0) {
+      // Regulärer Klick während Auswahl aktiv → Dienstblock-Popup öffnen
+      setMultiPopoverOpen(true)
+      return
+    }
+
     setContextShift(null)
     setActiveCell({ rotationId, doctorId, day, shiftId })
+  }
+
+  function handleMultiAssign(shiftTypeId: number) {
+    let skipped = 0
+    for (const cell of selectedCells) {
+      const shiftId = findShiftId(shifts, cell.dayKey, shiftTypeId)
+      if (shiftId === null) { skipped++; continue }
+      assignShift.mutate(
+        { shiftId, data: { doctor_id: cell.doctorId } },
+        { onError: () => toast.error('Fehler beim Speichern einer Zuweisung') },
+      )
+    }
+    if (skipped > 0) toast.info(`${skipped} Zelle(n) übersprungen — Schichttyp an diesem Tag nicht vorhanden`)
+    setSelectedCells([])
+    setMultiPopoverOpen(false)
+  }
+
+  function handleRangeSelected(rotationId: number, doctorId: number, days: string[]) {
+    setSelectedCells(days.map((dk) => ({ rotationId, doctorId, dayKey: dk })))
+    setMultiPopoverOpen(true)
+  }
+
+  function handleMultiRemove() {
+    let skipped = 0
+    for (const cell of selectedCells) {
+      const shift = shifts.find((s) => s.doctor_id === cell.doctorId && s.shift_date === cell.dayKey)
+      if (!shift) { skipped++; continue }
+      if (shift.is_pinned) { skipped++; continue }
+      assignShift.mutate(
+        { shiftId: shift.id, data: { doctor_id: null } },
+        { onError: () => toast.error('Fehler beim Entfernen einer Zuweisung') },
+      )
+    }
+    if (skipped > 0) toast.info(`${skipped} Zelle(n) übersprungen — keine Zuweisung oder gepinnt`)
+    setSelectedCells([])
+    setMultiPopoverOpen(false)
+  }
+
+  function handleCloseMultiPopover() {
+    setMultiPopoverOpen(false)
+    setSelectedCells([])
+  }
+
+  function handleDoubleClickRemoveAbsence(absenceId: number) {
+    const absence = absences.find((a) => a.id === absenceId)
+    if (!absence) return
+    const fromFmt = (() => {
+      try { return format(parseISO(absence.valid_from), 'dd.MM.', { locale: de }) } catch { return absence.valid_from }
+    })()
+    const toFmt = (() => {
+      try { return format(parseISO(absence.valid_to), 'dd.MM.yyyy', { locale: de }) } catch { return absence.valid_to }
+    })()
+    setPendingDeleteAbsence({
+      id: absenceId,
+      label: ABSENCE_TYPE_LABELS[absence.absence_type],
+      from: fromFmt,
+      to: toFmt,
+    })
   }
 
   const sensors = useSensors(
@@ -253,20 +414,51 @@ export function PlanPage() {
     const shiftTypeId = parseShiftTypeDragId(activeId)
     if (shiftTypeId !== null) {
       const map = new Map<number, Set<string>>()
+      const planFrom = plan?.valid_from
+      const planTo = plan?.valid_to
+      if (!planFrom || !planTo) { setDragConflictMap(map); return }
 
-      // Build map: doctorId → Set of dates with existing shifts
-      shifts?.forEach((shift) => {
-        if (shift.doctor_id == null) return
-        const dates = map.get(shift.doctor_id) ?? new Set<string>()
-        dates.add(shift.shift_date)
-        map.set(shift.doctor_id, dates)
+      function markDate(doctorId: number, dateStr: string) {
+        if (!map.has(doctorId)) map.set(doctorId, new Set())
+        map.get(doctorId)!.add(dateStr)
+      }
+
+      // 1. Abwesenheiten
+      absences.forEach((absence) => {
+        const from = absence.valid_from > planFrom ? absence.valid_from : planFrom
+        const to = absence.valid_to < planTo ? absence.valid_to : planTo
+        if (from > to) return
+        eachDayOfInterval({ start: parseISO(from), end: parseISO(to) }).forEach((d) => {
+          markDate(absence.doctor_id, format(d, 'yyyy-MM-dd'))
+        })
       })
 
-      // Also mark dates from known conflicts
-      conflicts?.conflicts?.forEach((conflict) => {
-        const dates = map.get(conflict.doctor_id) ?? new Set<string>()
-        dates.add(String(conflict.shift_date))
-        map.set(conflict.doctor_id, dates)
+      // 2. INA-blockierende Rotationen (Werktage/Wochenenden)
+      rotations.forEach((rotation) => {
+        const dept = rotation.department
+        if (!dept || (!dept.blocks_ina_weekdays && !dept.blocks_ina_weekends)) return
+        const from = rotation.valid_from > planFrom ? rotation.valid_from : planFrom
+        const to = rotation.valid_to < planTo ? rotation.valid_to : planTo
+        if (from > to) return
+        eachDayOfInterval({ start: parseISO(from), end: parseISO(to) }).forEach((d) => {
+          const we = isWeekend(d)
+          if ((we && dept.blocks_ina_weekends) || (!we && dept.blocks_ina_weekdays)) {
+            markDate(rotation.doctor_id, format(d, 'yyyy-MM-dd'))
+          }
+        })
+      })
+
+      // 3. INA-Ausschlüsse (manuelle Sperren)
+      inaExclusionsByDoctor.forEach((exclusions, doctorId) => {
+        exclusions.forEach((excl) => {
+          const exclTo = excl.valid_to ?? planTo
+          const from = excl.valid_from > planFrom ? excl.valid_from : planFrom
+          const to = exclTo < planTo ? exclTo : planTo
+          if (from > to) return
+          eachDayOfInterval({ start: parseISO(from), end: parseISO(to) }).forEach((d) => {
+            markDate(doctorId, format(d, 'yyyy-MM-dd'))
+          })
+        })
       })
 
       setDragConflictMap(map)
@@ -309,22 +501,38 @@ export function PlanPage() {
       return
     }
 
+    // ── Absence → Cell-Drop ───────────────────────────────────────────────────
+    const absenceType = parseAbsenceDragId(activeId)
+    if (absenceType !== null) {
+      const cellMatch = overId.match(/^cell-(\d+)-(\d{4}-\d{2}-\d{2})$/)
+      if (!cellMatch) return
+      const rotationId = Number(cellMatch[1])
+      const dayKey = cellMatch[2]
+      const rotation = rotations.find((r) => r.id === rotationId)
+      if (!rotation) return
+      const doctor = doctors.find((d) => d.id === rotation.doctor_id)
+      setActiveAbsenceCell({
+        type: absenceType,
+        doctorId: rotation.doctor_id,
+        doctorName: doctor?.name ?? '',
+        dayKey,
+      })
+      return
+    }
+
     // ── ShiftType → Cell-Drop ─────────────────────────────────────────────────
     const shiftTypeId = parseShiftTypeDragId(activeId)
     if (shiftTypeId === null) return
 
-    // Ziel-Zelle parsen: cell-{rotationId}-{yyyy-MM-dd}
     const cellMatch = overId.match(/^cell-(\d+)-(\d{4}-\d{2}-\d{2})$/)
     if (!cellMatch) return
     const rotationId = Number(cellMatch[1])
     const dayKey = cellMatch[2]
 
-    // Arzt aus Rotation ermitteln
     const rotation = rotations.find((r) => r.id === rotationId)
     if (!rotation) return
     const targetDoctorId = rotation.doctor_id
 
-    // Shift für diesen Tag + ShiftType suchen
     const shiftId = findShiftId(shifts, dayKey, shiftTypeId)
     if (shiftId === null) {
       const st = shiftTypes.find((s) => s.id === shiftTypeId)
@@ -446,48 +654,44 @@ export function PlanPage() {
         <KpiBar tiles={kpiTiles} />
       </div>
 
-      {/* Summary Bar */}
-      {plan && (openCount > 0 || conflictCount > 0) && (
-        <div className="flex gap-4 px-10 py-1.5 bg-paper border-b border-line text-xs">
-          {openCount > 0 && (
-            <button
-              className="font-medium text-warn-ink hover:underline"
-              onClick={() => scrollToFirstMatch('open')}
-            >
-              {openCount} offen
-            </button>
-          )}
-          {conflictCount > 0 && (
-            <button
-              className="font-medium text-red-600 hover:underline"
-              onClick={() => scrollToFirstMatch('conflict')}
-            >
-              {conflictCount} Konflikte
-            </button>
-          )}
+      {/* DnD-Bars: Dienste + Abwesenheiten */}
+      <div className="px-6 pb-2 flex items-center gap-3">
+        <ShiftTypeDragBar
+          shiftTypes={shiftTypes}
+          focusMode={focusMode}
+          onFocusToggle={() => setFocusMode((m) => (m === 'alle' ? 'vn' : 'alle'))}
+        />
+        <AbsenceTypeDragBar />
+      </div>
+
+      {/* Mehrfach-Auswahl-Indikator */}
+      {selectedCells.length > 0 && (
+        <div className="px-6 pb-2 flex items-center gap-2">
+          <span className="text-xs text-ink-3">
+            {selectedCells.length} {selectedCells.length === 1 ? 'Zelle' : 'Zellen'} ausgewählt
+          </span>
+          <button
+            onClick={() => setMultiPopoverOpen(true)}
+            className="px-2.5 py-1 rounded-lg text-xs font-medium bg-accent text-white border border-accent hover:bg-accent/90 transition"
+          >
+            Dienst zuweisen
+          </button>
+          <button
+            onClick={() => setSelectedCells([])}
+            className="px-2.5 py-1 rounded-lg text-xs font-medium bg-paper text-ink-3 border border-line hover:bg-paper/80 transition"
+          >
+            Abbrechen
+          </button>
         </div>
       )}
 
-      {/* ShiftType-DragBar + Fokus-Toggle */}
-      <div className="px-6 pb-2 flex items-center gap-3">
-        <div className="flex-1">
-          <ShiftTypeDragBar shiftTypes={shiftTypes} focusMode={focusMode} selectedIndex={selectedShiftTypeIndex} />
-        </div>
-        <button
-          onClick={() => setFocusMode((m) => (m === 'alle' ? 'vn' : 'alle'))}
-          className={[
-            'px-3 py-1.5 rounded-lg text-xs font-medium border transition',
-            focusMode === 'vn'
-              ? 'bg-accent text-white border-accent'
-              : 'bg-paper text-ink-3 border-line hover:bg-paper/80',
-          ].join(' ')}
-        >
-          {focusMode === 'vn' ? 'Fokus: V+N' : 'Alle Dienste'}
-        </button>
-      </div>
-
       <div className="flex flex-1 overflow-hidden gap-4 px-6 pb-6">
-        <DoctorDragSource doctors={doctors} />
+        <DoctorDragSource
+          doctors={doctors}
+          rotationDoctorIds={assignedDoctorIds}
+          highlightedDoctorId={highlightedDoctorId}
+          onHighlightDoctor={setHighlightedDoctorId}
+        />
         <div className="flex flex-1 min-w-0 overflow-hidden">
           {plan && (
             <UnifiedPlanGrid
@@ -500,7 +704,10 @@ export function PlanPage() {
               tarifWarningsByShift={tarifWarningsByShift}
               focusMode={focusMode}
               dragConflictMap={dragConflictMap}
+              selectedCellKeys={selectedCellKeys}
+              highlightedDoctorId={highlightedDoctorId}
               onCellClick={handleCellClick}
+              onRangeSelected={handleRangeSelected}
               onDoubleClickRemove={(shiftId) => {
                 assignShift.mutate({ shiftId, data: { doctor_id: null } })
               }}
@@ -525,6 +732,7 @@ export function PlanPage() {
                 setActiveCell(null)
                 setContextShift(shift)
               }}
+              onDoubleClickRemoveAbsence={handleDoubleClickRemoveAbsence}
             />
           )}
         </div>
@@ -549,6 +757,27 @@ export function PlanPage() {
               (s.doctor_id === null || s.doctor_id === undefined),
           )}
           onClose={() => setActiveCell(null)}
+        />
+      )}
+
+      {activeAbsenceCell && (
+        <AbsenceAssignPopover
+          doctorId={activeAbsenceCell.doctorId}
+          doctorName={activeAbsenceCell.doctorName}
+          absenceType={activeAbsenceCell.type}
+          defaultFrom={activeAbsenceCell.dayKey}
+          planId={id}
+          onClose={() => setActiveAbsenceCell(null)}
+        />
+      )}
+
+      {multiPopoverOpen && selectedCells.length > 0 && (
+        <ShiftBlockPopover
+          selectedCount={selectedCells.length}
+          shiftTypes={shiftTypes}
+          onSelectShiftType={handleMultiAssign}
+          onRemoveAll={handleMultiRemove}
+          onClose={handleCloseMultiPopover}
         />
       )}
 
@@ -618,7 +847,7 @@ export function PlanPage() {
         <AlertDialogHeader>
           <AlertDialogTitle>Arzt aus Bereich entfernen?</AlertDialogTitle>
           <AlertDialogDescription>
-            Nicht-gepinnte Schichtzuweisungen im Zeitraum werden ebenfalls gelöscht.
+            Alle Schichtzuweisungen des Arztes in diesem Zeitraum werden ebenfalls gelöscht.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -654,6 +883,40 @@ export function PlanPage() {
             disabled={deletePlan.isPending}
           >
             {deletePlan.isPending ? 'Wird gelöscht…' : 'Löschen'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    <AlertDialog
+      open={pendingDeleteAbsence !== null}
+      onOpenChange={(open) => { if (!open) setPendingDeleteAbsence(null) }}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Abwesenheit löschen?</AlertDialogTitle>
+          <AlertDialogDescription>
+            <strong>{pendingDeleteAbsence?.label}</strong>{' '}
+            {pendingDeleteAbsence?.from}–{pendingDeleteAbsence?.to} wird vollständig gelöscht.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => setPendingDeleteAbsence(null)}>
+            Abbrechen
+          </AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-red-600 hover:bg-red-700 text-white"
+            onClick={() => {
+              if (!pendingDeleteAbsence) return
+              deleteAbsence.mutate(pendingDeleteAbsence.id, {
+                onSuccess: () => toast.success('Abwesenheit gelöscht'),
+                onError: () => toast.error('Löschen fehlgeschlagen'),
+              })
+              setPendingDeleteAbsence(null)
+            }}
+            disabled={deleteAbsence.isPending}
+          >
+            Löschen
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
