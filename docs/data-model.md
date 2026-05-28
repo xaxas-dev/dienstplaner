@@ -4,6 +4,41 @@ Dieser Artikel beschreibt die Stammdaten-Entitäten des Dienstplaners,
 implementiert in Meilenstein M1. Plan-Entitäten (Plan, Schicht, Zuweisung,
 Abwesenheit, Wunsch) werden in M2 ergänzt.
 
+## Inhaltsverzeichnis
+
+- [Entitäten-Übersicht](#entitäten-übersicht)
+- [Erläuterungen](#erläuterungen)
+  - [Warum `EmploymentPeriod` zeitabhängig ist](#warum-employmentperiod-zeitabhängig-ist)
+  - [Was `DoctorType.EXTERNAL` bedeutet](#was-doctortypeexternal-bedeutet)
+  - [`entry_date` und `virtual_entry_date` am Arzt](#entry_date-und-virtual_entry_date-am-arzt)
+  - [`title` am Arzt (Migration 0007)](#title-am-arzt-migration-0007)
+  - [`weiterbildungsjahr` als computed property](#weiterbildungsjahr-als-computed-property)
+  - [Warum `is_external` und `is_shift_relevant` getrennt sind](#warum-is_external-und-is_shift_relevant-getrennt-sind)
+  - [`requires_full_time` an Bereichen](#requires_full_time-an-bereichen)
+  - [`min_headcount` und `max_headcount` an Bereichen (Sollbesetzung)](#min_headcount-und-max_headcount-an-bereichen-sollbesetzung)
+  - [Wie `RuleOverride` funktioniert (Ebenen A und B)](#wie-ruleoverride-funktioniert-ebenen-a-und-b)
+- [Initiale Bereiche (23 Stück)](#initiale-bereiche-23-stück)
+- [Initiale Schichttypen](#initiale-schichttypen)
+- [App-Einstellungen (app_settings)](#app-einstellungen-app_settings)
+- [Plan-Entitäten (ab M2)](#plan-entitäten-ab-m2)
+  - [Übersicht: Plan-Modell](#übersicht-plan-modell)
+  - [Hybrid-Modell: Schicht ohne Bereich](#hybrid-modell-schicht-ohne-bereich)
+  - [Plan-Status und Editierbarkeit](#plan-status-und-editierbarkeit)
+  - [Plan-Versionierung als JSON-Snapshot](#plan-versionierung-als-json-snapshot)
+  - [Pin-Konzept (Variante C)](#pin-konzept-variante-c)
+  - [Geteilte Rotationen](#geteilte-rotationen)
+  - [Abwesenheiten (plan-unabhängig)](#abwesenheiten-plan-unabhängig)
+  - [Wünsche (date-basiert)](#wünsche-date-basiert)
+- [INA-Verfügbarkeitsmodell (ab M2)](#ina-verfügbarkeitsmodell-ab-m2)
+  - [Überblick](#überblick)
+  - [CK-Sonderfall](#ck-sonderfall)
+  - [Einarbeitung als Rotation](#einarbeitung-als-rotation)
+  - [INAExclusion](#inaexclusion)
+  - [Department-Erweiterungen](#department-erweiterungen)
+  - [Cascade-Verhalten](#cascade-verhalten)
+
+---
+
 ## Entitäten-Übersicht
 
 ```mermaid
