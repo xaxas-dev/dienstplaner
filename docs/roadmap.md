@@ -25,6 +25,8 @@ Solver-ist-additiv).
 | M2-004 | Shift-Assignment (Click-Popover) | ✅ |
 | M2-005 | Konflikt-Engine (NOT_AVAILABLE, DOUBLE_BOOKED) | ✅ |
 | M2-006 | Plan-Grid Polish (Surface, Tokens) | ✅ |
+| M1-012 | Command Palette (⌘K / Strg+K, Entity-Search, Recents) | ✅ |
+| M2-007 | Unified Plan Grid (Dual-Tab entfernt, Rotation+Schicht+Absence in einer Ansicht) | ✅ |
 
 ## Phase A — Lücke schließen (M3–M7, neu definiert)
 
@@ -47,8 +49,7 @@ Validierung im Drop-Pfad (weiche Validierung, ADR-033).
 **Abhängigkeiten.** Keine — RotationGrid + RotationAssignPopover sind
 seit M2-006/feat/bereich-grid vollständig.
 
-**Status.** 🚧 In Arbeit (Sub-Schritt A/A' committed, B–F ausstehend):
-`tasks/open/M3-001-plan-editor-v2-dnd.md`.
+**Status.** ✅ Abgeschlossen (2026-05-21). dnd-kit Drop-Target an RotationGrid-Zellen; `RotationAssignPopover` mit `preselectedDoctorId`-Prop. Klick-Pfad als a11y-Fallback erhalten.
 
 ### M4-001 — Verfügbarkeit & Rotation Management UI
 
@@ -63,7 +64,7 @@ Nutzung des bestehenden `get_ina_availability`-Services.
 **Abhängigkeiten.** M3-001 (geteiltes Plan-UX-Vokabular: Popover-Pattern,
 dp-Tokens, dnd-kit falls relevant).
 
-**Status.** ⏳ Geplant.
+**Status.** ✅ Abgeschlossen (2026-05-21). Frontend-CRUD für RotationAssignment, INAExclusion, EmploymentPeriod, Absence; Verfügbarkeitsanzeige mit Amber-Ring/-Dot in RotationGrid und DoctorAssignPopover.
 
 ### M5-001 — Tarif-Soft-Validierung (Framework, ohne konkrete Werte)
 
@@ -81,15 +82,14 @@ Frontend-Marker (analog Konflikt-Dot). Keine Schreibpfad-Blockade.
 **Abhängigkeiten.** M2-005 (Konflikt-Pattern als Vorlage), M3-001
 (Grid-Marker-Konvention).
 
-**Status.** ⏳ Geplant.
+**Status.** ✅ Abgeschlossen (2026-05-21). `TarifRule`-Protocol, leerer `REGISTERED_RULES`-Prod-Regelsatz, `GET /api/plans/{id}/tarif-warnings`, Sand-Dot (§) im ShiftCell als weicher Hint.
 
 ### M6-001 — Excel-Export
 
 **Ziel.** Einen Plan als `.xlsx`-Datei für das klinikinterne Tool
 exportieren.
 
-**Kerndeliverable.** `POST /api/plans/{id}/export` mit openpyxl
-(Stack-Bestandteil); Frontend-Download-Button in der CommandBar.
+**Kerndeliverable.** `GET /api/plans/{id}/export` mit openpyxl (Stack-Bestandteil, ADR-063); Frontend-Download-Button via `window.location.assign` in der CommandBar.
 
 **Abhängigkeiten.** Excel-Spaltenschema muss vor Start mit dem
 Klinik-Tool abgeglichen werden (siehe offene Domänen-Frage zum Schema).
