@@ -11,6 +11,7 @@ from collections import Counter
 
 from sqlalchemy.orm import Session
 
+from app.models.shift_type import ShiftType as ShiftTypeORM
 from app.repositories.doctor_repository import list_doctors
 from app.repositories.shift_repository import list_shifts_for_plan
 from app.services.employment_period_service import get_fte_for_period
@@ -32,6 +33,12 @@ def to_solver(db: Session, plan_id: int) -> ShiftSchedule:
     Timefold-Constraints dürfen keine DB-Queries ausführen — der Snapshot
     entkoppelt die Constraint-Logik vom Datenbankzugriff.
     """
+    # ShiftType-Map: is_bereitschaftsdienst-Flag einmalig pro Aufruf laden
+    shift_type_bd_map: dict[int, bool] = {
+        st.id: st.is_bereitschaftsdienst
+        for st in db.query(ShiftTypeORM).filter(ShiftTypeORM.active == True).all()  # noqa: E712
+    }
+
     # --- Schichten laden (nötig für Plan-Datum-Range) ---
     orm_shifts = list_shifts_for_plan(db, plan_id)
 
@@ -100,6 +107,7 @@ def to_solver(db: Session, plan_id: int) -> ShiftSchedule:
                 shift_type_id=shift.shift_type_id,
                 doctor=assigned_doctor,
                 is_pinned=shift.is_pinned,
+                is_bereitschaftsdienst=shift_type_bd_map.get(shift.shift_type_id, False),
             )
         )
 

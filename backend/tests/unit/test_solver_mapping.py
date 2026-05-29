@@ -491,3 +491,62 @@ def test_to_solver_fair_targets_leer_bei_keinem_aktiven_arzt(
 
     assert schedule.doctors == []
     assert len(schedule.shifts) == 1
+
+
+# ---------------------------------------------------------------------------
+# BD-Snapshot-Tests (M8-005/D)
+# ---------------------------------------------------------------------------
+
+
+def test_to_solver_shift_is_bd_propagiert(
+    db: Session, plan: "Plan", doctor_alice: "Doctor"
+) -> None:
+    """ShiftType mit is_bereitschaftsdienst=True → SolverShift.is_bereitschaftsdienst=True."""
+    st = ShiftType(name="BD-Typ", short_name="BD", display_order=9, active=True,
+                   is_bereitschaftsdienst=True)
+    db.add(st)
+    db.flush()
+
+    shift = Shift(plan_id=plan.id, shift_date=date(2026, 6, 1), shift_type_id=st.id)
+    db.add(shift)
+    db.flush()
+
+    schedule = to_solver(db, plan.id)
+
+    s = next(sv for sv in schedule.shifts if sv.id == shift.id)
+    assert s.is_bereitschaftsdienst is True
+
+
+def test_to_solver_shift_is_bd_false_default(
+    db: Session, plan: "Plan", shift_type_v: "ShiftType", doctor_alice: "Doctor"
+) -> None:
+    """ShiftType ohne BD-Flag → SolverShift.is_bereitschaftsdienst=False."""
+    shift = Shift(plan_id=plan.id, shift_date=date(2026, 6, 1), shift_type_id=shift_type_v.id)
+    db.add(shift)
+    db.flush()
+
+    schedule = to_solver(db, plan.id)
+
+    s = next(sv for sv in schedule.shifts if sv.id == shift.id)
+    assert s.is_bereitschaftsdienst is False
+
+
+def test_to_solver_shift_type_nicht_in_map_fallback_false(
+    db: Session, plan: "Plan", doctor_alice: "Doctor"
+) -> None:
+    """Inaktiver ShiftType nicht in BD-Map → Fallback False, kein KeyError."""
+    st_inactive = ShiftType(
+        name="Inaktiv-BD", short_name="IBD", display_order=10, active=False,
+        is_bereitschaftsdienst=True,
+    )
+    db.add(st_inactive)
+    db.flush()
+
+    shift = Shift(plan_id=plan.id, shift_date=date(2026, 6, 1), shift_type_id=st_inactive.id)
+    db.add(shift)
+    db.flush()
+
+    schedule = to_solver(db, plan.id)
+
+    s = next(sv for sv in schedule.shifts if sv.id == shift.id)
+    assert s.is_bereitschaftsdienst is False
