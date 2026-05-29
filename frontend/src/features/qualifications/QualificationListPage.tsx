@@ -49,6 +49,8 @@ export function QualificationListPage() {
 
   const sorted = [...(qualifications ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'de'))
 
+  const count = sorted.length
+
   const filterChips = [{
     label: includeInactive ? 'Inaktive ausblenden' : 'Inaktive anzeigen',
     active: includeInactive,
@@ -58,7 +60,8 @@ export function QualificationListPage() {
   return (
     <div className="flex flex-col h-full">
       <CommandBar
-        title="Qualifikationen"
+        titleAccent="Qualifikationen"
+        title={count > 0 ? `· ${count} Qualifikationen` : ''}
         filters={filterChips}
         showSearch={false}
         primaryAction={{ label: '+ Neue Qualifikation', onClick: handleNewClick }}

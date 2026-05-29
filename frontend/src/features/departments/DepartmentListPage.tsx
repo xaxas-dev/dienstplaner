@@ -41,6 +41,8 @@ export function DepartmentListPage() {
     (a, b) => a.display_order - b.display_order || a.name.localeCompare(b.name, 'de'),
   )
 
+  const count = sorted.length
+
   const filterChips = [{
     label: includeInactive ? 'Inaktive ausblenden' : 'Inaktive anzeigen',
     active: includeInactive,
@@ -50,7 +52,8 @@ export function DepartmentListPage() {
   return (
     <div className="flex flex-col h-full">
       <CommandBar
-        title="Stationen"
+        titleAccent="Stationen"
+        title={count > 0 ? `· ${count} ${count === 1 ? 'Station' : 'Stationen'}` : ''}
         filters={filterChips}
         showSearch={false}
         primaryAction={{ label: '+ Neue Station', onClick: handleNewClick }}

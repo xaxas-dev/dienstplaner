@@ -61,6 +61,8 @@ export function ShiftTypeListPage() {
     (a, b) => a.display_order - b.display_order || a.name.localeCompare(b.name, 'de'),
   )
 
+  const count = sorted.length
+
   const filterChips = [
     {
       label: includeInactive ? 'Inaktive ausblenden' : 'Inaktive anzeigen',
@@ -72,7 +74,8 @@ export function ShiftTypeListPage() {
   return (
     <div className="flex flex-col h-full">
       <CommandBar
-        title="Schichttypen"
+        titleAccent="Schichttypen"
+        title={count > 0 ? `· ${count} ${count === 1 ? 'Schichttyp' : 'Schichttypen'}` : ''}
         filters={filterChips}
         showSearch={false}
         primaryAction={{ label: '+ Neuer Schichttyp', onClick: handleNewClick }}
