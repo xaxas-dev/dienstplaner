@@ -104,7 +104,11 @@ export function TodayPage() {
                 <p className="text-sm text-ink-3 italic">Keine Hinweise</p>
               ) : (
                 summary.attention.map((item, i) => (
-                  <AttentionRow key={i} item={item} />
+                  <AttentionRow
+                    key={i}
+                    item={item}
+                    href={planSlug ? `/plans/${planSlug}?date=${item.date}` : undefined}
+                  />
                 ))
               )}
             </div>
