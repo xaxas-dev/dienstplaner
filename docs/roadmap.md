@@ -117,7 +117,8 @@ schließen.
 | M8-002 | Solver-Apply (`/apply`, DB-Write ohne JVM) | ✅ |
 | M8-003 | Solver-Constraint ABSENT_DOCTOR (logisch-hart) | ✅ Abgeschlossen (2026-05-24). Availability-Snapshot-Pattern; `get_ina_availability_for_period` wiederverwendet. |
 | M8-004 | Solver-Constraint FAIR_DISTRIBUTION (soft, FTE-gewichtet) | ✅ Abgeschlossen (2026-05-26). Snapshot-Pattern (ADR-076); `get_fte_for_period` neu. `group_by(key1, key2, count())` + 3-arg Lambda verifiziert (timefold==1.24.0b0). |
-| M8-005+ | Weitere Solver-Constraints (regulatorisch-hart, weitere soft) | ⏳ Regulatorisch-hart: Tarif-Werte nötig (OQ-006) |
+| M8-005 | Solver-Constraint MAX_BD_PER_MONTH (§ 7 Abs. 5a TV-Ärzte/TdL, max. 4 BD/Monat) | ✅ Abgeschlossen (2026-05-29). ShiftType-Flag `is_bereitschaftsdienst`; Snapshot in `to_solver()`; regulatorisch-harter Hard-Score. |
+| M8-006+ | Weitere Solver-Constraints (MAX_WEEKENDS_PER_MONTH, MAX_WEEKLY_HOURS, MIN_REST_TIME) | ⏳ Folge-Milestones |
 
 ## Phase B — Frontend (separater Strang)
 

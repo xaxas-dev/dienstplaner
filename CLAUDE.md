@@ -112,6 +112,17 @@ Details: docs/architecture.md
   `tarif_rules.py` erweitern. `__eq__/__hash__` von `SolverDoctor` bleiben auf
   `doctor_id`. Neue Soft-Constraint = `mapping.py` + `domain.py` + `constraints.py`
   + `tarif_rules.py` + ADR + `employment_period_service.py` (wenn FTE nötig).
+- **Tarif-Werte (M8-005, hardcoded in `backend/app/solver/tarif_rules.py`):**
+  - `MAX_BD_PER_MONAT = 4` — § 7 Abs. 5a Satz 1 TV-Ärzte/TdL i.d.F. 9. ÄnderungsTV.
+    Ausnahmen (5/Quartal per Satz 2, 7/Monat per Individualvereinbarung per Satz 4)
+    sind Phase-B-Override-Fälle. Nie ohne explizite Anforderung ändern.
+  - `ShiftType.is_bereitschaftsdienst: bool` — Klassifizierungsfeld. Default `False`.
+    Klinik konfiguriert welche ShiftTypes als BD zählen. Snapshot-Propagation:
+    `to_solver()` liest `ShiftTypeORM.active == True` einmalig in eine Map und
+    setzt `SolverShift.is_bereitschaftsdienst` via `.get(shift_type_id, False)`.
+    Kein DB-Zugriff im Constraint (Snapshot-Pattern ADR-071).
+  - Neue regulatorisch-harte Constraint = `mapping.py` + `domain.py` +
+    `constraints.py` + `tarif_rules.py` (ConstraintId + REGULATORISCH_HART) + ADR.
 - **Timefold-Python-API (empirisch verifiziert, timefold==1.24.0b0):**
   - Dekoratoren: `@planning_entity`, `@planning_solution`, `@constraint_provider`
   - Felder: `Annotated[Type, PlanningVariable(allows_unassigned=True)]`,

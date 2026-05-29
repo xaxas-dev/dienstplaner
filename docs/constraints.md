@@ -14,6 +14,7 @@ Alle Tarifregeln sind zentral in `backend/app/solver/tarif_rules.py` definiert.
   - [Apply-Endpoint (M8-002)](#apply-endpoint-m8-002)
   - [2. ABSENT_DOCTOR](#2-absent_doctor-logisch-hart-constraintidabsent_doctor-m8-003)
   - [3. FAIR_DISTRIBUTION](#3-fair_distribution-soft-constraintidfair_distribution-m8-004)
+  - [4. MAX_BD_PER_MONTH](#4-max_bd_per_month-regulatorisch-hart-constraintidmax_bd_per_month-m8-005)
   - [Folge-Milestones](#folge-milestones-noch-nicht-implementiert)
 - [Tarif-Validation-Framework (M5-001)](#tarif-validation-framework-m5-001-phase-a)
 - [Excel-Export (M6-001)](#excel-export-m6-001-phase-a)
@@ -161,12 +162,46 @@ Typs erscheinen nicht im Stream — keine Phantom-Pivot-Komplexität.
 **Pinned Shifts** zählen in `actual`. Manuelle Ungleichverteilung durch Pinning
 erzeugt unvermeidliche Penalty — erwartetes Verhalten.
 
+### 4. MAX_BD_PER_MONTH (regulatorisch-hart, ConstraintId.MAX_BD_PER_MONTH, M8-005)
+
+**Regel:** Kein Arzt darf mehr als 4 Bereitschaftsdienste pro Kalendermonat
+leisten (§ 7 Abs. 5a Satz 1 TV-Ärzte/TdL i.d.F. 9. ÄnderungsTV).
+
+**Klasse:** Regulatorisch-hart — durch Override-Mechanismus A/B/C abschaltbar
+(Ausnahmen per Satz 2 und 4; Override-Mechanismus kommt in Phase B).
+
+**Tarif-Schwelle:** `MAX_BD_PER_MONAT = 4` in `backend/app/solver/tarif_rules.py`.
+Hardcoded (OQ-006, Option A). Ausnahmen (5/Quartal per Satz 2,
+7/Monat per Individualvereinbarung per Satz 4) sind Phase-B-Override-Fälle.
+
+**BD-Klassifizierung:** `ShiftType.is_bereitschaftsdienst: bool` (Default `False`).
+Klinik konfiguriert welche ShiftTypes als BD zählen. Snapshot-Feld
+`SolverShift.is_bereitschaftsdienst` wird in `to_solver()` aus ShiftType-Map
+(nur aktive ShiftTypes, `.get(id, False)`) propagiert.
+
+**Implementierung:**
+```python
+cf.for_each(SolverShift)
+  .filter(lambda s: s.doctor is not None and s.is_bereitschaftsdienst)
+  .group_by(lambda s: s.doctor, lambda s: s.shift_date.month, ConstraintCollectors.count())
+  .filter(lambda doc, month, count: count > MAX_BD_PER_MONAT)
+  .penalize(HardSoftScore.ONE_HARD, lambda doc, month, count: count - MAX_BD_PER_MONAT)
+  .as_constraint(ConstraintId.MAX_BD_PER_MONTH)
+```
+
+Penalty: −(count − 4) Hard pro (Arzt, Monat)-Gruppe. `group_by(key1, key2, count())`
++ 3-Arg-Lambda verifiziert in timefold==1.24.0b0 (M8-004-Spike).
+
+**Pinned Shifts zählen.** Manuelle 5+-BD-Zuweisungen mit Pinning erzeugen
+unvermeidliche Hard-Penalty — erwartetes Verhalten bis Phase-B-Override.
+
 ### Folge-Milestones (noch nicht implementiert)
 
-| Constraint-ID | Klasse | Beschreibung |
-|---------------|--------|--------------|
-| max-weekly-hours | Regulatorisch-hart | ArbZG max. Wochenstunden |
-| min-rest-time | Regulatorisch-hart | Mindestruhezeit zwischen Diensten (TV-Ärzte/TdL) |
+| Constraint-ID | Klasse | Milestone | Beschreibung |
+|---------------|--------|-----------|--------------|
+| max-weekends-per-month | Regulatorisch-hart | M8-006 | Max. 2 Wochenenden/Monat (§ 6 Abs. 9 TV-Ärzte/TdL, Fr 21:00–Mo 05:00). Benötigt `ConstraintCollectors.to_set()` — erst nach Spike. |
+| max-weekly-hours | Regulatorisch-hart | M8-007 | ArbZG § 3: 48 h/Woche (Std.), Opt-out BD-I: 58 h, BD-II: 54 h (§ 7 Abs. 5). Benötigt Schichtdauer-Snapshot auf SolverShift. |
+| min-rest-time | Regulatorisch-hart | M8-008+ | Mindestruhezeit 11 h zwischen Diensten (§ 5 ArbZG). Benötigt paarweisen Shift-Vergleich. |
 
 Keine Tarif-Werte dürfen ohne Rückfrage erfunden werden — alle regulatorischen
 Constraints kommen erst nach Klärung mit Domänenexperten (OQ-006).
