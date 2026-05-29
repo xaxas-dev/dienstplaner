@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
@@ -143,6 +143,16 @@ export function PlanListPage() {
   const count = visible.length
   const totalCount = plans.length
 
+  const plansByYear = useMemo(() => {
+    const map = new Map<number, Plan[]>()
+    for (const p of visible) {
+      const year = new Date(p.valid_from).getFullYear()
+      if (!map.has(year)) map.set(year, [])
+      map.get(year)!.push(p)
+    }
+    return [...map.entries()].sort((a, b) => b[0] - a[0])
+  }, [visible])
+
   const filterChips = [
     { label: 'Alle',         active: filter === 'all',      onClick: () => setFilter('all') },
     { label: 'Entwurf',      active: filter === 'draft',    onClick: () => setFilter('draft') },
@@ -190,13 +200,20 @@ export function PlanListPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-3.5">
-            {visible.map((plan) => (
-              <PlanCard
-                key={plan.id}
-                plan={plan}
-                onClick={() => navigate(`/plans/${planToSlug(plan)}`)}
-              />
+          <div className="flex flex-col gap-8">
+            {plansByYear.map(([year, yearPlans]) => (
+              <div key={year}>
+                <h2 className="text-xs font-semibold text-ink-3 uppercase tracking-widest mb-3">{year}</h2>
+                <div className="grid grid-cols-3 gap-3.5">
+                  {yearPlans.map((plan) => (
+                    <PlanCard
+                      key={plan.id}
+                      plan={plan}
+                      onClick={() => navigate(`/plans/${planToSlug(plan)}`)}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}

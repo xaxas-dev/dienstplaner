@@ -24,7 +24,7 @@ const avatarTopModifier: Modifier = ({ activatorEvent, draggingNodeRect, transfo
   const offsetY = activatorEvent.clientY - draggingNodeRect.top
   return { ...transform, x: transform.x + offsetX - 14, y: transform.y + offsetY }
 }
-import { FileDown, Trash2, ChevronDown } from 'lucide-react'
+import { FileDown, Trash2, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -296,6 +296,17 @@ export function PlanPage() {
   const planTitle = plan
     ? format(new Date(plan.valid_from), 'MMMM yyyy', { locale: de })
     : '…'
+
+  const sortedPlans = useMemo(
+    () => [...allPlans].sort((a, b) => a.valid_from.localeCompare(b.valid_from)),
+    [allPlans],
+  )
+  const currentPlanIdx = !isNaN(id) ? sortedPlans.findIndex((p) => p.id === id) : -1
+  const prevPlan = currentPlanIdx > 0 ? sortedPlans[currentPlanIdx - 1] : null
+  const nextPlan =
+    currentPlanIdx >= 0 && currentPlanIdx < sortedPlans.length - 1
+      ? sortedPlans[currentPlanIdx + 1]
+      : null
 
   const openCount = conflicts?.open_shift_count ?? 0
   const conflictCount = conflicts?.conflict_count ?? 0
@@ -617,6 +628,31 @@ export function PlanPage() {
     <div className="flex flex-col flex-1 overflow-hidden">
       <CommandBar
         title={planTitle}
+        titleNode={
+          <span className="inline-flex items-center gap-0.5">
+            <button
+              type="button"
+              onClick={() => prevPlan && navigate(`/plans/${planToSlug(prevPlan)}`)}
+              disabled={!prevPlan}
+              title={prevPlan ? format(new Date(prevPlan.valid_from), 'MMMM yyyy', { locale: de }) : undefined}
+              className="p-0.5 rounded text-ink-3 hover:text-ink hover:bg-line disabled:opacity-20 transition"
+              aria-label="Vorheriger Plan"
+            >
+              <ChevronLeft className="size-4" />
+            </button>
+            <span>{planTitle}</span>
+            <button
+              type="button"
+              onClick={() => nextPlan && navigate(`/plans/${planToSlug(nextPlan)}`)}
+              disabled={!nextPlan}
+              title={nextPlan ? format(new Date(nextPlan.valid_from), 'MMMM yyyy', { locale: de }) : undefined}
+              className="p-0.5 rounded text-ink-3 hover:text-ink hover:bg-line disabled:opacity-20 transition"
+              aria-label="Nächster Plan"
+            >
+              <ChevronRight className="size-4" />
+            </button>
+          </span>
+        }
         breadcrumb={[{ label: 'Pläne', href: '/plans' }]}
         primaryAction={
           !isNaN(id)
@@ -723,6 +759,7 @@ export function PlanPage() {
           {plan && (
             <UnifiedPlanGrid
               departments={departments}
+              doctors={doctors}
               rotations={rotations}
               shifts={shifts}
               absences={absences}

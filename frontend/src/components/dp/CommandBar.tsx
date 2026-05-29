@@ -22,6 +22,7 @@ interface FilterChip {
 interface CommandBarProps {
   title: string
   titleAccent?: string
+  titleNode?: React.ReactNode
   breadcrumb?: BreadcrumbItem[]
   filters?: FilterChip[]
   primaryAction?: {
@@ -37,6 +38,7 @@ interface CommandBarProps {
 export function CommandBar({
   title,
   titleAccent,
+  titleNode,
   breadcrumb,
   filters,
   primaryAction,
@@ -76,11 +78,15 @@ export function CommandBar({
 
       {/* Titel */}
       <h1 className="font-serif text-2xl text-ink leading-none shrink-0">
-        {titleAccent && (
-          <em className="not-italic text-dp-accent">{titleAccent}</em>
+        {titleNode ?? (
+          <>
+            {titleAccent && (
+              <em className="not-italic text-dp-accent">{titleAccent}</em>
+            )}
+            {titleAccent && title && ' '}
+            {title}
+          </>
         )}
-        {titleAccent && title && ' '}
-        {title}
       </h1>
 
       {/* Filter-Chips */}

@@ -5,16 +5,18 @@ import { eachDayOfInterval, format, isToday, isWeekend, parseISO } from 'date-fn
 import { ExternalLink, Pencil, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getDepartmentColor } from '@/lib/bereichColors'
+import { getCurrentEmploymentPeriod } from '@/features/doctors/doctorHelpers'
 import { buildUnifiedRows, resolveCell } from '../unifiedGridUtils'
 import type { RotationRow } from '../unifiedGridUtils'
 import { BereichHeaderRow, makePlaceholderDropId, makeRotationMemberDropId } from './BereichHeaderRow'
 import { UnifiedShiftCell } from './UnifiedShiftCell'
-import type { Department, RotationAssignmentWithDetails, ShiftWithDetails, Absence, TarifWarning } from '@/lib/types'
+import type { Department, Doctor, RotationAssignmentWithDetails, ShiftWithDetails, Absence, TarifWarning } from '@/lib/types'
 
 const WEEKDAY_ABBR = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 
 interface UnifiedPlanGridProps {
   departments: Department[]
+  doctors?: Doctor[]
   rotations: RotationAssignmentWithDetails[]
   shifts: ShiftWithDetails[]
   absences: Absence[]
@@ -61,6 +63,7 @@ function RotationLabelCell({
   row,
   isHovered,
   isHighlighted,
+  employmentPct,
   onMouseEnter,
   onDelete,
   onEdit,
@@ -68,6 +71,7 @@ function RotationLabelCell({
   row: RotationRow
   isHovered: boolean
   isHighlighted: boolean
+  employmentPct?: number | null
   onMouseEnter: () => void
   onDelete?: () => void
   onEdit?: () => void
@@ -97,6 +101,9 @@ function RotationLabelCell({
       )}>
         {row.doctor.name}
       </span>
+      {isHovered && employmentPct != null && (
+        <span className="text-[10px] text-ink-3 shrink-0 tabular-nums">{employmentPct}%</span>
+      )}
       <div className={cn('flex items-center gap-0.5 shrink-0', !isHovered && 'invisible')}>
         <button
           className="p-0.5 rounded hover:bg-paper text-ink-3 hover:text-ink-2 transition-colors"
@@ -129,6 +136,7 @@ function RotationLabelCell({
 
 export function UnifiedPlanGrid({
   departments,
+  doctors = [],
   rotations,
   shifts,
   absences,
@@ -282,11 +290,15 @@ export function UnifiedPlanGrid({
         {/* Daten-Zeilen */}
         {rows.map((row) => {
           if (row.kind === 'header') {
+            const rotationCount = rows.filter(
+              (r) => r.kind === 'rotation' && r.department.id === row.department.id,
+            ).length
             return (
               <BereichHeaderRow
                 key={row.rowKey}
                 department={row.department}
                 colCount={colCount}
+                rotationCount={rotationCount}
               />
             )
           }
@@ -310,6 +322,13 @@ export function UnifiedPlanGrid({
           // kind === 'rotation'
           const isRowHovered = effectiveHoverRow === row.rowKey
           const isRowHighlighted = highlightedDoctorId != null && row.doctor.id === highlightedDoctorId
+          const employmentPct = isRowHovered
+            ? (() => {
+                const fullDoc = doctors.find((d) => d.id === row.doctor.id)
+                if (!fullDoc) return null
+                return getCurrentEmploymentPeriod(fullDoc.employment_periods)?.employment_percentage ?? null
+              })()
+            : null
 
           return (
             <div key={row.rowKey} className="contents">
@@ -317,6 +336,7 @@ export function UnifiedPlanGrid({
                 row={row}
                 isHovered={isRowHovered}
                 isHighlighted={isRowHighlighted}
+                employmentPct={employmentPct}
                 onMouseEnter={() => { setHoverRow(row.rowKey); setHoverDay(null) }}
                 onDelete={() => onDeleteRotation?.(row.rotation.id)}
                 onEdit={() => onEditRotation?.(row.rotation)}

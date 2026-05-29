@@ -32,9 +32,10 @@ export function parseRotationMemberDropId(id: string): number | null {
 interface BereichHeaderRowProps {
   department: Department
   colCount: number
+  rotationCount?: number
 }
 
-export function BereichHeaderRow({ department, colCount }: BereichHeaderRowProps) {
+export function BereichHeaderRow({ department, colCount, rotationCount }: BereichHeaderRowProps) {
   const color = getDepartmentColor(department)
   const { setNodeRef, isOver } = useDroppable({
     id: makeBereichHeaderDropId(department.id),
@@ -52,9 +53,14 @@ export function BereichHeaderRow({ department, colCount }: BereichHeaderRowProps
           backgroundColor: isOver ? `${color}35` : `${color}18`,
         }}
       >
-        <span className="text-xs font-semibold text-ink truncate leading-none">
+        <span className="text-xs font-semibold text-ink truncate leading-none flex-1">
           {department.short_name ?? department.name}
         </span>
+        {typeof rotationCount === 'number' && department.max_headcount != null && (
+          <span className="text-[10px] text-ink-3 shrink-0 tabular-nums leading-none">
+            {rotationCount}/{department.max_headcount}
+          </span>
+        )}
       </div>
       {/* Tag-Spalten: volle Breite, Farbtönung */}
       {Array.from({ length: colCount }).map((_, i) => (
