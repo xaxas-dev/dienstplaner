@@ -678,13 +678,17 @@ export function PlanPage() {
       </div>
 
       {/* DnD-Bars: Dienste + Abwesenheiten */}
-      <div className="px-6 pb-2 flex items-center gap-3">
-        <ShiftTypeDragBar
-          shiftTypes={shiftTypes}
-          focusMode={focusMode}
-          onFocusToggle={() => setFocusMode((m) => (m === 'alle' ? 'vn' : 'alle'))}
-        />
-        <AbsenceTypeDragBar />
+      <div className="px-6 pb-2 flex items-stretch gap-3">
+        <div className="flex-1 min-w-0">
+          <ShiftTypeDragBar
+            shiftTypes={shiftTypes}
+            focusMode={focusMode}
+            onFocusToggle={() => setFocusMode((m) => (m === 'alle' ? 'vn' : 'alle'))}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <AbsenceTypeDragBar />
+        </div>
       </div>
 
       {/* Mehrfach-Auswahl-Indikator */}
