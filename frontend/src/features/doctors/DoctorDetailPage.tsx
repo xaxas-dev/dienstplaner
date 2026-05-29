@@ -83,11 +83,11 @@ export function DoctorDetailPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => void navigate('/doctors')}
+            onClick={() => void navigate(-1)}
             className="-ml-2"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
-            Ärzte
+            Zurück
           </Button>
         </div>
         <div className="flex items-center justify-between">

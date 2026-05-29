@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { apiPost } from '@/lib/api'
+import { Button } from '@/components/ui/button'
 import { planAbsenceKeys } from '../usePlanAbsences'
 import type { AbsenceType, Absence } from '@/lib/types'
 
@@ -135,20 +136,21 @@ export function AbsenceAssignPopover({
 
           {/* Buttons */}
           <div className="flex gap-2 justify-end pt-1">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={onClose}
-              className="px-3 py-1.5 rounded-lg border border-line text-[12px] text-ink-3 bg-paper hover:bg-paper/80 transition"
             >
               Abbrechen
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              size="sm"
               disabled={!validTo || mutation.isPending}
-              className="px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-accent text-white hover:bg-accent/90 transition disabled:opacity-50"
             >
               {mutation.isPending ? 'Speichern…' : 'Speichern'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
