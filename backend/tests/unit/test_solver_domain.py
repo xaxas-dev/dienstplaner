@@ -144,7 +144,7 @@ def test_solver_doctor_fair_targets_konfigurierbar() -> None:
 
 
 def test_solver_doctor_eq_ignoriert_neue_felder() -> None:
-    """Gleichheit basiert nur auf doctor_id — fte_percentage und fair_targets spielen keine Rolle."""
+    """Gleichheit basiert nur auf doctor_id — fte_percentage und fair_targets irrelevant."""
     a = SolverDoctor(doctor_id=1, name="Alice", fte_percentage=100, fair_targets={1: 3})
     b = SolverDoctor(doctor_id=1, name="Alice", fte_percentage=50, fair_targets={2: 7})
     assert a == b
@@ -152,6 +152,29 @@ def test_solver_doctor_eq_ignoriert_neue_felder() -> None:
 
 
 # --- ShiftSchedule ---
+
+
+# --- SolverShift.is_bereitschaftsdienst (M8-005/C) ---
+
+
+def test_solver_shift_default_is_bd_false() -> None:
+    s = SolverShift(shift_id=40, plan_id=1, shift_date=date(2025, 6, 1), shift_type_id=1)
+    assert s.is_bereitschaftsdienst is False
+
+
+def test_solver_shift_is_bd_konfigurierbar() -> None:
+    s = SolverShift(
+        shift_id=41, plan_id=1, shift_date=date(2025, 6, 1), shift_type_id=1,
+        is_bereitschaftsdienst=True,
+    )
+    assert s.is_bereitschaftsdienst is True
+
+
+def test_solver_shift_bestehende_konstruktoren_unveraendert() -> None:
+    s = SolverShift(shift_id=42, plan_id=1, shift_date=date(2025, 6, 1), shift_type_id=1)
+    assert s.id == 42
+    assert s.doctor is None
+    assert s.is_pinned is False
 
 
 def test_shift_schedule_instanziierung() -> None:

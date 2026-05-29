@@ -79,6 +79,7 @@ class SolverShift:
     plan_id: int
     shift_date: date
     shift_type_id: int
+    is_bereitschaftsdienst: bool
 
     def __init__(
         self,
@@ -89,6 +90,7 @@ class SolverShift:
         doctor: SolverDoctor | None = None,
         *,
         is_pinned: bool = False,
+        is_bereitschaftsdienst: bool = False,
     ) -> None:
         self.id = shift_id
         self.plan_id = plan_id
@@ -97,6 +99,7 @@ class SolverShift:
         self.doctor = doctor
         # Sonderfall: gepinnt + kein Arzt → nicht pinnbar (Solver darf besetzen)
         self.is_pinned = is_pinned and doctor is not None
+        self.is_bereitschaftsdienst = is_bereitschaftsdienst
 
     def __repr__(self) -> str:
         return (
