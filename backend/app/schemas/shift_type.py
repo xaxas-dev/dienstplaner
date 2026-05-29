@@ -12,6 +12,7 @@ class ShiftTypeBase(BaseModel):
     end_time: time | None = None
     display_order: int = 0
     active: bool = True
+    is_bereitschaftsdienst: bool = False
     notes: str | None = None
 
 
@@ -27,6 +28,7 @@ class ShiftTypeUpdate(BaseModel):
     end_time: time | None = None
     display_order: int | None = None
     active: bool | None = None
+    is_bereitschaftsdienst: bool | None = None
     notes: str | None = None
 
 

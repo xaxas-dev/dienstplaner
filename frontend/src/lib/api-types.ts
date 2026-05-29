@@ -294,6 +294,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plans/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Current Plan
+         * @description Liefert den neuesten Plan, dessen Zeitraum heute enthält. 204 falls keiner.
+         */
+        get: operations["get_current_plan_api_plans_current_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plans/{plan_id}": {
         parameters: {
             query?: never;
@@ -330,6 +350,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plans/{plan_id}/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Dashboard Summary */
+        get: operations["get_dashboard_summary_api_plans__plan_id__dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plans/{plan_id}/absences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Plan Absences */
+        get: operations["get_plan_absences_api_plans__plan_id__absences_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plans/{plan_id}/conflicts": {
         parameters: {
             query?: never;
@@ -358,6 +412,23 @@ export interface paths {
         put?: never;
         /** Solve Plan */
         post: operations["solve_plan_api_plans__plan_id__solve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plans/{plan_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Plan */
+        get: operations["export_plan_api_plans__plan_id__export_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -710,6 +781,24 @@ export interface components {
             /** Skipped Pinned */
             skipped_pinned: number[];
         };
+        /** AttentionItem */
+        AttentionItem: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Person Name */
+            person_name: string | null;
+            /** Message */
+            message: string;
+            severity: components["schemas"]["AttentionSeverity"];
+        };
+        /**
+         * AttentionSeverity
+         * @enum {string}
+         */
+        AttentionSeverity: "info" | "warning" | "error";
         /** CloneResult */
         CloneResult: {
             plan: components["schemas"]["PlanWithRelations"];
@@ -723,6 +812,45 @@ export interface components {
          * @enum {string}
          */
         ConflictType: "not_available" | "double_booked";
+        /** CoverageBar */
+        CoverageBar: {
+            /** Department Name */
+            department_name: string;
+            /** Filled */
+            filled: number;
+            /** Total */
+            total: number;
+            /** Pct */
+            pct: number;
+        };
+        /** DashboardKpis */
+        DashboardKpis: {
+            /** Coverage Pct */
+            coverage_pct: number;
+            /** Open Shifts */
+            open_shifts: number;
+            /** Conflicts */
+            conflicts: number;
+            /** On Leave */
+            on_leave: number;
+        };
+        /** DashboardSummary */
+        DashboardSummary: {
+            /** Plan Id */
+            plan_id: number;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            kpis: components["schemas"]["DashboardKpis"];
+            /** Today Shifts */
+            today_shifts: components["schemas"]["DutyShift"][];
+            /** Coverage By Department */
+            coverage_by_department: components["schemas"]["CoverageBar"][];
+            /** Attention */
+            attention: components["schemas"]["AttentionItem"][];
+        };
         /** DepartmentCreate */
         DepartmentCreate: {
             /** Name */
@@ -891,6 +1019,15 @@ export interface components {
             /** Notes */
             notes?: string | null;
         };
+        /** DoctorInfo */
+        DoctorInfo: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Initials */
+            initials: string;
+        };
         /**
          * DoctorQualificationBody
          * @description Optionaler Body für die Qualifikations-Zuweisung (Pfad liefert IDs).
@@ -1038,6 +1175,17 @@ export interface components {
             qualifications: components["schemas"]["QualificationResponse"][];
             /** Weiterbildungsjahr */
             readonly weiterbildungsjahr: number | null;
+        };
+        /** DutyShift */
+        DutyShift: {
+            /** Shift Type Name */
+            shift_type_name: string;
+            /** Shift Type Short Name */
+            shift_type_short_name: string;
+            /** Time Label */
+            time_label: string | null;
+            /** Doctors */
+            doctors: components["schemas"]["DoctorInfo"][];
         };
         /**
          * EmploymentPeriodBody
@@ -1693,6 +1841,11 @@ export interface components {
              * @default true
              */
             active: boolean;
+            /**
+             * Is Bereitschaftsdienst
+             * @default false
+             */
+            is_bereitschaftsdienst: boolean;
             /** Notes */
             notes?: string | null;
         };
@@ -1726,6 +1879,11 @@ export interface components {
              * @default true
              */
             active: boolean;
+            /**
+             * Is Bereitschaftsdienst
+             * @default false
+             */
+            is_bereitschaftsdienst: boolean;
             /** Notes */
             notes?: string | null;
             /** Id */
@@ -1759,6 +1917,8 @@ export interface components {
             display_order?: number | null;
             /** Active */
             active?: boolean | null;
+            /** Is Bereitschaftsdienst */
+            is_bereitschaftsdienst?: boolean | null;
             /** Notes */
             notes?: string | null;
         };
@@ -2952,6 +3112,37 @@ export interface operations {
             };
         };
     };
+    get_current_plan_api_plans_current_get: {
+        parameters: {
+            query?: {
+                today?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanWithRelations"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_plan_api_plans__plan_id__get: {
         parameters: {
             query?: never;
@@ -3082,6 +3273,70 @@ export interface operations {
             };
         };
     };
+    get_dashboard_summary_api_plans__plan_id__dashboard_get: {
+        parameters: {
+            query?: {
+                today?: string | null;
+            };
+            header?: never;
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_plan_absences_api_plans__plan_id__absences_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbsenceResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_plan_conflicts_api_plans__plan_id__conflicts_get: {
         parameters: {
             query?: never;
@@ -3131,6 +3386,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SolveResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_plan_api_plans__plan_id__export_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
