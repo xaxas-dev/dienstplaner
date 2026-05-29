@@ -27,7 +27,9 @@ class ConstraintId(enum.StrEnum):
     DOUBLE_BOOKED = "double-booked"
     ABSENT_DOCTOR = "absent-doctor"
 
-    # --- Regulatorisch-hart (overridebar) --- Folge-Milestones
+    # --- Regulatorisch-hart (overridebar A/B/C) ---
+    MAX_BD_PER_MONTH = "max-bd-per-month"
+
     # --- Soft (Optimierungsziele) ---
     FAIR_DISTRIBUTION = "fair-distribution"
 
@@ -36,8 +38,11 @@ class ConstraintId(enum.StrEnum):
 LOGISCH_HART: frozenset[ConstraintId] = frozenset(
     [ConstraintId.DOUBLE_BOOKED, ConstraintId.ABSENT_DOCTOR]
 )
-REGULATORISCH_HART: frozenset[ConstraintId] = frozenset()
+REGULATORISCH_HART: frozenset[ConstraintId] = frozenset([ConstraintId.MAX_BD_PER_MONTH])
 SOFT: frozenset[ConstraintId] = frozenset([ConstraintId.FAIR_DISTRIBUTION])
+
+# Tarif-Werte TV-Ärzte/TdL i.d.F. 9. ÄnderungsTV (OQ-006, Option A hardcoded)
+MAX_BD_PER_MONAT: int = 4  # § 7 Abs. 5a Satz 1
 
 
 class TarifRule(Protocol):
