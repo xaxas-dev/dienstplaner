@@ -24,7 +24,7 @@ const avatarTopModifier: Modifier = ({ activatorEvent, draggingNodeRect, transfo
   const offsetY = activatorEvent.clientY - draggingNodeRect.top
   return { ...transform, x: transform.x + offsetX - 14, y: transform.y + offsetY }
 }
-import { FileDown, Trash2, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { FileDown, Trash2, ChevronDown, ChevronLeft, ChevronRight, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -55,6 +55,10 @@ import { usePlanAbsences } from './usePlanAbsences'
 import { useAssignShift, findShiftId } from './useAssignShift'
 import { useUpdatePlan } from './useUpdatePlan'
 import { useDeletePlan } from './useDeletePlan'
+import { useSolvePlan, JvmUnavailableError } from './useSolvePlan'
+import { useApplySolverResult } from './useApplySolverResult'
+import { buildSolverDiff } from './solverUtils'
+import { SolverResultPanel } from './components/SolverResultPanel'
 import { useDoctors } from '@/features/doctors/useDoctors'
 import { useDepartments } from '@/features/departments/useDepartments'
 import { useShiftTypes } from '@/features/shift-types/useShiftTypes'
@@ -71,7 +75,7 @@ import { DoctorDragSource, DoctorDragOverlayToken, parseDoctorDragId } from './c
 import { RotationAssignPopover } from './components/RotationAssignPopover'
 import { parseBereichHeaderDropId, parsePlaceholderDropId, parseRotationMemberDropId } from './components/BereichHeaderRow'
 import { apiGet } from '@/lib/api'
-import type { ShiftWithDetails, TarifWarning, RotationAssignmentWithDetails, INAExclusion } from '@/lib/types'
+import type { ShiftWithDetails, TarifWarning, RotationAssignmentWithDetails, INAExclusion, SolveResult } from '@/lib/types'
 
 interface ActiveCell {
   rotationId: number
@@ -160,6 +164,10 @@ export function PlanPage() {
   const updatePlan = useUpdatePlan(id)
   const deletePlan = useDeletePlan()
   const deleteRotation = useDeleteRotation(id)
+  const solvePlan = useSolvePlan(id)
+  const applySolver = useApplySolverResult(id)
+  const [solveResult, setSolveResult] = useState<SolveResult | null>(null)
+  const [isSolverOpen, setIsSolverOpen] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [pendingDeleteRotation, setPendingDeleteRotation] = useState<RotationAssignmentWithDetails | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
@@ -226,6 +234,27 @@ export function PlanPage() {
     if (w.shift_id != null) {
       ;(tarifWarningsByShift[w.shift_id] ??= []).push(w)
     }
+  }
+
+  const solverDiffRows = useMemo(
+    () => (solveResult ? buildSolverDiff(shifts, doctors, solveResult.proposed_assignments) : []),
+    [shifts, doctors, solveResult],
+  )
+
+  function handleSolve() {
+    solvePlan.mutate(undefined, {
+      onSuccess: (result) => {
+        setSolveResult(result)
+        setIsSolverOpen(true)
+      },
+      onError: (err) => {
+        if (err instanceof JvmUnavailableError) {
+          toast.error('Java-Runtime nicht verfügbar. Bitte JDK 21 (Eclipse Temurin) installieren.')
+        } else {
+          toast.error(err instanceof Error ? `Solver-Fehler: ${err.message}` : 'Solver-Fehler')
+        }
+      },
+    })
   }
 
   useEffect(() => {
@@ -665,6 +694,15 @@ export function PlanPage() {
         }
         extras={plan ? (
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSolve}
+              disabled={solvePlan.isPending || isNaN(id)}
+            >
+              <Zap className="size-3.5 mr-1.5" />
+              {solvePlan.isPending ? 'Berechne…' : 'Plan generieren'}
+            </Button>
             <span className={cn(
               'text-xs px-2 py-0.5 rounded-full font-medium border',
               plan.status === 'RELEASED' ? 'bg-green-50 text-green-700 border-green-200'
@@ -878,6 +916,35 @@ export function PlanPage() {
         )}
       </DragOverlay>
     </DndContext>
+
+    {isSolverOpen && solveResult && (
+      <SolverResultPanel
+        result={solveResult}
+        diffRows={solverDiffRows}
+        isApplying={applySolver.isPending}
+        onApply={() => {
+          applySolver.mutate(solveResult.proposed_assignments, {
+            onSuccess: (result) => {
+              setIsSolverOpen(false)
+              setSolveResult(null)
+              const skipped = result.skipped_pinned.length
+              if (skipped > 0) {
+                toast.info(`${result.applied.length} Schichten angewendet, ${skipped} gepinnte übersprungen.`)
+              } else {
+                toast.success(`${result.applied.length} Schichten angewendet.`)
+              }
+            },
+            onError: (err) => {
+              toast.error(err instanceof Error ? err.message : 'Fehler beim Anwenden')
+            },
+          })
+        }}
+        onClose={() => {
+          setIsSolverOpen(false)
+          setSolveResult(null)
+        }}
+      />
+    )}
 
     <AlertDialog open={pendingShiftAssign !== null} onOpenChange={(open) => { if (!open) setPendingShiftAssign(null) }}>
       <AlertDialogContent>
