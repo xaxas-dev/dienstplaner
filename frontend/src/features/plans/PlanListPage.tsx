@@ -21,6 +21,17 @@ import {
 } from '@/components/ui/alert-dialog'
 import type { Plan } from '@/lib/types'
 
+type PlanFilterKey = 'all' | 'draft' | 'released' | 'archived'
+
+function applyPlanFilter(plans: Plan[], filter: PlanFilterKey): Plan[] {
+  switch (filter) {
+    case 'draft':    return plans.filter((p) => p.status === 'DRAFT')
+    case 'released': return plans.filter((p) => p.status === 'RELEASED')
+    case 'archived': return plans.filter((p) => p.status === 'ARCHIVED')
+    default:         return plans
+  }
+}
+
 function PlanCard({ plan, onClick }: { plan: Plan; onClick: () => void }) {
   const [showDelete, setShowDelete] = useState(false)
   const deletePlan = useDeletePlan()
@@ -47,7 +58,7 @@ function PlanCard({ plan, onClick }: { plan: Plan; onClick: () => void }) {
         >
           <p className="font-serif text-xl capitalize">{title}</p>
           <p className="text-xs text-ink-3 mt-1 uppercase tracking-wide">
-            {plan.status === 'RELEASED' ? 'Freigegeben' : 'Entwurf'}
+            {plan.status === 'RELEASED' ? 'Freigegeben' : plan.status === 'ARCHIVED' ? 'Archiviert' : 'Entwurf'}
           </p>
         </button>
         <button
@@ -85,13 +96,27 @@ function PlanCard({ plan, onClick }: { plan: Plan; onClick: () => void }) {
 
 export function PlanListPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [filter, setFilter] = useState<PlanFilterKey>('all')
   const navigate = useNavigate()
   const { data: plans = [], isLoading, isError, refetch } = usePlans()
+
+  const visible = applyPlanFilter(plans, filter)
+  const count = visible.length
+  const totalCount = plans.length
+
+  const filterChips = [
+    { label: 'Alle',         active: filter === 'all',      onClick: () => setFilter('all') },
+    { label: 'Entwurf',      active: filter === 'draft',    onClick: () => setFilter('draft') },
+    { label: 'Freigegeben',  active: filter === 'released', onClick: () => setFilter('released') },
+    { label: 'Archiviert',   active: filter === 'archived', onClick: () => setFilter('archived') },
+  ]
 
   return (
     <div className="flex flex-col flex-1">
       <CommandBar
-        title="Pläne"
+        titleAccent="Pläne"
+        title={count > 0 ? `· ${count} ${count === 1 ? 'Plan' : 'Pläne'}` : ''}
+        filters={filterChips}
         primaryAction={{ label: '+ Neuer Plan', onClick: () => setDialogOpen(true) }}
       />
       <div className="px-10 py-6 flex-1">
@@ -115,9 +140,19 @@ export function PlanListPage() {
               />
             ))}
           </div>
+        ) : visible.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3 text-ink-3">
+            {totalCount === 0 ? (
+              <>
+                <p className="text-sm">Noch keine Pläne angelegt.</p>
+              </>
+            ) : (
+              <p className="text-sm">Keine Pläne für diesen Filter.</p>
+            )}
+          </div>
         ) : (
           <div className="grid grid-cols-3 gap-3.5">
-            {plans.map((plan) => (
+            {visible.map((plan) => (
               <PlanCard
                 key={plan.id}
                 plan={plan}

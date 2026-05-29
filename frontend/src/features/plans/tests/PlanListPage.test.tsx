@@ -52,8 +52,8 @@ describe('PlanListPage', () => {
 
   it('zeigt Plan-Status unter dem Titel', () => {
     render(<Wrapper><PlanListPage /></Wrapper>)
-    expect(screen.getByText('DRAFT')).toBeInTheDocument()
-    expect(screen.getByText('RELEASED')).toBeInTheDocument()
+    expect(screen.getAllByText('Entwurf').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Freigegeben').length).toBeGreaterThan(0)
   })
 
   it('öffnet PlanCreateDialog bei Klick auf + Neuer Plan', async () => {

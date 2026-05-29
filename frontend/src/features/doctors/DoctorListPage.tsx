@@ -1,22 +1,12 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
-import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { CommandBar } from '@/components/dp/CommandBar'
 import { DoctorCard } from './DoctorCard'
-import { useDoctors, useDeleteDoctor } from './useDoctors'
-import type { Doctor } from '@/lib/types'
+import { useDoctors } from './useDoctors'
+import { useCurrentPlan } from '@/features/today/useCurrentPlan'
+import { usePlanShifts } from '@/features/plans/usePlanShifts'
+import type { Doctor, ShiftWithDetails } from '@/lib/types'
 
 type FilterKey = 'all' | 'facharzt' | 'wba' | 'extern'
 
@@ -33,31 +23,29 @@ export function DoctorListPage() {
   const navigate = useNavigate()
   const [filter, setFilter] = useState<FilterKey>('all')
   const [includeInactive, setIncludeInactive] = useState(false)
-  const [doctorToDelete, setDoctorToDelete] = useState<Doctor | null>(null)
 
+  const today = new Date().toISOString().slice(0, 10)
   const { data: doctors, isLoading, isError, refetch } = useDoctors(includeInactive)
-  const deleteMutation = useDeleteDoctor()
+  const { data: currentPlan } = useCurrentPlan(today)
+  const { data: planShifts } = usePlanShifts(currentPlan?.id ?? NaN)
+
+  const shiftsByDoctor = useMemo<Record<number, ShiftWithDetails[]>>(() => {
+    if (!planShifts) return {}
+    const map: Record<number, ShiftWithDetails[]> = {}
+    for (const shift of planShifts) {
+      if (shift.doctor_id == null) continue
+      ;(map[shift.doctor_id] ??= []).push(shift)
+    }
+    return map
+  }, [planShifts])
 
   const sorted = [...(doctors ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'de'))
   const visible = applyFilter(sorted, filter)
-  const count = doctors?.length ?? 0
-
-  const handleDelete = () => {
-    if (!doctorToDelete) return
-    deleteMutation.mutate(doctorToDelete.id, {
-      onSuccess: () => {
-        toast.success(`${doctorToDelete.name} wurde gelöscht`)
-        setDoctorToDelete(null)
-      },
-      onError: (err) => {
-        toast.error(err instanceof Error ? err.message : 'Löschen fehlgeschlagen')
-        setDoctorToDelete(null)
-      },
-    })
-  }
+  const totalCount = doctors?.length ?? 0
+  const count = visible.length
 
   const filterChips = [
-    { label: 'Alle', active: filter === 'all',      onClick: () => setFilter('all') },
+    { label: 'Alle',      active: filter === 'all',      onClick: () => setFilter('all') },
     { label: 'Fachärzte', active: filter === 'facharzt', onClick: () => setFilter('facharzt') },
     { label: 'WBA',       active: filter === 'wba',      onClick: () => setFilter('wba') },
     { label: 'Extern',    active: filter === 'extern',   onClick: () => setFilter('extern') },
@@ -83,9 +71,9 @@ export function DoctorListPage() {
 
       <div className="flex-1 px-10 py-6 overflow-y-auto">
         {isLoading && (
-          <div className="grid grid-cols-3 gap-3.5">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-2xl bg-card border border-line p-5 h-44 animate-pulse" />
+          <div className="grid grid-cols-3 gap-3">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <div key={i} className="rounded-xl bg-card border border-line h-11 animate-pulse" />
             ))}
           </div>
         )}
@@ -101,7 +89,7 @@ export function DoctorListPage() {
 
         {!isLoading && !isError && visible.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-ink-3">
-            {count === 0 ? (
+            {totalCount === 0 ? (
               <>
                 <p className="text-sm">Noch keine Ärzte angelegt.</p>
                 <Button variant="accent" size="sm" onClick={() => void navigate('/doctors/new')}>
@@ -115,48 +103,17 @@ export function DoctorListPage() {
         )}
 
         {!isLoading && !isError && visible.length > 0 && (
-          <div className="grid grid-cols-3 gap-3.5">
+          <div className="grid grid-cols-3 gap-3">
             {visible.map((doctor) => (
-              <div key={doctor.id} className="relative group">
-                <DoctorCard doctor={doctor} />
-                <button
-                  type="button"
-                  aria-label="Arzt löschen"
-                  onClick={() => setDoctorToDelete(doctor)}
-                  className="absolute top-3 right-3 hidden group-hover:flex items-center justify-center size-7 rounded-full bg-paper border border-line text-ink-3 hover:text-destructive hover:border-destructive transition-colors"
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
-              </div>
+              <DoctorCard
+                key={doctor.id}
+                doctor={doctor}
+                doctorShifts={shiftsByDoctor[doctor.id]}
+              />
             ))}
           </div>
         )}
       </div>
-
-      <AlertDialog
-        open={doctorToDelete !== null}
-        onOpenChange={(open) => !open && setDoctorToDelete(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Arzt wirklich löschen?</AlertDialogTitle>
-            <AlertDialogDescription>
-              <strong>{doctorToDelete?.name}</strong> wird dauerhaft gelöscht. Alle
-              Beschäftigungszeiträume und Qualifikations-Zuweisungen werden ebenfalls
-              entfernt. Diese Aktion kann nicht rückgängig gemacht werden.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Löschen
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }

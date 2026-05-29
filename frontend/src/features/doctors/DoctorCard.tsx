@@ -1,74 +1,77 @@
 import { Link } from 'react-router-dom'
+import { Pencil } from 'lucide-react'
 import { Avatar } from '@/components/dp/Avatar'
 import { Chip } from '@/components/dp/Chip'
 import { ShiftHeatmap14 } from '@/components/dp/ShiftHeatmap14'
 import { getCurrentEmploymentPeriod } from './doctorHelpers'
-import type { Doctor } from '@/lib/types'
+import type { Doctor, ShiftWithDetails } from '@/lib/types'
 
 function roleLabel(doctor: Doctor): string {
   if (doctor.doctor_type === 'EXTERNAL') return 'Extern'
   if (doctor.is_facharzt) return 'Facharzt'
-  if (doctor.weiterbildungsjahr != null) return `WBA · WBJ ${doctor.weiterbildungsjahr}`
+  if (doctor.weiterbildungsjahr != null) return `WBA ${doctor.weiterbildungsjahr}`
   return 'Assistenzarzt'
 }
 
 interface DoctorCardProps {
   doctor: Doctor
+  doctorShifts?: ShiftWithDetails[]
 }
 
-export function DoctorCard({ doctor }: DoctorCardProps) {
+export function DoctorCard({ doctor, doctorShifts }: DoctorCardProps) {
   const currentPeriod = getCurrentEmploymentPeriod(doctor.employment_periods)
   const pct = currentPeriod ? `${currentPeriod.employment_percentage} %` : null
   const subLine = [roleLabel(doctor), pct].filter(Boolean).join(' · ')
 
+  const today = new Date().toISOString().slice(0, 10)
+  const shiftMap = new Map((doctorShifts ?? []).map((s) => [s.shift_date, s]))
+  const heatmapShifts = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date(today)
+    d.setDate(d.getDate() + i)
+    const date = d.toISOString().slice(0, 10)
+    const shift = shiftMap.get(date)
+    return { date, shiftType: shift?.shift_type ?? undefined }
+  })
+
   return (
-    <div className="rounded-2xl bg-card border border-line p-5 flex flex-col gap-3 hover:-translate-y-px hover:shadow transition-all">
-      {/* Header */}
-      <div className="flex items-start gap-3">
-        <Avatar name={doctor.name} shortName={doctor.short_name} id={doctor.id} size={44} />
-        <div className="flex-1 min-w-0">
-          <p className="font-serif text-[19px] leading-tight text-ink truncate">
-            {doctor.title ? `${doctor.title} ` : ''}{doctor.name}
-          </p>
-          <p className="text-xs text-ink-2 mt-0.5">{subLine}</p>
-        </div>
+    <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-card border border-line hover:shadow-sm transition-all">
+      <Avatar name={doctor.name} shortName={doctor.short_name} id={doctor.id} size={30} />
+
+      <div className="flex-1 min-w-0">
+        <span className="font-medium text-sm text-ink">
+          {doctor.title ? `${doctor.title} ` : ''}{doctor.name}
+        </span>
+        <span className="text-xs text-ink-3 ml-2">{subLine}</span>
         {!doctor.active && (
-          <span className="shrink-0 rounded-full bg-line text-ink-3 border border-line-2 px-2 py-0.5 text-[10px] font-medium leading-none">
+          <span className="ml-2 rounded-full bg-line text-ink-3 border border-line-2 px-1.5 py-0.5 text-[10px] font-medium leading-none">
             Inaktiv
           </span>
         )}
       </div>
 
-      {/* Quals */}
-      {doctor.qualifications.length > 0 ? (
-        <div className="flex flex-wrap gap-1">
-          {doctor.qualifications.map((q) => (
-            <Chip key={q.id} variant="soft" className="text-[11px] px-2 py-0.5">
-              {q.name}
-            </Chip>
-          ))}
-        </div>
-      ) : (
-        <p className="text-[11px] text-ink-3">—</p>
-      )}
-
-      {/* Heatmap */}
-      <div>
-        <p className="text-[10px] text-ink-3 uppercase tracking-wide mb-1">Nächste 14 Tage</p>
-        <ShiftHeatmap14 shifts={[]} />
+      <div className="flex items-center gap-1 shrink-0">
+        {doctor.qualifications.slice(0, 2).map((q) => (
+          <Chip key={q.id} variant="soft" className="text-[10px] px-1.5 py-0.5">
+            {q.name}
+          </Chip>
+        ))}
+        {doctor.qualifications.length > 2 && (
+          <span className="text-[10px] text-ink-3">+{doctor.qualifications.length - 2}</span>
+        )}
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-1 border-t border-line">
-        <span className="text-xs text-ink-2">—</span>
-        <Link
-          to={`/doctors/${doctor.id}`}
-          className="text-xs text-dp-accent hover:underline font-medium"
-          onClick={(e) => e.stopPropagation()}
-        >
-          Details →
-        </Link>
+      <div className="w-28 shrink-0">
+        <ShiftHeatmap14 shifts={heatmapShifts} />
       </div>
+
+      <Link
+        to={`/doctors/${doctor.id}`}
+        aria-label="Details"
+        className="text-ink-3 hover:text-dp-accent transition-colors shrink-0"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Pencil className="size-3.5" />
+      </Link>
     </div>
   )
 }

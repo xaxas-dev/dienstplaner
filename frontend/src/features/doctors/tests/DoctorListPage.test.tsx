@@ -34,7 +34,14 @@ const mockDoctors: Doctor[] = [
 
 vi.mock('../useDoctors', () => ({
   useDoctors: () => ({ data: mockDoctors, isLoading: false, isError: false, refetch: vi.fn() }),
-  useDeleteDoctor: () => ({ mutate: vi.fn(), isPending: false }),
+}))
+
+vi.mock('@/features/today/useCurrentPlan', () => ({
+  useCurrentPlan: () => ({ data: null, isLoading: false }),
+}))
+
+vi.mock('@/features/plans/usePlanShifts', () => ({
+  usePlanShifts: () => ({ data: undefined }),
 }))
 
 function Wrapper({ children }: { children: React.ReactNode }) {
