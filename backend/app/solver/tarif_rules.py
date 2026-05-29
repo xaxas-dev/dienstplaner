@@ -2,7 +2,7 @@
 
 Drei Sektionen:
   1. Logisch-hart (nie overridebar): DOUBLE_BOOKED, ABSENT_DOCTOR
-  2. Regulatorisch-hart (overridebar A/B/C): (leer — Folge-Milestones)
+  2. Regulatorisch-hart (overridebar A/B/C): MAX_BD_PER_MONTH, MAX_WEEKENDS_PER_MONTH, MIN_REST_TIME
   3. Soft (Optimierungsziele): FAIR_DISTRIBUTION
 
 ConstraintId als StrEnum: Wert = String, der an timefold als Constraint-Name übergeben wird.
@@ -29,6 +29,8 @@ class ConstraintId(enum.StrEnum):
 
     # --- Regulatorisch-hart (overridebar A/B/C) ---
     MAX_BD_PER_MONTH = "max-bd-per-month"
+    MAX_WEEKENDS_PER_MONTH = "max-weekends-per-month"
+    MIN_REST_TIME = "min-rest-time"
 
     # --- Soft (Optimierungsziele) ---
     FAIR_DISTRIBUTION = "fair-distribution"
@@ -38,11 +40,20 @@ class ConstraintId(enum.StrEnum):
 LOGISCH_HART: frozenset[ConstraintId] = frozenset(
     [ConstraintId.DOUBLE_BOOKED, ConstraintId.ABSENT_DOCTOR]
 )
-REGULATORISCH_HART: frozenset[ConstraintId] = frozenset([ConstraintId.MAX_BD_PER_MONTH])
+REGULATORISCH_HART: frozenset[ConstraintId] = frozenset(
+    [
+        ConstraintId.MAX_BD_PER_MONTH,
+        ConstraintId.MAX_WEEKENDS_PER_MONTH,
+        ConstraintId.MIN_REST_TIME,
+    ]
+)
 SOFT: frozenset[ConstraintId] = frozenset([ConstraintId.FAIR_DISTRIBUTION])
 
 # Tarif-Werte TV-Ärzte/TdL i.d.F. 9. ÄnderungsTV (OQ-006, Option A hardcoded)
 MAX_BD_PER_MONAT: int = 4  # § 7 Abs. 5a Satz 1
+# M8-006: Wochenend-Limit (Platzhalter — exakter TV-Ärzte/TdL-Wert noch zu bestätigen)
+MAX_WEEKEND_SHIFTS_PER_MONTH: int = 2  # max. Wochenend-Dienste pro Arzt/Monat
+MIN_REST_HOURS: int = 11  # ArbZG §5 Abs. 1: Mindestruhezeit 11 Stunden
 
 
 class TarifRule(Protocol):

@@ -112,15 +112,24 @@ Details: docs/architecture.md
   `tarif_rules.py` erweitern. `__eq__/__hash__` von `SolverDoctor` bleiben auf
   `doctor_id`. Neue Soft-Constraint = `mapping.py` + `domain.py` + `constraints.py`
   + `tarif_rules.py` + ADR + `employment_period_service.py` (wenn FTE nötig).
-- **Tarif-Werte (M8-005, hardcoded in `backend/app/solver/tarif_rules.py`):**
+- **Tarif-Werte (M8-005/M8-006, hardcoded in `backend/app/solver/tarif_rules.py`):**
   - `MAX_BD_PER_MONAT = 4` — § 7 Abs. 5a Satz 1 TV-Ärzte/TdL i.d.F. 9. ÄnderungsTV.
     Ausnahmen (5/Quartal per Satz 2, 7/Monat per Individualvereinbarung per Satz 4)
     sind Phase-B-Override-Fälle. Nie ohne explizite Anforderung ändern.
+  - `MAX_WEEKEND_SHIFTS_PER_MONTH = 2` — Platzhalter, exakter TV-Ärzte/TdL-Wert
+    noch durch Domänenexperten zu bestätigen. Wochenende = `weekday() in (5, 6)`.
+  - `MIN_REST_HOURS = 11` — ArbZG §5 Abs. 1, gesetzlich fixiert.
   - `ShiftType.is_bereitschaftsdienst: bool` — Klassifizierungsfeld. Default `False`.
     Klinik konfiguriert welche ShiftTypes als BD zählen. Snapshot-Propagation:
     `to_solver()` liest `ShiftTypeORM.active == True` einmalig in eine Map und
     setzt `SolverShift.is_bereitschaftsdienst` via `.get(shift_type_id, False)`.
     Kein DB-Zugriff im Constraint (Snapshot-Pattern ADR-071).
+  - `SolverShift.shift_start_minutes / shift_end_minutes: int | None` — Zeitdaten-
+    Snapshot (M8-006): `to_solver()` berechnet `date.toordinal() * 1440 + time_minutes`
+    aus `ShiftType.start_time/end_time`. Overnight-Shifts: `+1440` wenn `end < start`.
+    Nullable times → `None` → Constraint überspringt (Graceful Degradation).
+    `for_each_unique_pair`-Bidirektional-Filter: beide Richtungen (s1→s2, s2→s1) per
+    `or`-Verknüpfung prüfen, da Paare ungeordnet sind.
   - Neue regulatorisch-harte Constraint = `mapping.py` + `domain.py` +
     `constraints.py` + `tarif_rules.py` (ConstraintId + REGULATORISCH_HART) + ADR.
 - **Timefold-Python-API (empirisch verifiziert, timefold==1.24.0b0):**

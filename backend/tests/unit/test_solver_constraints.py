@@ -396,3 +396,164 @@ def test_max_bd_getrennt_pro_arzt() -> None:
     ]
     solution = _solve(ShiftSchedule(doctors=[_DR_BD, _DR_BD2], shifts=shifts_a + shifts_b))
     assert solution.score.hard_score == -1
+
+
+# ---------------------------------------------------------------------------
+# MAX_WEEKENDS_PER_MONTH-Tests (M8-006)
+#
+# Juni 2026: Sa 6., 13., 20., 27. / So 7., 14., 21., 28.
+# Alle Shifts gepinnt, shift_type_id=7, Arzt doctor_id=40.
+# ---------------------------------------------------------------------------
+
+_DR_WE: "SolverDoctor | None" = None
+if _JVM_OK:
+    _DR_WE = SolverDoctor(doctor_id=40, name="Dr. Weekend")
+
+# Hilfsdaten: Samstag/Sonntag im Juni 2026
+_SAMSTAGE = [6, 13, 20, 27]
+_SONNTAGE = [7, 14, 21, 28]
+
+
+def _we_shift(shift_id: int, day: int, doctor: "SolverDoctor") -> "SolverShift":
+    return SolverShift(
+        shift_id=shift_id, plan_id=1, shift_date=date(2026, 6, day),
+        shift_type_id=7, doctor=doctor, is_pinned=True,
+    )
+
+
+def test_max_weekends_kein_penalize_bei_2_oder_weniger() -> None:
+    """2 Wochenend-Shifts (Grenzwert) → hard_score == 0."""
+    shifts = [_we_shift(200 + i, _SAMSTAGE[i], _DR_WE) for i in range(2)]
+    solution = _solve(ShiftSchedule(doctors=[_DR_WE], shifts=shifts))
+    assert solution.score.hard_score == 0
+
+
+def test_max_weekends_penalize_bei_3_we_shifts() -> None:
+    """3 Wochenend-Shifts → Überschreitung 1 → hard_score == -1."""
+    shifts = [_we_shift(210 + i, _SAMSTAGE[i], _DR_WE) for i in range(3)]
+    solution = _solve(ShiftSchedule(doctors=[_DR_WE], shifts=shifts))
+    assert solution.score.hard_score == -1
+
+
+def test_max_weekends_penalize_skaliert_linear() -> None:
+    """4 Wochenend-Shifts → Überschreitung 2 → hard_score == -2."""
+    shifts = [_we_shift(220 + i, _SAMSTAGE[i], _DR_WE) for i in range(4)]
+    solution = _solve(ShiftSchedule(doctors=[_DR_WE], shifts=shifts))
+    assert solution.score.hard_score == -2
+
+
+def test_max_weekends_kein_penalize_werktags_shifts() -> None:
+    """5 Werktags-Shifts (Mo–Fr) → kein Wochenend-Penalty."""
+    # Montag 1.6., Di 2.6., Mi 3.6., Do 4.6., Fr 5.6. 2026 (alle Werktage)
+    shifts = [
+        SolverShift(
+            shift_id=230 + i, plan_id=1, shift_date=date(2026, 6, i + 1),
+            shift_type_id=7, doctor=_DR_WE, is_pinned=True,
+        )
+        for i in range(5)
+    ]
+    solution = _solve(ShiftSchedule(doctors=[_DR_WE], shifts=shifts))
+    assert solution.score.hard_score == 0
+
+
+def test_max_weekends_getrennt_pro_monat() -> None:
+    """3 Wochenend-Shifts in Juni + 3 in Juli → je -1 Hard pro Monat = -2 gesamt."""
+    juni_shifts = [_we_shift(240 + i, _SAMSTAGE[i], _DR_WE) for i in range(3)]
+    # Juli 2026: Sa 4., 11., 18. (weekday 5)
+    juli_samstage = [4, 11, 18]
+    juli_shifts = [
+        SolverShift(
+            shift_id=250 + i, plan_id=1, shift_date=date(2026, 7, juli_samstage[i]),
+            shift_type_id=7, doctor=_DR_WE, is_pinned=True,
+        )
+        for i in range(3)
+    ]
+    solution = _solve(ShiftSchedule(doctors=[_DR_WE], shifts=juni_shifts + juli_shifts))
+    assert solution.score.hard_score == -2
+
+
+# ---------------------------------------------------------------------------
+# MIN_REST_TIME-Tests (M8-006)
+#
+# shift_start_minutes / shift_end_minutes direkt gesetzt (Snapshot-Werte).
+# Basis: 1_000_000 Minuten (willkürlicher Epoch-Offset, konsistente Arithmetik).
+# Alle Shifts gepinnt, doctor_id=50.
+# ---------------------------------------------------------------------------
+
+_DR_REST: "SolverDoctor | None" = None
+if _JVM_OK:
+    _DR_REST = SolverDoctor(doctor_id=50, name="Dr. Rest")
+
+_BASE = 1_000_000  # willkürliche Epoch-Minuten-Basis
+_8H = 8 * 60       # 480 Minuten
+_11H = 11 * 60     # 660 Minuten
+_12H = 12 * 60     # 720 Minuten
+
+
+def _rest_shift(
+    shift_id: int,
+    day: int,
+    doctor: "SolverDoctor",
+    start_min: int,
+    end_min: int,
+) -> "SolverShift":
+    return SolverShift(
+        shift_id=shift_id, plan_id=1, shift_date=date(2026, 6, day),
+        shift_type_id=8, doctor=doctor, is_pinned=True,
+        shift_start_minutes=start_min,
+        shift_end_minutes=end_min,
+    )
+
+
+def test_min_rest_kein_penalize_bei_12h_abstand() -> None:
+    """12h Ruhezeit (> 11h) → kein Penalty."""
+    s1 = _rest_shift(300, 1, _DR_REST, start_min=_BASE, end_min=_BASE + _8H)
+    # s2 startet 12h nach Ende von s1
+    s2 = _rest_shift(301, 2, _DR_REST, start_min=_BASE + _8H + _12H, end_min=_BASE + _8H + _12H + _8H)
+    solution = _solve(ShiftSchedule(doctors=[_DR_REST], shifts=[s1, s2]))
+    assert solution.score.hard_score == 0
+
+
+def test_min_rest_penalize_bei_8h_abstand() -> None:
+    """8h Ruhezeit (< 11h) → Hard-Penalty."""
+    s1 = _rest_shift(310, 1, _DR_REST, start_min=_BASE, end_min=_BASE + _8H)
+    # s2 startet nur 8h nach Ende von s1 (Verletzung)
+    s2 = _rest_shift(311, 2, _DR_REST, start_min=_BASE + _8H + _8H, end_min=_BASE + _8H + _8H + _8H)
+    solution = _solve(ShiftSchedule(doctors=[_DR_REST], shifts=[s1, s2]))
+    assert solution.score.hard_score < 0
+
+
+def test_min_rest_kein_penalize_bei_null_zeiten() -> None:
+    """Shifts ohne Zeitdaten (shift_start/end_minutes=None) → kein Penalty."""
+    s1 = SolverShift(
+        shift_id=320, plan_id=1, shift_date=date(2026, 6, 1),
+        shift_type_id=8, doctor=_DR_REST, is_pinned=True,
+        # shift_start_minutes und shift_end_minutes bleiben None (Standard)
+    )
+    s2 = SolverShift(
+        shift_id=321, plan_id=1, shift_date=date(2026, 6, 2),
+        shift_type_id=8, doctor=_DR_REST, is_pinned=True,
+    )
+    solution = _solve(ShiftSchedule(doctors=[_DR_REST], shifts=[s1, s2]))
+    assert solution.score.hard_score == 0
+
+
+def test_min_rest_kein_penalize_verschiedene_aerzte() -> None:
+    """Zwei Ärzte mit kurzer Ruhezeit zwischen ihren Shifts → kein Penalty (andere Ärzte)."""
+    dr_a = SolverDoctor(doctor_id=51, name="Dr. A")
+    dr_b = SolverDoctor(doctor_id=52, name="Dr. B")
+    # dr_a Shift 1, endet bei _BASE + _8H
+    s1 = _rest_shift(330, 1, dr_a, start_min=_BASE, end_min=_BASE + _8H)
+    # dr_b Shift 2, startet 4h nach Ende von s1 — aber anderer Arzt → kein Penalty
+    s2 = _rest_shift(331, 1, dr_b, start_min=_BASE + _8H + 4 * 60, end_min=_BASE + _8H + 4 * 60 + _8H)
+    solution = _solve(ShiftSchedule(doctors=[dr_a, dr_b], shifts=[s1, s2]))
+    assert solution.score.hard_score == 0
+
+
+def test_min_rest_exakt_11h_abstand_kein_penalize() -> None:
+    """Genau 11h Ruhezeit (Grenzwert) → kein Penalty (> 0 and < 660 schließt exakt 660 aus)."""
+    s1 = _rest_shift(340, 1, _DR_REST, start_min=_BASE, end_min=_BASE + _8H)
+    # s2 startet exakt 11h (660 min) nach Ende von s1 → nicht < 660 → kein Penalty
+    s2 = _rest_shift(341, 2, _DR_REST, start_min=_BASE + _8H + _11H, end_min=_BASE + _8H + _11H + _8H)
+    solution = _solve(ShiftSchedule(doctors=[_DR_REST], shifts=[s1, s2]))
+    assert solution.score.hard_score == 0

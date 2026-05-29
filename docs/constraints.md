@@ -15,6 +15,8 @@ Alle Tarifregeln sind zentral in `backend/app/solver/tarif_rules.py` definiert.
   - [2. ABSENT_DOCTOR](#2-absent_doctor-logisch-hart-constraintidabsent_doctor-m8-003)
   - [3. FAIR_DISTRIBUTION](#3-fair_distribution-soft-constraintidfair_distribution-m8-004)
   - [4. MAX_BD_PER_MONTH](#4-max_bd_per_month-regulatorisch-hart-constraintidmax_bd_per_month-m8-005)
+  - [5. MAX_WEEKENDS_PER_MONTH](#5-max_weekends_per_month-regulatorisch-hart-constraintidmax_weekends_per_month-m8-006)
+  - [6. MIN_REST_TIME](#6-min_rest_time-regulatorisch-hart-constraintidmin_rest_time-m8-006)
   - [Folge-Milestones](#folge-milestones-noch-nicht-implementiert)
 - [Tarif-Validation-Framework (M5-001)](#tarif-validation-framework-m5-001-phase-a)
 - [Excel-Export (M6-001)](#excel-export-m6-001-phase-a)
@@ -195,13 +197,69 @@ Penalty: −(count − 4) Hard pro (Arzt, Monat)-Gruppe. `group_by(key1, key2, c
 **Pinned Shifts zählen.** Manuelle 5+-BD-Zuweisungen mit Pinning erzeugen
 unvermeidliche Hard-Penalty — erwartetes Verhalten bis Phase-B-Override.
 
+### 5. MAX_WEEKENDS_PER_MONTH (regulatorisch-hart, ConstraintId.MAX_WEEKENDS_PER_MONTH, M8-006)
+
+**Regel:** Kein Arzt darf mehr als `MAX_WEEKEND_SHIFTS_PER_MONTH` (= 2, Platzhalter)
+Wochenend-Dienste pro Monat haben. Wochenende = Samstag (weekday 5) oder Sonntag (weekday 6).
+
+**Klasse:** Regulatorisch-hart — overridebar per Override-Mechanismus A/B/C.
+
+**Tarif-Wert:** `MAX_WEEKEND_SHIFTS_PER_MONTH = 2` in `tarif_rules.py`.
+Platzhalter — exakter TV-Ärzte/TdL-Wert noch durch Domänenexperten zu bestätigen.
+
+**Implementierung:**
+```python
+cf.for_each(SolverShift)
+  .filter(lambda s: s.doctor is not None and s.shift_date.weekday() in (5, 6))
+  .group_by(lambda s: s.doctor, lambda s: s.shift_date.month, ConstraintCollectors.count())
+  .filter(lambda doc, month, count: count > MAX_WEEKEND_SHIFTS_PER_MONTH)
+  .penalize(HardSoftScore.ONE_HARD, lambda doc, month, count: count - MAX_WEEKEND_SHIFTS_PER_MONTH)
+  .as_constraint(ConstraintId.MAX_WEEKENDS_PER_MONTH)
+```
+
+Penalty: −(count − 2) Hard pro (Arzt, Monat)-Gruppe.
+
+### 6. MIN_REST_TIME (regulatorisch-hart, ConstraintId.MIN_REST_TIME, M8-006)
+
+**Regel:** Zwischen Dienstende und Dienstbeginn desselben Arztes müssen
+mindestens `MIN_REST_HOURS` (= 11) Stunden Ruhezeit liegen (ArbZG § 5 Abs. 1).
+
+**Klasse:** Regulatorisch-hart — overridebar per Override-Mechanismus A/B/C.
+
+**Tarif-Wert:** `MIN_REST_HOURS = 11` in `tarif_rules.py` (ArbZG, kein Platzhalter).
+
+**Snapshot-Extension (ADR-071-Pattern):** `SolverShift` erhält zwei neue Felder:
+- `shift_start_minutes: int | None` — Minuten seit Datum-Epoch (`date.toordinal() * 1440 + start_hhmm`)
+- `shift_end_minutes: int | None` — analog, +1440 bei Overnight-Shifts (`end_time < start_time`)
+
+`to_solver()` befüllt diese Felder aus `ShiftType.start_time` / `ShiftType.end_time` (nullable).
+Shifts ohne Zeitdaten erhalten `None` — der Constraint überspringt sie (Graceful Degradation).
+
+**Implementierung:**
+```python
+cf.for_each_unique_pair(SolverShift, Joiners.equal(lambda s: s.doctor))
+  .filter(lambda s1, s2: (
+      s1.doctor is not None
+      and s1.shift_start_minutes is not None and s1.shift_end_minutes is not None
+      and s2.shift_start_minutes is not None and s2.shift_end_minutes is not None
+      and (
+          0 < s2.shift_start_minutes - s1.shift_end_minutes < MIN_REST_HOURS * 60
+          or 0 < s1.shift_start_minutes - s2.shift_end_minutes < MIN_REST_HOURS * 60
+      )
+  ))
+  .penalize(HardSoftScore.ONE_HARD)
+  .as_constraint(ConstraintId.MIN_REST_TIME)
+```
+
+`for_each_unique_pair` liefert ungeordnete Paare — beide Richtungen werden geprüft.
+Penalty: −1 Hard pro verletzendem Pair.
+
 ### Folge-Milestones (noch nicht implementiert)
 
 | Constraint-ID | Klasse | Milestone | Beschreibung |
 |---------------|--------|-----------|--------------|
-| max-weekends-per-month | Regulatorisch-hart | M8-006 | Max. 2 Wochenenden/Monat (§ 6 Abs. 9 TV-Ärzte/TdL, Fr 21:00–Mo 05:00). Benötigt `ConstraintCollectors.to_set()` — erst nach Spike. |
 | max-weekly-hours | Regulatorisch-hart | M8-007 | ArbZG § 3: 48 h/Woche (Std.), Opt-out BD-I: 58 h, BD-II: 54 h (§ 7 Abs. 5). Benötigt Schichtdauer-Snapshot auf SolverShift. |
-| min-rest-time | Regulatorisch-hart | M8-008+ | Mindestruhezeit 11 h zwischen Diensten (§ 5 ArbZG). Benötigt paarweisen Shift-Vergleich. |
+| max-consecutive-days | Soft | M8-008 | Max. aufeinanderfolgende Arbeitstage pro Arzt. |
 
 Keine Tarif-Werte dürfen ohne Rückfrage erfunden werden — alle regulatorischen
 Constraints kommen erst nach Klärung mit Domänenexperten (OQ-006).

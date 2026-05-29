@@ -8,6 +8,7 @@ Liest read-only über bestehende Repositories; keine eigenen DB-Queries.
 from __future__ import annotations
 
 from collections import Counter
+from datetime import date, time
 
 from sqlalchemy.orm import Session
 
@@ -17,6 +18,36 @@ from app.repositories.shift_repository import list_shifts_for_plan
 from app.services.employment_period_service import get_fte_for_period
 from app.services.ina_availability_service import get_ina_availability_for_period
 from app.solver.domain import ShiftSchedule, SolverDoctor, SolverShift
+
+
+def _time_to_minutes(t: time | None) -> int | None:
+    """Konvertiert datetime.time in Minuten seit Mitternacht, None wenn nicht gesetzt."""
+    if t is None:
+        return None
+    return t.hour * 60 + t.minute
+
+
+def _shift_start_minutes(shift_date: date, start_time: time | None) -> int | None:
+    """Absolute Startminuten (Minuten seit Datum-Epoch). None wenn start_time nicht gesetzt."""
+    t = _time_to_minutes(start_time)
+    if t is None:
+        return None
+    return shift_date.toordinal() * 1440 + t
+
+
+def _shift_end_minutes(
+    shift_date: date, start_time: time | None, end_time: time | None
+) -> int | None:
+    """Absolute Endminuten. Overnight-Shifts (end_time < start_time) enden am Folgetag.
+    None wenn start_time oder end_time nicht gesetzt (Constraint überspringt dann diesen Shift).
+    """
+    s = _time_to_minutes(start_time)
+    e = _time_to_minutes(end_time)
+    if s is None or e is None:
+        return None
+    base = shift_date.toordinal() * 1440
+    # Overnight: Nachtschicht endet nach Mitternacht des Folgetags
+    return base + e + (1440 if e < s else 0)
 
 
 def to_solver(db: Session, plan_id: int) -> ShiftSchedule:
@@ -33,10 +64,16 @@ def to_solver(db: Session, plan_id: int) -> ShiftSchedule:
     Timefold-Constraints dürfen keine DB-Queries ausführen — der Snapshot
     entkoppelt die Constraint-Logik vom Datenbankzugriff.
     """
-    # ShiftType-Map: is_bereitschaftsdienst-Flag einmalig pro Aufruf laden
+    # ShiftType-Maps: alle relevanten Felder einmalig pro Aufruf laden
+    all_shift_types = (
+        db.query(ShiftTypeORM).filter(ShiftTypeORM.active == True).all()  # noqa: E712
+    )
     shift_type_bd_map: dict[int, bool] = {
-        st.id: st.is_bereitschaftsdienst
-        for st in db.query(ShiftTypeORM).filter(ShiftTypeORM.active == True).all()  # noqa: E712
+        st.id: st.is_bereitschaftsdienst for st in all_shift_types
+    }
+    # Zeitdaten für MIN_REST_TIME-Snapshot (nullable)
+    shift_type_times_map: dict[int, tuple[time | None, time | None]] = {
+        st.id: (st.start_time, st.end_time) for st in all_shift_types
     }
 
     # --- Schichten laden (nötig für Plan-Datum-Range) ---
@@ -99,6 +136,7 @@ def to_solver(db: Session, plan_id: int) -> ShiftSchedule:
         assigned_doctor = (
             solver_doctors.get(shift.doctor_id) if shift.doctor_id is not None else None
         )
+        start_t, end_t = shift_type_times_map.get(shift.shift_type_id, (None, None))
         solver_shifts.append(
             SolverShift(
                 shift_id=shift.id,
@@ -108,6 +146,8 @@ def to_solver(db: Session, plan_id: int) -> ShiftSchedule:
                 doctor=assigned_doctor,
                 is_pinned=shift.is_pinned,
                 is_bereitschaftsdienst=shift_type_bd_map.get(shift.shift_type_id, False),
+                shift_start_minutes=_shift_start_minutes(shift.shift_date, start_t),
+                shift_end_minutes=_shift_end_minutes(shift.shift_date, start_t, end_t),
             )
         )
 

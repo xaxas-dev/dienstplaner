@@ -21,7 +21,12 @@ from timefold.solver.score import (
 )
 
 from app.solver.domain import SolverShift
-from app.solver.tarif_rules import MAX_BD_PER_MONAT, ConstraintId
+from app.solver.tarif_rules import (
+    MAX_BD_PER_MONAT,
+    MAX_WEEKEND_SHIFTS_PER_MONTH,
+    MIN_REST_HOURS,
+    ConstraintId,
+)
 
 
 @constraint_provider
@@ -30,6 +35,8 @@ def constraint_definitions(cf: ConstraintFactory) -> list[Constraint]:
         double_booked(cf),
         absent_doctor(cf),
         max_bd_per_month(cf),
+        max_weekends_per_month(cf),
+        min_rest_time(cf),
         fair_distribution(cf),
     ]
 
@@ -84,6 +91,62 @@ def max_bd_per_month(cf: ConstraintFactory) -> Constraint:
             lambda doc, month, count: count - MAX_BD_PER_MONAT,
         )
         .as_constraint(ConstraintId.MAX_BD_PER_MONTH)
+    )
+
+
+def max_weekends_per_month(cf: ConstraintFactory) -> Constraint:
+    """Regulatorisch-harte Constraint: max. Wochenend-Dienste pro Arzt pro Monat (TV-Ärzte/TdL).
+
+    Wochenende = Samstag (weekday 5) oder Sonntag (weekday 6).
+    Limit: MAX_WEEKEND_SHIFTS_PER_MONTH (Platzhalter, noch zu bestätigen).
+    """
+    return (
+        cf.for_each(SolverShift)
+        .filter(lambda s: s.doctor is not None and s.shift_date.weekday() in (5, 6))
+        .group_by(
+            lambda s: s.doctor,
+            lambda s: s.shift_date.month,
+            ConstraintCollectors.count(),
+        )
+        .filter(lambda doc, month, count: count > MAX_WEEKEND_SHIFTS_PER_MONTH)
+        .penalize(
+            HardSoftScore.ONE_HARD,
+            lambda doc, month, count: count - MAX_WEEKEND_SHIFTS_PER_MONTH,
+        )
+        .as_constraint(ConstraintId.MAX_WEEKENDS_PER_MONTH)
+    )
+
+
+def min_rest_time(cf: ConstraintFactory) -> Constraint:
+    """Regulatorisch-harte Constraint: mindestens 11h Ruhezeit zwischen Diensten (ArbZG §5 Abs. 1).
+
+    Snapshot-Pattern: shift_start_minutes / shift_end_minutes vorberechnet in to_solver().
+    Graceful Degradation: ShiftTypes ohne Zeitdaten werden übersprungen (kein Penalty).
+    Overnight-Shifts (end_time < start_time) korrekt behandelt (+1440 Minuten in mapping.py).
+    for_each_unique_pair liefert ungeordnete Paare — beide Richtungen (s1→s2, s2→s1) geprüft.
+    """
+    return (
+        cf.for_each_unique_pair(
+            SolverShift,
+            Joiners.equal(lambda s: s.doctor),
+        )
+        .filter(
+            lambda s1, s2: (
+                s1.doctor is not None
+                and s1.shift_start_minutes is not None
+                and s1.shift_end_minutes is not None
+                and s2.shift_start_minutes is not None
+                and s2.shift_end_minutes is not None
+                and (
+                    # s2 folgt auf s1, Ruhezeit zu kurz
+                    0 < s2.shift_start_minutes - s1.shift_end_minutes < MIN_REST_HOURS * 60
+                    # s1 folgt auf s2, Ruhezeit zu kurz
+                    or 0 < s1.shift_start_minutes - s2.shift_end_minutes < MIN_REST_HOURS * 60
+                )
+            )
+        )
+        .penalize(HardSoftScore.ONE_HARD)
+        .as_constraint(ConstraintId.MIN_REST_TIME)
     )
 
 

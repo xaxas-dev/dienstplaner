@@ -80,6 +80,9 @@ class SolverShift:
     shift_date: date
     shift_type_id: int
     is_bereitschaftsdienst: bool
+    # Zeitdaten für MIN_REST_TIME: Minuten seit Datum-Epoch (None wenn ShiftType keine Zeiten hat)
+    shift_start_minutes: int | None
+    shift_end_minutes: int | None
 
     def __init__(
         self,
@@ -91,6 +94,8 @@ class SolverShift:
         *,
         is_pinned: bool = False,
         is_bereitschaftsdienst: bool = False,
+        shift_start_minutes: int | None = None,
+        shift_end_minutes: int | None = None,
     ) -> None:
         self.id = shift_id
         self.plan_id = plan_id
@@ -100,6 +105,8 @@ class SolverShift:
         # Sonderfall: gepinnt + kein Arzt → nicht pinnbar (Solver darf besetzen)
         self.is_pinned = is_pinned and doctor is not None
         self.is_bereitschaftsdienst = is_bereitschaftsdienst
+        self.shift_start_minutes = shift_start_minutes
+        self.shift_end_minutes = shift_end_minutes
 
     def __repr__(self) -> str:
         return (
