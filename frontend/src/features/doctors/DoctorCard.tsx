@@ -9,7 +9,7 @@ import type { Doctor, ShiftWithDetails } from '@/lib/types'
 function roleLabel(doctor: Doctor): string {
   if (doctor.doctor_type === 'EXTERNAL') return 'Extern'
   if (doctor.is_facharzt) return 'Facharzt'
-  if (doctor.weiterbildungsjahr != null) return `WBA ${doctor.weiterbildungsjahr}`
+  if (doctor.weiterbildungsjahr != null) return `Assistenzarzt ${doctor.weiterbildungsjahr}`
   return 'Assistenzarzt'
 }
 

@@ -47,7 +47,7 @@ export function DoctorListPage() {
   const filterChips = [
     { label: 'Alle',      active: filter === 'all',      onClick: () => setFilter('all') },
     { label: 'Fachärzte', active: filter === 'facharzt', onClick: () => setFilter('facharzt') },
-    { label: 'WBA',       active: filter === 'wba',      onClick: () => setFilter('wba') },
+    { label: 'Assistenzarzt', active: filter === 'wba', onClick: () => setFilter('wba') },
     { label: 'Extern',    active: filter === 'extern',   onClick: () => setFilter('extern') },
     {
       label: includeInactive ? 'Inaktive ausblenden' : 'Inaktive anzeigen',

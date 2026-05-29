@@ -77,10 +77,10 @@ describe('DoctorListPage – Karten-Grid', () => {
     expect(screen.queryByText('Clara Extern')).toBeNull()
   })
 
-  it('Filter WBA zeigt nur WBA-Ärzte', async () => {
+  it('Filter Assistenzarzt zeigt nur Assistenzärzte', async () => {
     const user = userEvent.setup()
     render(<Wrapper><DoctorListPage /></Wrapper>)
-    await user.click(screen.getByRole('button', { name: 'WBA' }))
+    await user.click(screen.getByRole('button', { name: 'Assistenzarzt' }))
     expect(screen.queryByText('Anna Facharzt')).toBeNull()
     expect(screen.getByText('Bruno WBA')).toBeInTheDocument()
     expect(screen.queryByText('Clara Extern')).toBeNull()
