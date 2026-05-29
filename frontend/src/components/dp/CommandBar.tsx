@@ -1,6 +1,7 @@
 import * as React from 'react'
-import { Search, ChevronRight } from 'lucide-react'
+import { Search, ChevronRight, ChevronLeft } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Chip } from './Chip'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -48,6 +49,31 @@ export function CommandBar({
 
   return (
     <div className={cn('flex items-center gap-3 px-10 py-4 bg-paper', className)}>
+      {/* Breadcrumb / Zurück-Navigation — vor dem Titel */}
+      {breadcrumb && breadcrumb.length > 0 && (
+        <nav className="flex items-center gap-1 shrink-0">
+          {breadcrumb.map((item, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <ChevronRight className="size-3 text-ink-3" />}
+              {item.href ? (
+                <Link
+                  to={item.href}
+                  className={cn(
+                    'text-xs text-ink-3 hover:text-ink transition-colors',
+                    i === 0 && 'flex items-center gap-0.5',
+                  )}
+                >
+                  {i === 0 && <ChevronLeft className="size-3.5" />}
+                  {item.label}
+                </Link>
+              ) : (
+                <span className="text-xs text-ink-3">{item.label}</span>
+              )}
+            </React.Fragment>
+          ))}
+        </nav>
+      )}
+
       {/* Titel */}
       <h1 className="font-serif text-2xl text-ink leading-none shrink-0">
         {titleAccent && (
@@ -56,24 +82,6 @@ export function CommandBar({
         {titleAccent && title && ' '}
         {title}
       </h1>
-
-      {/* Breadcrumb */}
-      {breadcrumb && breadcrumb.length > 0 && (
-        <nav className="flex items-center gap-1 text-xs text-ink-3 shrink-0">
-          {breadcrumb.map((item, i) => (
-            <React.Fragment key={i}>
-              {i > 0 && <ChevronRight className="size-3" />}
-              {item.href ? (
-                <a href={item.href} className="hover:text-ink transition-colors">
-                  {item.label}
-                </a>
-              ) : (
-                <span>{item.label}</span>
-              )}
-            </React.Fragment>
-          ))}
-        </nav>
-      )}
 
       {/* Filter-Chips */}
       {filters && filters.length > 0 && (
