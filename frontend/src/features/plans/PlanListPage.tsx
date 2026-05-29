@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { CommandBar } from '@/components/dp/CommandBar'
 import { usePlans } from './usePlans'
 import { useDeletePlan } from './useDeletePlan'
+import { useUpdatePlan } from './useUpdatePlan'
 import { planToSlug } from './planSlug'
 import { PlanCreateDialog } from './components/PlanCreateDialog'
 import {
@@ -19,6 +20,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import type { Plan } from '@/lib/types'
 
 type PlanFilterKey = 'all' | 'draft' | 'released' | 'archived'
@@ -35,39 +43,70 @@ function applyPlanFilter(plans: Plan[], filter: PlanFilterKey): Plan[] {
 function PlanCard({ plan, onClick }: { plan: Plan; onClick: () => void }) {
   const [showDelete, setShowDelete] = useState(false)
   const deletePlan = useDeletePlan()
+  const updatePlan = useUpdatePlan(plan.id)
   const title = format(new Date(plan.valid_from), 'MMMM yyyy', { locale: de })
 
   const handleDelete = () => {
     deletePlan.mutate(plan.id, {
-      onSuccess: () => {
-        toast.success('Plan gelöscht')
-        setShowDelete(false)
-      },
-      onError: () => {
-        toast.error('Löschen fehlgeschlagen')
-      },
+      onSuccess: () => { toast.success('Plan gelöscht'); setShowDelete(false) },
+      onError: () => { toast.error('Löschen fehlgeschlagen') },
     })
   }
+
+  const handleStatusChange = (newStatus: 'DRAFT' | 'RELEASED' | 'ARCHIVED') => {
+    updatePlan.mutate({ status: newStatus }, {
+      onSuccess: () => toast.success('Status geändert'),
+      onError: () => toast.error('Statusänderung fehlgeschlagen'),
+    })
+  }
+
+  const statusLabel =
+    plan.status === 'RELEASED' ? 'Freigegeben'
+    : plan.status === 'ARCHIVED' ? 'Archiviert'
+    : 'Entwurf'
 
   return (
     <>
       <div className="group relative rounded-2xl bg-card border border-line hover:border-accent transition">
-        <button
-          onClick={onClick}
-          className="w-full p-5 text-left"
-        >
+        <button onClick={onClick} className="w-full p-5 text-left">
           <p className="font-serif text-xl capitalize">{title}</p>
-          <p className="text-xs text-ink-3 mt-1 uppercase tracking-wide">
-            {plan.status === 'RELEASED' ? 'Freigegeben' : plan.status === 'ARCHIVED' ? 'Archiviert' : 'Entwurf'}
-          </p>
+          <p className="text-xs text-ink-3 mt-1 uppercase tracking-wide">{statusLabel}</p>
         </button>
-        <button
-          className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-line"
-          onClick={(e) => { e.stopPropagation(); setShowDelete(true) }}
-          aria-label="Plan-Aktionen"
-        >
-          <MoreHorizontal className="size-4 text-ink-3" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-line"
+              aria-label="Plan-Aktionen"
+            >
+              <MoreHorizontal className="size-4 text-ink-3" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {plan.status !== 'RELEASED' && (
+              <DropdownMenuItem onClick={() => handleStatusChange('RELEASED')}>
+                Freigeben
+              </DropdownMenuItem>
+            )}
+            {plan.status !== 'ARCHIVED' && (
+              <DropdownMenuItem onClick={() => handleStatusChange('ARCHIVED')}>
+                Archivieren
+              </DropdownMenuItem>
+            )}
+            {plan.status !== 'DRAFT' && (
+              <DropdownMenuItem onClick={() => handleStatusChange('DRAFT')}>
+                Zurück zu Entwurf
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-red-600 focus:text-red-600"
+              onClick={() => setShowDelete(true)}
+            >
+              <Trash2 className="size-4 mr-2" />
+              Löschen
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <AlertDialog open={showDelete} onOpenChange={setShowDelete}>
         <AlertDialogContent>

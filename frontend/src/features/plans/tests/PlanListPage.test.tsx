@@ -32,6 +32,14 @@ vi.mock('../usePlans', () => ({
   usePlan: () => ({ data: undefined, isLoading: false }),
 }))
 
+vi.mock('../useDeletePlan', () => ({
+  useDeletePlan: () => ({ mutate: vi.fn(), isPending: false }),
+}))
+
+vi.mock('../useUpdatePlan', () => ({
+  useUpdatePlan: () => ({ mutate: vi.fn(), isPending: false }),
+}))
+
 function Wrapper({ children }: { children: React.ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return (
@@ -54,6 +62,16 @@ describe('PlanListPage', () => {
     render(<Wrapper><PlanListPage /></Wrapper>)
     expect(screen.getAllByText('Entwurf').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Freigegeben').length).toBeGreaterThan(0)
+  })
+
+  it('zeigt Status-Optionen im Dropdown-Menü', async () => {
+    const user = userEvent.setup()
+    render(<Wrapper><PlanListPage /></Wrapper>)
+    const buttons = screen.getAllByRole('button', { name: 'Plan-Aktionen' })
+    await user.click(buttons[0]) // erster Plan ist DRAFT
+    expect(screen.getByText('Freigeben')).toBeInTheDocument()
+    expect(screen.getByText('Archivieren')).toBeInTheDocument()
+    expect(screen.getByText('Löschen')).toBeInTheDocument()
   })
 
   it('öffnet PlanCreateDialog bei Klick auf + Neuer Plan', async () => {
