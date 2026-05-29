@@ -7,7 +7,7 @@ import { getCurrentEmploymentPeriod } from './doctorHelpers'
 import type { Doctor, ShiftWithDetails } from '@/lib/types'
 
 function roleLabel(doctor: Doctor): string {
-  if (doctor.doctor_type === 'EXTERNAL') return 'Extern'
+  if (doctor.doctor_type === 'EXTERNAL') return doctor.is_facharzt ? 'Facharzt (Extern)' : 'Extern'
   if (doctor.is_facharzt) return 'Facharzt'
   if (doctor.weiterbildungsjahr != null) return `Assistenzarzt ${doctor.weiterbildungsjahr}`
   return 'Assistenzarzt'

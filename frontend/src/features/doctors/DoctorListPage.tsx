@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useMemo } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { CommandBar } from '@/components/dp/CommandBar'
 import { DoctorCard } from './DoctorCard'
@@ -21,8 +21,17 @@ function applyFilter(doctors: Doctor[], filter: FilterKey): Doctor[] {
 
 export function DoctorListPage() {
   const navigate = useNavigate()
-  const [filter, setFilter] = useState<FilterKey>('all')
-  const [includeInactive, setIncludeInactive] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const filter = (searchParams.get('filter') ?? 'all') as FilterKey
+  const includeInactive = searchParams.get('inactive') === 'true'
+
+  function setFilter(key: FilterKey) {
+    setSearchParams((p) => { p.set('filter', key); return p }, { replace: true })
+  }
+  function setIncludeInactive(fn: (v: boolean) => boolean) {
+    setSearchParams((p) => { p.set('inactive', String(fn(includeInactive))); return p }, { replace: true })
+  }
 
   const today = new Date().toISOString().slice(0, 10)
   const { data: doctors, isLoading, isError, refetch } = useDoctors(includeInactive)
@@ -46,7 +55,7 @@ export function DoctorListPage() {
 
   const filterChips = [
     { label: 'Alle',      active: filter === 'all',      onClick: () => setFilter('all') },
-    { label: 'Fachärzte', active: filter === 'facharzt', onClick: () => setFilter('facharzt') },
+    { label: 'Facharzt', active: filter === 'facharzt', onClick: () => setFilter('facharzt') },
     { label: 'Assistenzarzt', active: filter === 'wba', onClick: () => setFilter('wba') },
     { label: 'Extern',    active: filter === 'extern',   onClick: () => setFilter('extern') },
     {

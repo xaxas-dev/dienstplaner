@@ -218,22 +218,20 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
           )}
         />
 
-        {/* Facharzt (nur intern) */}
-        {doctorType === 'INTERNAL' && (
-          <FormField
-            control={form.control}
-            name="is_facharzt"
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-3">
-                <FormControl>
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
-                </FormControl>
-                <FormLabel className="!mt-0 cursor-pointer">Facharzt</FormLabel>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        {/* Facharzt */}
+        <FormField
+          control={form.control}
+          name="is_facharzt"
+          render={({ field }) => (
+            <FormItem className="flex items-center gap-3">
+              <FormControl>
+                <Switch checked={field.value} onCheckedChange={field.onChange} />
+              </FormControl>
+              <FormLabel className="!mt-0 cursor-pointer">Facharzt</FormLabel>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {/* Eintrittsdatum */}
         <FormField

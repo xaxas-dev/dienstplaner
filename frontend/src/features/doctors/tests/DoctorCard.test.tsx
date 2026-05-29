@@ -46,10 +46,10 @@ describe('DoctorCard', () => {
     expect(screen.getByText(/facharzt/i)).toBeInTheDocument()
   })
 
-  it('zeigt WBA-Label für Arzt mit Weiterbildungsjahr', () => {
+  it('zeigt Assistenzarzt-Label für Arzt mit Weiterbildungsjahr', () => {
     const wbaDoctor: Doctor = { ...baseDoctor, is_facharzt: false, weiterbildungsjahr: 3 }
     render(<Wrapper><DoctorCard doctor={wbaDoctor} /></Wrapper>)
-    expect(screen.getByText(/wba/i)).toBeInTheDocument()
+    expect(screen.getByText(/assistenzarzt/i)).toBeInTheDocument()
   })
 
   it('zeigt Extern für externen Arzt', () => {

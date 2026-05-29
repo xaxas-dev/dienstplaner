@@ -68,10 +68,10 @@ describe('DoctorListPage – Karten-Grid', () => {
     expect(screen.getByText(/3 Ärzte/)).toBeInTheDocument()
   })
 
-  it('Filter Fachärzte zeigt nur Fachärzte', async () => {
+  it('Filter Facharzt zeigt nur Fachärzte', async () => {
     const user = userEvent.setup()
     render(<Wrapper><DoctorListPage /></Wrapper>)
-    await user.click(screen.getByRole('button', { name: 'Fachärzte' }))
+    await user.click(screen.getByRole('button', { name: 'Facharzt' }))
     expect(screen.getByText('Anna Facharzt')).toBeInTheDocument()
     expect(screen.queryByText('Bruno WBA')).toBeNull()
     expect(screen.queryByText('Clara Extern')).toBeNull()
@@ -98,7 +98,7 @@ describe('DoctorListPage – Karten-Grid', () => {
   it('Filter Alle stellt alle Ärzte wieder her', async () => {
     const user = userEvent.setup()
     render(<Wrapper><DoctorListPage /></Wrapper>)
-    await user.click(screen.getByRole('button', { name: 'Fachärzte' }))
+    await user.click(screen.getByRole('button', { name: 'Facharzt' }))
     await user.click(screen.getByRole('button', { name: 'Alle' }))
     expect(screen.getByText('Anna Facharzt')).toBeInTheDocument()
     expect(screen.getByText('Bruno WBA')).toBeInTheDocument()
