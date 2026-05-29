@@ -36,7 +36,7 @@ export function TodayPage() {
             <KpiTile
               value={hasPlan && kpis ? `${Math.round(kpis.coverage_pct * 100)}%` : '—'}
               label="Abdeckung"
-              sub="gefüllte Schichten"
+              sub="zugeteilte Schichten"
             />
             {planSlug && openCount > 0 ? (
               <Link to={`/plans/${planSlug}?highlight=open`} className="block rounded-tile focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
@@ -98,7 +98,7 @@ export function TodayPage() {
         <div className="flex flex-col gap-5">
           {/* Aufmerksamkeit */}
           <div className="rounded-2xl bg-card border border-line p-5">
-            <h2 className="text-sm font-semibold text-ink mb-3">Aufmerksamkeit</h2>
+            <h2 className="text-sm font-semibold text-ink mb-3">Hinweise</h2>
             {!hasPlan || !summary || summary.attention.length === 0 ? (
               <p className="text-sm text-ink-3 italic">Keine Hinweise</p>
             ) : (
@@ -110,7 +110,7 @@ export function TodayPage() {
 
           {/* Coverage per Department */}
           <div className="rounded-2xl bg-card border border-line p-5">
-            <h2 className="text-sm font-semibold text-ink mb-3">Rotationen</h2>
+            <h2 className="text-sm font-semibold text-ink mb-3">Stationsbesetzung</h2>
             {!hasPlan || !summary || summary.coverage_by_department.length === 0 ? (
               <p className="text-sm text-ink-3 italic">Keine Rotationsdaten</p>
             ) : (
