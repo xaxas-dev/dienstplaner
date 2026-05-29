@@ -10,9 +10,9 @@ export interface SolverDiffRow {
   is_unassign: boolean
 }
 
-function doctorName(d: { first_name: string; last_name: string } | null | undefined): string | null {
+function doctorName(d: { name: string } | null | undefined): string | null {
   if (!d) return null
-  return `${d.first_name} ${d.last_name}`
+  return d.name
 }
 
 export function buildSolverDiff(
