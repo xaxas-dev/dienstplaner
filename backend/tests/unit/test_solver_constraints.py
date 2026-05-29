@@ -240,7 +240,6 @@ def test_fair_distribution_kein_penalize_bei_null_doctor() -> None:
     """Offene Shifts (doctor=None) → kein Soft-Penalty, auch wenn kein Arzt zugewiesen."""
     # Nur ein Arzt im Pool mit target=0 für alle Typen.
     # Shifts sind offen (nicht gepinnt, doctor=None), Solver kann unassigned lassen.
-    dr = SolverDoctor(doctor_id=22, name="Dr. Target0", fair_targets={1: 0})
     s1 = SolverShift(shift_id=50, plan_id=1, shift_date=date(2026, 8, 1), shift_type_id=1)
     s2 = SolverShift(shift_id=51, plan_id=1, shift_date=date(2026, 8, 2), shift_type_id=1)
     # Solver mit leerer Doktorliste → kein Arzt verfügbar → doctor=None bleibt
@@ -313,3 +312,87 @@ def test_fair_distribution_und_double_booked_unabhaengig() -> None:
     assert solution.score.hard_score < 0
     # FAIR_DISTRIBUTION: Typ 1 count=3 (s1,s3,s4), target=2 → soft_score == -1
     assert solution.score.soft_score < 0
+
+
+# ---------------------------------------------------------------------------
+# MAX_BD_PER_MONTH-Tests (M8-005)
+#
+# Alle BD-Shifts: is_bereitschaftsdienst=True, is_pinned=True.
+# Gleicher Monat (Juli 2026). BD-Arzt: doctor_id=30.
+# ---------------------------------------------------------------------------
+
+_DR_BD: "SolverDoctor | None" = None
+if _JVM_OK:
+    _DR_BD = SolverDoctor(doctor_id=30, name="Dr. BD")
+
+_DR_BD2: "SolverDoctor | None" = None
+if _JVM_OK:
+    _DR_BD2 = SolverDoctor(doctor_id=31, name="Dr. BD2")
+
+
+def _bd_shift(shift_id: int, day: int, doctor: "SolverDoctor") -> "SolverShift":
+    return SolverShift(
+        shift_id=shift_id, plan_id=1, shift_date=date(2026, 7, day),
+        shift_type_id=5, doctor=doctor, is_pinned=True, is_bereitschaftsdienst=True,
+    )
+
+
+def test_max_bd_kein_penalize_bei_4_oder_weniger() -> None:
+    """4 BD-Shifts ein Arzt → hard_score == 0 (Grenzwert)."""
+    shifts = [_bd_shift(100 + i, i + 1, _DR_BD) for i in range(4)]
+    solution = _solve(ShiftSchedule(doctors=[_DR_BD], shifts=shifts))
+    assert solution.score.hard_score == 0
+
+
+def test_max_bd_penalize_bei_5_bd() -> None:
+    """5 BD-Shifts ein Arzt → hard_score == -1."""
+    shifts = [_bd_shift(110 + i, i + 1, _DR_BD) for i in range(5)]
+    solution = _solve(ShiftSchedule(doctors=[_DR_BD], shifts=shifts))
+    assert solution.score.hard_score == -1
+
+
+def test_max_bd_penalize_skaliert_linear() -> None:
+    """6 BD-Shifts ein Arzt → hard_score == -2 (linear)."""
+    shifts = [_bd_shift(120 + i, i + 1, _DR_BD) for i in range(6)]
+    solution = _solve(ShiftSchedule(doctors=[_DR_BD], shifts=shifts))
+    assert solution.score.hard_score == -2
+
+
+def test_max_bd_kein_penalize_nicht_bd_shifts() -> None:
+    """5 Shifts ohne BD-Flag → hard_score == 0."""
+    shifts = [
+        SolverShift(
+            shift_id=130 + i, plan_id=1, shift_date=date(2026, 7, i + 1),
+            shift_type_id=5, doctor=_DR_BD, is_pinned=True, is_bereitschaftsdienst=False,
+        )
+        for i in range(5)
+    ]
+    solution = _solve(ShiftSchedule(doctors=[_DR_BD], shifts=shifts))
+    assert solution.score.hard_score == 0
+
+
+def test_max_bd_kein_penalize_offene_shifts() -> None:
+    """5 BD-Shifts ohne Doctor → hard_score == 0."""
+    shifts = [
+        SolverShift(
+            shift_id=140 + i, plan_id=1, shift_date=date(2026, 7, i + 1),
+            shift_type_id=5, doctor=None, is_bereitschaftsdienst=True,
+        )
+        for i in range(5)
+    ]
+    solution = _solve(ShiftSchedule(doctors=[_DR_BD], shifts=shifts))
+    assert solution.score.hard_score == 0
+
+
+def test_max_bd_getrennt_pro_arzt() -> None:
+    """Arzt A: 5 BD (penalisiert), Arzt B: 3 BD (nicht penalisiert) → hard_score == -1."""
+    shifts_a = [_bd_shift(150 + i, i + 1, _DR_BD) for i in range(5)]
+    shifts_b = [
+        SolverShift(
+            shift_id=160 + i, plan_id=1, shift_date=date(2026, 7, i + 1),
+            shift_type_id=6, doctor=_DR_BD2, is_pinned=True, is_bereitschaftsdienst=True,
+        )
+        for i in range(3)
+    ]
+    solution = _solve(ShiftSchedule(doctors=[_DR_BD, _DR_BD2], shifts=shifts_a + shifts_b))
+    assert solution.score.hard_score == -1

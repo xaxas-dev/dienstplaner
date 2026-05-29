@@ -21,7 +21,7 @@ from timefold.solver.score import (
 )
 
 from app.solver.domain import SolverShift
-from app.solver.tarif_rules import ConstraintId
+from app.solver.tarif_rules import MAX_BD_PER_MONAT, ConstraintId
 
 
 @constraint_provider
@@ -29,6 +29,7 @@ def constraint_definitions(cf: ConstraintFactory) -> list[Constraint]:
     return [
         double_booked(cf),
         absent_doctor(cf),
+        max_bd_per_month(cf),
         fair_distribution(cf),
     ]
 
@@ -64,6 +65,25 @@ def fair_distribution(cf: ConstraintFactory) -> Constraint:
             lambda doc, st, count: count - doc.fair_targets.get(st, 0),
         )
         .as_constraint(ConstraintId.FAIR_DISTRIBUTION)
+    )
+
+
+def max_bd_per_month(cf: ConstraintFactory) -> Constraint:
+    """Regulatorisch-harte Constraint: max. 4 BD pro Arzt pro Monat (§ 7 Abs. 5a TV-Ärzte/TdL)."""
+    return (
+        cf.for_each(SolverShift)
+        .filter(lambda s: s.doctor is not None and s.is_bereitschaftsdienst)
+        .group_by(
+            lambda s: s.doctor,
+            lambda s: s.shift_date.month,
+            ConstraintCollectors.count(),
+        )
+        .filter(lambda doc, month, count: count > MAX_BD_PER_MONAT)
+        .penalize(
+            HardSoftScore.ONE_HARD,
+            lambda doc, month, count: count - MAX_BD_PER_MONAT,
+        )
+        .as_constraint(ConstraintId.MAX_BD_PER_MONTH)
     )
 
 

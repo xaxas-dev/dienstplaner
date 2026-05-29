@@ -332,3 +332,60 @@ def test_solve_nur_abwesender_arzt_bleibt_unassigned(
     diff_by_shift = {pa["shift_id"]: pa["doctor_id"] for pa in data["proposed_assignments"]}
     assert shifts[0]["id"] in diff_by_shift, "Solver-Diff enthält Shift nicht"
     assert diff_by_shift[shifts[0]["id"]] is None, "Solver hat abwesende Alice nicht entfernt"
+
+
+# ---------------------------------------------------------------------------
+# MAX_BD_PER_MONTH-Integrationstest (M8-005)
+# ---------------------------------------------------------------------------
+
+
+def test_solve_respektiert_bd_limit(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """2 Ärzte, 6 BD-Shifts → Solver verteilt auf ≤ 4 pro Arzt, hard_score == 0.
+
+    BD-Shifts werden über einen Shift-Typ mit is_bereitschaftsdienst=True erstellt.
+    6 Shifts auf 6 verschiedene Tage (UNIQUE-Constraint: plan+date+type eindeutig).
+    """
+    monkeypatch.setattr(_ss, "TERMINATION_SECONDS", 5)
+
+    # BD-Schichttyp anlegen
+    r = client.post(
+        "/api/shift-types",
+        json={
+            "name": "Bereitschaftsdienst-Test",
+            "short_name": "BDT",
+            "applies_on_weekdays": True,
+            "applies_on_weekend": True,
+            "display_order": 99,
+            "is_bereitschaftsdienst": True,
+        },
+    )
+    assert r.status_code == 201, r.text
+    bd_type_id = r.json()["id"]
+
+    _create_doctor(client, "Dr. BD-Alice")
+    _create_doctor(client, "Dr. BD-Bob")
+
+    # Plan mit 6 Tagen, je 1 BD-Shift
+    r = client.post(
+        "/api/plans",
+        json={
+            "name": "BDLimitTest",
+            "valid_from": "2026-09-01",
+            "valid_to": "2026-09-06",
+            "shift_type_ids": [bd_type_id],
+        },
+    )
+    assert r.status_code == 201, r.text
+    plan = r.json()
+
+    r = client.post(f"/api/plans/{plan['id']}/solve")
+    assert r.status_code == 200
+    data = r.json()
+
+    # Mit 2 Ärzten und 6 BD-Shifts kann der Solver feasibel lösen (≤ 4 pro Arzt)
+    assert data["hard_score"] == 0, (
+        f"Solver verletzt BD-Limit: hard_score={data['hard_score']}"
+    )
