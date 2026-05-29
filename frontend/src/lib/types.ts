@@ -86,6 +86,11 @@ export type PlanTarifWarnings = components['schemas']['PlanTarifWarnings']
 export type TarifWarning = components['schemas']['TarifWarning']
 export type TarifSeverity = components['schemas']['TarifSeverity']
 
+export type SolveResult = components['schemas']['SolveResult']
+export type ProposedAssignment = components['schemas']['ProposedAssignment']
+export type ApplyRequest = components['schemas']['ApplyRequest']
+export type ApplyResult = components['schemas']['ApplyResult']
+
 // Dashboard-Types (manuell, noch nicht im OpenAPI-Schema generiert)
 export interface DoctorInfo {
   id: number
