@@ -96,28 +96,30 @@ export function TodayPage() {
 
         {/* RECHTE SPALTE */}
         <div className="flex flex-col gap-5">
-          {/* Aufmerksamkeit */}
-          <div className="rounded-2xl bg-card border border-line p-5">
-            <h2 className="text-sm font-semibold text-ink mb-3">Hinweise</h2>
-            {!hasPlan || !summary || summary.attention.length === 0 ? (
-              <p className="text-sm text-ink-3 italic">Keine Hinweise</p>
-            ) : (
-              summary.attention.map((item, i) => (
-                <AttentionRow key={i} item={item} />
-              ))
-            )}
-          </div>
-
-          {/* Coverage per Department */}
-          <div className="rounded-2xl bg-card border border-line p-5">
-            <h2 className="text-sm font-semibold text-ink mb-3">Stationsbesetzung</h2>
-            {!hasPlan || !summary || summary.coverage_by_department.length === 0 ? (
-              <p className="text-sm text-ink-3 italic">Keine Rotationsdaten</p>
-            ) : (
-              summary.coverage_by_department.map(bar => (
-                <CoverageBar key={bar.department_name} bar={bar} />
-              ))
-            )}
+          <div className="rounded-2xl bg-card border border-line overflow-hidden">
+            {/* Hinweise */}
+            <div className="p-5">
+              <h2 className="text-sm font-semibold text-ink mb-3">Hinweise</h2>
+              {!hasPlan || !summary || summary.attention.length === 0 ? (
+                <p className="text-sm text-ink-3 italic">Keine Hinweise</p>
+              ) : (
+                summary.attention.map((item, i) => (
+                  <AttentionRow key={i} item={item} />
+                ))
+              )}
+            </div>
+            <div className="border-t border-line" />
+            {/* Stationsbesetzung */}
+            <div className="p-5">
+              <h2 className="text-sm font-semibold text-ink mb-3">Stationsbesetzung</h2>
+              {!hasPlan || !summary || summary.coverage_by_department.length === 0 ? (
+                <p className="text-sm text-ink-3 italic">Keine Daten</p>
+              ) : (
+                summary.coverage_by_department.map(bar => (
+                  <CoverageBar key={bar.department_name} bar={bar} />
+                ))
+              )}
+            </div>
           </div>
 
           {/* CTA */}
