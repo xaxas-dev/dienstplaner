@@ -1,63 +1,44 @@
-"""Tests für solver/constraints.py: DOUBLE_BOOKED Hard-Constraint (Sub-Schritt D).
+"""Tests für solver/constraints.py — voller Solver-Lauf mit Eclipse Temurin 21.
 
-Positiv-Test:  kollisionsfreier Plan → Hard-Score 0 (feasible).
-Negativ-Test: konstruierte Doppelbelegung (gepinnt) → Hard-Score < 0.
+Voraussetzung: JAVA_HOME auf Eclipse Temurin 21 gesetzt (Windows-User-Variable).
+Kein JVM-Skip-Guard — JVM ist feste Voraussetzung der Entwicklungsumgebung.
 
 Voller Solver-Lauf statt ConstraintVerifier (Python-API für CV empirisch nicht
-verifiziert); Pinning verhindert, dass der Solver die Kollision auflöst.
-
-JVM-Guard wie in den anderen Solver-Tests.
+verifiziert); Pinning verhindert, dass der Solver Verletzungen wegoptimiert.
 """
 from datetime import date
 
-import pytest
+from timefold.solver import SolverFactory
+from timefold.solver.config import (
+    Duration,
+    ScoreDirectorFactoryConfig,
+    SolverConfig,
+    TerminationConfig,
+)
 
-_JVM_OK = False
-_JVM_SKIP_REASON = "JVM-Check noch nicht ausgeführt"
-
-try:
-    from timefold.solver import SolverFactory
-    from timefold.solver.config import (
-        Duration,
-        ScoreDirectorFactoryConfig,
-        SolverConfig,
-        TerminationConfig,
-    )
-
-    from app.solver.constraints import constraint_definitions
-    from app.solver.domain import ShiftSchedule, SolverDoctor, SolverShift
-
-    _JVM_OK = True
-except Exception as exc:
-    _JVM_SKIP_REASON = f"Requires Java 17+ JVM: {exc}"
-
-pytestmark = pytest.mark.skipif(not _JVM_OK, reason=_JVM_SKIP_REASON)
+from app.solver.constraints import constraint_definitions
+from app.solver.domain import ShiftSchedule, SolverDoctor, SolverShift
 
 # ---------------------------------------------------------------------------
-# Modul-Level-Setup (nur wenn JVM verfügbar)
+# Modul-Level-Setup
 # ---------------------------------------------------------------------------
 
-_DR_ALICE: "SolverDoctor | None" = None
-_DR_BOB: "SolverDoctor | None" = None
-_solver_factory: object = None
+_DR_ALICE = SolverDoctor(doctor_id=1, name="Dr. Alice")
+_DR_BOB = SolverDoctor(doctor_id=2, name="Dr. Bob")
 
-if _JVM_OK:
-    _DR_ALICE = SolverDoctor(doctor_id=1, name="Dr. Alice")
-    _DR_BOB = SolverDoctor(doctor_id=2, name="Dr. Bob")
-
-    _config = SolverConfig(
-        solution_class=ShiftSchedule,
-        entity_class_list=[SolverShift],
-        score_director_factory_config=ScoreDirectorFactoryConfig(
-            constraint_provider_function=constraint_definitions,
-        ),
-        termination_config=TerminationConfig(spent_limit=Duration(seconds=5)),
-    )
-    _solver_factory = SolverFactory.create(_config)
+_config = SolverConfig(
+    solution_class=ShiftSchedule,
+    entity_class_list=[SolverShift],
+    score_director_factory_config=ScoreDirectorFactoryConfig(
+        constraint_provider_function=constraint_definitions,
+    ),
+    termination_config=TerminationConfig(spent_limit=Duration(seconds=5)),
+)
+_solver_factory = SolverFactory.create(_config)
 
 
-def _solve(schedule: "ShiftSchedule") -> "ShiftSchedule":
-    return _solver_factory.build_solver().solve(schedule)  # type: ignore[union-attr]
+def _solve(schedule: ShiftSchedule) -> ShiftSchedule:
+    return _solver_factory.build_solver().solve(schedule)
 
 
 # ---------------------------------------------------------------------------
@@ -127,11 +108,9 @@ def test_offene_shifts_kein_hard_penalty() -> None:
 
 _ABSENT_DATE = date(2026, 6, 5)
 
-_DR_ABSENT: "SolverDoctor | None" = None
-if _JVM_OK:
-    _DR_ABSENT = SolverDoctor(
-        doctor_id=3, name="Dr. Abwesend", unavailable_dates=frozenset([_ABSENT_DATE])
-    )
+_DR_ABSENT = SolverDoctor(
+    doctor_id=3, name="Dr. Abwesend", unavailable_dates=frozenset([_ABSENT_DATE])
+)
 
 
 def test_absent_doctor_penalize_bei_unavailable_date() -> None:
@@ -199,9 +178,7 @@ def test_absent_doctor_und_double_booked_addieren() -> None:
 # (vermeidet DOUBLE_BOOKED-Interaktionen).
 # ---------------------------------------------------------------------------
 
-_DR_FAIR: "SolverDoctor | None" = None
-if _JVM_OK:
-    _DR_FAIR = SolverDoctor(doctor_id=20, name="Dr. Fair", fair_targets={1: 2})
+_DR_FAIR = SolverDoctor(doctor_id=20, name="Dr. Fair", fair_targets={1: 2})
 
 
 def test_fair_distribution_kein_penalize_bei_target_erreicht() -> None:
@@ -321,16 +298,11 @@ def test_fair_distribution_und_double_booked_unabhaengig() -> None:
 # Gleicher Monat (Juli 2026). BD-Arzt: doctor_id=30.
 # ---------------------------------------------------------------------------
 
-_DR_BD: "SolverDoctor | None" = None
-if _JVM_OK:
-    _DR_BD = SolverDoctor(doctor_id=30, name="Dr. BD")
-
-_DR_BD2: "SolverDoctor | None" = None
-if _JVM_OK:
-    _DR_BD2 = SolverDoctor(doctor_id=31, name="Dr. BD2")
+_DR_BD = SolverDoctor(doctor_id=30, name="Dr. BD")
+_DR_BD2 = SolverDoctor(doctor_id=31, name="Dr. BD2")
 
 
-def _bd_shift(shift_id: int, day: int, doctor: "SolverDoctor") -> "SolverShift":
+def _bd_shift(shift_id: int, day: int, doctor: SolverDoctor) -> SolverShift:
     return SolverShift(
         shift_id=shift_id, plan_id=1, shift_date=date(2026, 7, day),
         shift_type_id=5, doctor=doctor, is_pinned=True, is_bereitschaftsdienst=True,
@@ -405,16 +377,14 @@ def test_max_bd_getrennt_pro_arzt() -> None:
 # Alle Shifts gepinnt, shift_type_id=7, Arzt doctor_id=40.
 # ---------------------------------------------------------------------------
 
-_DR_WE: "SolverDoctor | None" = None
-if _JVM_OK:
-    _DR_WE = SolverDoctor(doctor_id=40, name="Dr. Weekend")
+_DR_WE = SolverDoctor(doctor_id=40, name="Dr. Weekend")
 
 # Hilfsdaten: Samstag/Sonntag im Juni 2026
 _SAMSTAGE = [6, 13, 20, 27]
 _SONNTAGE = [7, 14, 21, 28]
 
 
-def _we_shift(shift_id: int, day: int, doctor: "SolverDoctor") -> "SolverShift":
+def _we_shift(shift_id: int, day: int, doctor: SolverDoctor) -> SolverShift:
     return SolverShift(
         shift_id=shift_id, plan_id=1, shift_date=date(2026, 6, day),
         shift_type_id=7, doctor=doctor, is_pinned=True,
@@ -480,9 +450,7 @@ def test_max_weekends_getrennt_pro_monat() -> None:
 # Alle Shifts gepinnt, doctor_id=50.
 # ---------------------------------------------------------------------------
 
-_DR_REST: "SolverDoctor | None" = None
-if _JVM_OK:
-    _DR_REST = SolverDoctor(doctor_id=50, name="Dr. Rest")
+_DR_REST = SolverDoctor(doctor_id=50, name="Dr. Rest")
 
 _BASE = 1_000_000  # willkürliche Epoch-Minuten-Basis
 _8H = 8 * 60       # 480 Minuten
@@ -493,10 +461,10 @@ _12H = 12 * 60     # 720 Minuten
 def _rest_shift(
     shift_id: int,
     day: int,
-    doctor: "SolverDoctor",
+    doctor: SolverDoctor,
     start_min: int,
     end_min: int,
-) -> "SolverShift":
+) -> SolverShift:
     return SolverShift(
         shift_id=shift_id, plan_id=1, shift_date=date(2026, 6, day),
         shift_type_id=8, doctor=doctor, is_pinned=True,
