@@ -22,11 +22,20 @@ export function TodayPage() {
   const openCount = hasPlan && kpis ? kpis.open_shifts : 0
   const conflictCount = hasPlan && kpis ? kpis.conflicts : 0
 
+  const sortedCoverage = summary?.coverage_by_department
+    .slice()
+    .sort((a, b) => {
+      const aFull = a.filled >= a.total
+      const bFull = b.filled >= b.total
+      if (aFull !== bFull) return aFull ? 1 : -1
+      return a.filled / a.total - b.filled / b.total
+    }) ?? []
+
   return (
     <div className="flex flex-col flex-1 overflow-y-auto">
       <CommandBar titleAccent="Heute" title="Dashboard" showSearch />
 
-      <div className="grid grid-cols-[1.4fr_1fr] gap-7 px-10 py-6">
+      <div className="grid grid-cols-[1.4fr_1fr] gap-7 px-10 py-6 items-stretch">
         {/* LINKE SPALTE */}
         <div className="flex flex-col gap-5">
           <GreetingBlock date={now} />
@@ -80,7 +89,7 @@ export function TodayPage() {
           </div>
 
           {/* Heute im Dienst */}
-          <div className="rounded-2xl bg-card border border-line p-5">
+          <div className="rounded-2xl bg-card border border-line p-5 flex-1">
             <h2 className="text-sm font-semibold text-ink mb-3">Heute im Dienst</h2>
             {!hasPlan || !summary ? (
               <p className="text-sm text-ink-3 italic">Kein Plan für diesen Monat</p>
@@ -92,38 +101,36 @@ export function TodayPage() {
               ))
             )}
           </div>
+
+          {/* Hinweise */}
+          <div className="rounded-2xl bg-card border border-line p-5">
+            <h2 className="text-sm font-semibold text-ink mb-3">Hinweise</h2>
+            {!hasPlan || !summary || summary.attention.length === 0 ? (
+              <p className="text-sm text-ink-3 italic">Keine Hinweise</p>
+            ) : (
+              summary.attention.map((item, i) => (
+                <AttentionRow
+                  key={i}
+                  item={item}
+                  href={planSlug ? `/plans/${planSlug}?date=${item.date}` : undefined}
+                />
+              ))
+            )}
+          </div>
         </div>
 
         {/* RECHTE SPALTE */}
         <div className="flex flex-col gap-5">
-          <div className="rounded-2xl bg-card border border-line overflow-hidden">
-            {/* Hinweise */}
-            <div className="p-5">
-              <h2 className="text-sm font-semibold text-ink mb-3">Hinweise</h2>
-              {!hasPlan || !summary || summary.attention.length === 0 ? (
-                <p className="text-sm text-ink-3 italic">Keine Hinweise</p>
-              ) : (
-                summary.attention.map((item, i) => (
-                  <AttentionRow
-                    key={i}
-                    item={item}
-                    href={planSlug ? `/plans/${planSlug}?date=${item.date}` : undefined}
-                  />
-                ))
-              )}
-            </div>
-            <div className="border-t border-line" />
-            {/* Stationsbesetzung */}
-            <div className="p-5">
-              <h2 className="text-sm font-semibold text-ink mb-3">Stationsbesetzung</h2>
-              {!hasPlan || !summary || summary.coverage_by_department.length === 0 ? (
-                <p className="text-sm text-ink-3 italic">Keine Daten</p>
-              ) : (
-                summary.coverage_by_department.map(bar => (
-                  <CoverageBar key={bar.department_name} bar={bar} />
-                ))
-              )}
-            </div>
+          {/* Stationsbesetzung */}
+          <div className="rounded-2xl bg-card border border-line p-5">
+            <h2 className="text-sm font-semibold text-ink mb-3">Stationsbesetzung</h2>
+            {!hasPlan || !summary || sortedCoverage.length === 0 ? (
+              <p className="text-sm text-ink-3 italic">Keine Daten</p>
+            ) : (
+              sortedCoverage.map(bar => (
+                <CoverageBar key={bar.department_name} bar={bar} />
+              ))
+            )}
           </div>
 
           {/* CTA */}

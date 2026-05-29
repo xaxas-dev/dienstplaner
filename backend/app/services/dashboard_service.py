@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from sqlalchemy.orm import Session
 
 from app.models.absence import Absence
+from app.models.department import Department as DepartmentModel
 from app.repositories import plan_repository, shift_repository
 from app.schemas.dashboard import (
     AttentionItem,
@@ -99,18 +100,27 @@ def build_dashboard_summary(db: Session, plan_id: int, target_date: date) -> Das
 
     # --- Coverage per Department ---
     coverage_by_department: list[CoverageBar] = []
-    dept_totals: dict[int, dict] = {}  # dept_id → {name, total, filled}
+    # max_headcount als Nenner; ra_count als Fallback wenn max_headcount nicht gesetzt
+    dept_totals: dict[int, dict] = {}
+    for dept in db.query(DepartmentModel).all():
+        dept_totals[dept.id] = {
+            "name": dept.name,
+            "max_headcount": dept.max_headcount,
+            "ra_count": 0,
+            "filled": 0,
+        }
+
     for ra in plan.rotation_assignments:
         dept_id = ra.department_id
-        dept_name = ra.department.name if ra.department else f"Bereich {dept_id}"
         if dept_id not in dept_totals:
-            dept_totals[dept_id] = {"name": dept_name, "total": 0, "filled": 0}
-        dept_totals[dept_id]["total"] += 1
+            dept_name = ra.department.name if ra.department else f"Bereich {dept_id}"
+            dept_totals[dept_id] = {"name": dept_name, "max_headcount": None, "ra_count": 0, "filled": 0}
+        dept_totals[dept_id]["ra_count"] += 1
         if ra.valid_from <= target_date <= ra.valid_to:
             dept_totals[dept_id]["filled"] += 1
 
     for info in sorted(dept_totals.values(), key=lambda d: d["name"]):
-        total = info["total"]
+        total = info["max_headcount"] if info["max_headcount"] is not None else info["ra_count"]
         filled = info["filled"]
         coverage_by_department.append(
             CoverageBar(
