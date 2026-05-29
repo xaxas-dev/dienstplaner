@@ -24,7 +24,7 @@ const avatarTopModifier: Modifier = ({ activatorEvent, draggingNodeRect, transfo
   const offsetY = activatorEvent.clientY - draggingNodeRect.top
   return { ...transform, x: transform.x + offsetX - 14, y: transform.y + offsetY }
 }
-import { FileDown, Trash2 } from 'lucide-react'
+import { FileDown, Trash2, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -37,6 +37,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { CommandBar } from '@/components/dp/CommandBar'
 import { KpiBar } from '@/components/dp/KpiBar'
 import { usePlan, usePlans } from './usePlans'
@@ -205,14 +211,15 @@ export function PlanPage() {
     })
   }
 
-  function handleStatusToggle() {
+  function handleStatusChange(newStatus: 'DRAFT' | 'RELEASED' | 'ARCHIVED') {
     if (!plan) return
-    const newStatus = plan.status === 'DRAFT' ? 'RELEASED' : 'DRAFT'
     updatePlan.mutate({ status: newStatus })
   }
 
-  const statusLabel = plan?.status === 'RELEASED' ? 'Freigegeben' : 'Entwurf'
-  const statusToggleLabel = plan?.status === 'RELEASED' ? 'Zurück zu Entwurf' : 'Freigeben'
+  const statusLabel =
+    plan?.status === 'RELEASED' ? 'Freigegeben'
+    : plan?.status === 'ARCHIVED' ? 'Archiviert'
+    : 'Entwurf'
 
   const tarifWarningsByShift: Record<number, TarifWarning[]> = {}
   for (const w of tarifWarningsData?.warnings ?? []) {
@@ -624,20 +631,36 @@ export function PlanPage() {
           <div className="flex items-center gap-2">
             <span className={cn(
               'text-xs px-2 py-0.5 rounded-full font-medium border',
-              plan.status === 'RELEASED'
-                ? 'bg-green-50 text-green-700 border-green-200'
-                : 'bg-gray-50 text-gray-600 border-gray-200'
+              plan.status === 'RELEASED' ? 'bg-green-50 text-green-700 border-green-200'
+              : plan.status === 'ARCHIVED' ? 'bg-amber-50 text-amber-700 border-amber-200'
+              : 'bg-gray-50 text-gray-600 border-gray-200'
             )}>
               {statusLabel}
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleStatusToggle}
-              disabled={updatePlan.isPending}
-            >
-              {statusToggleLabel}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" disabled={updatePlan.isPending}>
+                  <ChevronDown className="size-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {plan.status !== 'RELEASED' && (
+                  <DropdownMenuItem onClick={() => handleStatusChange('RELEASED')}>
+                    Freigeben
+                  </DropdownMenuItem>
+                )}
+                {plan.status !== 'ARCHIVED' && (
+                  <DropdownMenuItem onClick={() => handleStatusChange('ARCHIVED')}>
+                    Archivieren
+                  </DropdownMenuItem>
+                )}
+                {plan.status !== 'DRAFT' && (
+                  <DropdownMenuItem onClick={() => handleStatusChange('DRAFT')}>
+                    Zurück zu Entwurf
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               variant="ghost"
               size="sm"
