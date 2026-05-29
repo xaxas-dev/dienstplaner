@@ -16,7 +16,8 @@
       "mcp__plugin_context-mode_context-mode__ctx_execute",
       "mcp__plugin_context-mode_context-mode__ctx_search",
       "Bash(mkdir -p 'd:/Softwareprojekte/Dienstplaner/.claude')",
-      "mcp__plugin_context-mode_context-mode__ctx_fetch_and_index"
+      "mcp__plugin_context-mode_context-mode__ctx_fetch_and_index",
+      "PowerShell([System.Environment]::SetEnvironmentVariable\\(\"JAVA_HOME\", \"C:\\\\Program Files\\\\Eclipse Adoptium\\\\jdk-21.0.11.10-hotspot\", \"User\"\\); [System.Environment]::GetEnvironmentVariable\\(\"JAVA_HOME\", \"User\"\\))"
     ],
     "additionalDirectories": [
       "d:\\Softwareprojekte\\Dienstplaner\\.claude"
