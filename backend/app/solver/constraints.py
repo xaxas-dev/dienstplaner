@@ -11,6 +11,8 @@ Verifizierte API (timefold==1.24.0b0):
 """
 from __future__ import annotations
 
+from datetime import date as _date
+
 from timefold.solver.score import (
     Constraint,
     ConstraintCollectors,
@@ -24,9 +26,21 @@ from app.solver.domain import SolverShift
 from app.solver.tarif_rules import (
     MAX_BD_PER_MONAT,
     MAX_WEEKEND_SHIFTS_PER_MONTH,
+    MAX_WEEKLY_HOURS_MINUTES,
     MIN_REST_HOURS,
     ConstraintId,
 )
+
+
+def _iso_week_key(start_minutes: int) -> tuple[int, int]:
+    """(iso_year, iso_week) aus absolutem Minuten-Ordinal (date.toordinal() * 1440 + time).
+
+    Indexzugriff iso[0]/iso[1] statt iso.year/iso.week — JVM-Interpreter (JPy)
+    übergibt isocalendar()-Ergebnis als Liste ohne NamedTuple-Attribute (verifiziert M8-007).
+    """
+    d = _date.fromordinal(start_minutes // 1440)
+    iso = d.isocalendar()
+    return (iso[0], iso[1])  # iso[0]=year, iso[1]=week
 
 
 @constraint_provider
@@ -37,6 +51,7 @@ def constraint_definitions(cf: ConstraintFactory) -> list[Constraint]:
         max_bd_per_month(cf),
         max_weekends_per_month(cf),
         min_rest_time(cf),
+        max_weekly_hours(cf),
         fair_distribution(cf),
     ]
 
@@ -147,6 +162,39 @@ def min_rest_time(cf: ConstraintFactory) -> Constraint:
         )
         .penalize(HardSoftScore.ONE_HARD)
         .as_constraint(ConstraintId.MIN_REST_TIME)
+    )
+
+
+def max_weekly_hours(cf: ConstraintFactory) -> Constraint:
+    """Regulatorisch-harte Constraint: max. 48 h/Woche pro Arzt (ArbZG §3 Abs. 1).
+
+    Opt-out-Stufen (BD-I: 58 h, BD-II: 54 h) sind Out of Scope für Phase B.
+    Graceful Degradation: Shifts ohne Zeitdaten werden übersprungen.
+    Penalty-Gewicht: Überschuss in Minuten (skaliert mit Schwere).
+    ISO-Wochengrenze über Jahreswechsel korrekt: _iso_week_key gibt (year, week)-Tuple.
+    """
+    return (
+        cf.for_each(SolverShift)
+        .filter(
+            lambda s: (
+                s.doctor is not None
+                and s.shift_start_minutes is not None
+                and s.shift_end_minutes is not None
+            )
+        )
+        .group_by(
+            lambda s: s.doctor,
+            lambda s: _iso_week_key(s.shift_start_minutes),
+            ConstraintCollectors.sum(
+                lambda s: s.shift_end_minutes - s.shift_start_minutes
+            ),
+        )
+        .filter(lambda doc, week, total_min: total_min > MAX_WEEKLY_HOURS_MINUTES)
+        .penalize(
+            HardSoftScore.ONE_HARD,
+            lambda doc, week, total_min: total_min - MAX_WEEKLY_HOURS_MINUTES,
+        )
+        .as_constraint(ConstraintId.MAX_WEEKLY_HOURS)
     )
 
 

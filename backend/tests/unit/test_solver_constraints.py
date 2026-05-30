@@ -477,7 +477,8 @@ def test_min_rest_kein_penalize_bei_12h_abstand() -> None:
     """12h Ruhezeit (> 11h) → kein Penalty."""
     s1 = _rest_shift(300, 1, _DR_REST, start_min=_BASE, end_min=_BASE + _8H)
     # s2 startet 12h nach Ende von s1
-    s2 = _rest_shift(301, 2, _DR_REST, start_min=_BASE + _8H + _12H, end_min=_BASE + _8H + _12H + _8H)
+    s2_start = _BASE + _8H + _12H
+    s2 = _rest_shift(301, 2, _DR_REST, start_min=s2_start, end_min=s2_start + _8H)
     solution = _solve(ShiftSchedule(doctors=[_DR_REST], shifts=[s1, s2]))
     assert solution.score.hard_score == 0
 
@@ -513,7 +514,8 @@ def test_min_rest_kein_penalize_verschiedene_aerzte() -> None:
     # dr_a Shift 1, endet bei _BASE + _8H
     s1 = _rest_shift(330, 1, dr_a, start_min=_BASE, end_min=_BASE + _8H)
     # dr_b Shift 2, startet 4h nach Ende von s1 — aber anderer Arzt → kein Penalty
-    s2 = _rest_shift(331, 1, dr_b, start_min=_BASE + _8H + 4 * 60, end_min=_BASE + _8H + 4 * 60 + _8H)
+    s2_start = _BASE + _8H + 4 * 60
+    s2 = _rest_shift(331, 1, dr_b, start_min=s2_start, end_min=s2_start + _8H)
     solution = _solve(ShiftSchedule(doctors=[dr_a, dr_b], shifts=[s1, s2]))
     assert solution.score.hard_score == 0
 
@@ -522,6 +524,73 @@ def test_min_rest_exakt_11h_abstand_kein_penalize() -> None:
     """Genau 11h Ruhezeit (Grenzwert) → kein Penalty (> 0 and < 660 schließt exakt 660 aus)."""
     s1 = _rest_shift(340, 1, _DR_REST, start_min=_BASE, end_min=_BASE + _8H)
     # s2 startet exakt 11h (660 min) nach Ende von s1 → nicht < 660 → kein Penalty
-    s2 = _rest_shift(341, 2, _DR_REST, start_min=_BASE + _8H + _11H, end_min=_BASE + _8H + _11H + _8H)
+    s2_start = _BASE + _8H + _11H
+    s2 = _rest_shift(341, 2, _DR_REST, start_min=s2_start, end_min=s2_start + _8H)
     solution = _solve(ShiftSchedule(doctors=[_DR_REST], shifts=[s1, s2]))
+    assert solution.score.hard_score == 0
+
+
+# ---------------------------------------------------------------------------
+# MAX_WEEKLY_HOURS-Tests (M8-007)
+#
+# ISO-Woche 23/2026: Mo 1.6. – So 7.6.
+# ISO-Woche 24/2026: Mo 8.6. – So 14.6.
+# Encoding: shift_start_minutes = date.toordinal() * 1440 + Tagesminuten.
+# Penalty-Gewicht: Überschuss-Minuten (2881 − 2880 = 1 → hard_score == −1).
+# Auch Spike für ConstraintCollectors.sum() — wenn sum() fehlt, schlägt der
+# Import von constraints.py bereits fehl (kein separater Spike nötig).
+# ---------------------------------------------------------------------------
+
+_DR_WH = SolverDoctor(doctor_id=60, name="Dr. WeeklyHours")
+
+_KW23 = [date(2026, 6, d) for d in range(1, 8)]   # Mo 1.6. – So 7.6.
+_KW24 = [date(2026, 6, d) for d in range(8, 15)]   # Mo 8.6. – So 14.6.
+_480_MIN = 8 * 60                                   # 8-h-Schicht
+
+
+def _wh_shift(
+    shift_id: int, d: date, start_min_of_day: int, duration_min: int, doctor: SolverDoctor
+) -> SolverShift:
+    ord_start = d.toordinal() * 1440 + start_min_of_day
+    return SolverShift(
+        shift_id=shift_id, plan_id=1, shift_date=d,
+        shift_type_id=9, doctor=doctor, is_pinned=True,
+        shift_start_minutes=ord_start,
+        shift_end_minutes=ord_start + duration_min,
+    )
+
+
+def test_max_weekly_hours_kein_penalize_bei_48h() -> None:
+    """6 × 8 h in KW23 = exakt 48 h (Grenzwert) → hard_score == 0."""
+    shifts = [_wh_shift(400 + i, _KW23[i], 480, _480_MIN, _DR_WH) for i in range(6)]
+    solution = _solve(ShiftSchedule(doctors=[_DR_WH], shifts=shifts))
+    assert solution.score.hard_score == 0
+
+
+def test_max_weekly_hours_penalize_bei_ueberschreitung() -> None:
+    """6 × 8 h + 1 × 1 min in KW23 = 2881 min → Überschuss 1 → hard_score == -1."""
+    shifts = [_wh_shift(410 + i, _KW23[i], 480, _480_MIN, _DR_WH) for i in range(6)]
+    extra = _wh_shift(416, _KW23[6], 480, 1, _DR_WH)
+    solution = _solve(ShiftSchedule(doctors=[_DR_WH], shifts=shifts + [extra]))
+    assert solution.score.hard_score == -1
+
+
+def test_max_weekly_hours_kein_penalize_auf_zwei_wochen_verteilt() -> None:
+    """4 × 8 h in KW23 (32 h) + 4 × 8 h in KW24 (32 h) → kein Penalty in beiden Wochen."""
+    shifts_kw23 = [_wh_shift(420 + i, _KW23[i], 480, _480_MIN, _DR_WH) for i in range(4)]
+    shifts_kw24 = [_wh_shift(424 + i, _KW24[i], 480, _480_MIN, _DR_WH) for i in range(4)]
+    solution = _solve(ShiftSchedule(doctors=[_DR_WH], shifts=shifts_kw23 + shifts_kw24))
+    assert solution.score.hard_score == 0
+
+
+def test_max_weekly_hours_kein_penalize_bei_null_zeiten() -> None:
+    """Shifts ohne shift_start/end_minutes → Graceful Degradation, kein Penalty."""
+    shifts = [
+        SolverShift(
+            shift_id=430 + i, plan_id=1, shift_date=_KW23[i],
+            shift_type_id=9, doctor=_DR_WH, is_pinned=True,
+        )
+        for i in range(7)
+    ]
+    solution = _solve(ShiftSchedule(doctors=[_DR_WH], shifts=shifts))
     assert solution.score.hard_score == 0

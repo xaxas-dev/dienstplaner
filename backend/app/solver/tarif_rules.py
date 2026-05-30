@@ -31,6 +31,7 @@ class ConstraintId(enum.StrEnum):
     MAX_BD_PER_MONTH = "max-bd-per-month"
     MAX_WEEKENDS_PER_MONTH = "max-weekends-per-month"
     MIN_REST_TIME = "min-rest-time"
+    MAX_WEEKLY_HOURS = "max-weekly-hours"
 
     # --- Soft (Optimierungsziele) ---
     FAIR_DISTRIBUTION = "fair-distribution"
@@ -45,6 +46,7 @@ REGULATORISCH_HART: frozenset[ConstraintId] = frozenset(
         ConstraintId.MAX_BD_PER_MONTH,
         ConstraintId.MAX_WEEKENDS_PER_MONTH,
         ConstraintId.MIN_REST_TIME,
+        ConstraintId.MAX_WEEKLY_HOURS,
     ]
 )
 SOFT: frozenset[ConstraintId] = frozenset([ConstraintId.FAIR_DISTRIBUTION])
@@ -54,6 +56,8 @@ MAX_BD_PER_MONAT: int = 4  # § 7 Abs. 5a Satz 1
 # M8-006: Wochenend-Limit (Platzhalter — exakter TV-Ärzte/TdL-Wert noch zu bestätigen)
 MAX_WEEKEND_SHIFTS_PER_MONTH: int = 2  # max. Wochenend-Dienste pro Arzt/Monat
 MIN_REST_HOURS: int = 11  # ArbZG §5 Abs. 1: Mindestruhezeit 11 Stunden
+# M8-007: Wochenstunden-Limit ArbZG §3 Abs. 1 Standard (48 h); Opt-out M8-007+
+MAX_WEEKLY_HOURS_MINUTES: int = 48 * 60
 
 
 class TarifRule(Protocol):
