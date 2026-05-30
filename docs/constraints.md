@@ -295,11 +295,48 @@ cf.for_each(SolverShift)
 Penalty: −(überschüssige Minuten) Hard pro (Arzt, ISO-Woche)-Gruppe.
 Jahreswechsel korrekt: `_iso_week_key` gibt `(year, week)`-Tuple (nicht nur `week`).
 
-### Folge-Milestones (noch nicht implementiert)
+### 8. MAX_CONSECUTIVE_DAYS (soft, ConstraintId.MAX_CONSECUTIVE_DAYS, M8-008)
 
-| Constraint-ID | Klasse | Milestone | Beschreibung |
-|---------------|--------|-----------|--------------|
-| max-consecutive-days | Soft | M8-008 | Max. aufeinanderfolgende Arbeitstage pro Arzt. |
+**Regel:** Ärzte sollen möglichst nicht mehr als 5 Tage hintereinander arbeiten.
+
+**Klasse:** Soft — beeinflusst nur den Soft-Score, nie die Feasibility
+(`hard_score >= 0`). TV-Ärzte/TdL enthält keine harte Grenze für Folgetage;
+ArbZG §5 regelt nur Mindestruhezeiten (ADR-083).
+
+**Tarif-Wert:** `MAX_CONSECUTIVE_DAYS = 5` in `tarif_rules.py` (Platzhalter;
+durch Domänenexperten zu bestätigen, analog MAX_WEEKEND_SHIFTS_PER_MONTH).
+
+**Pair-Ansatz (ADR-087):** `for_each_unique_pair(SolverShift, Joiners.equal(doctor))`
+wird verwendet statt N-way Join (N=5), da die Python-API kein verifiziertes
+`ConstraintCollectors.consecutive()` anbietet. Filter: `abs(ordinal_diff) == 5`.
+
+**Snapshot-Basis:** `SolverShift.shift_date_ordinal: int` (absolutes Datum als
+Integer, in `__init__` gesetzt) statt Date-Arithmetik in JVM-Lambdas
+(ADR-086-Pattern für JPy-Kompatibilität).
+
+**Implementierung:**
+```python
+cf.for_each_unique_pair(SolverShift, Joiners.equal(lambda s: s.doctor))
+  .filter(lambda s1, s2: (
+      s1.doctor is not None
+      and s2.doctor is not None
+      and (
+          abs(s2.shift_date_ordinal - s1.shift_date_ordinal) == MAX_CONSECUTIVE_DAYS
+          or abs(s1.shift_date_ordinal - s2.shift_date_ordinal) == MAX_CONSECUTIVE_DAYS
+      )
+  ))
+  .penalize(HardSoftScore.ONE_SOFT)
+  .as_constraint(ConstraintId.MAX_CONSECUTIVE_DAYS)
+```
+
+Penalty: −1 Soft pro Pair an der 5-Tage-Grenze.
+
+**Approximation:** Der Pair-Ansatz detektiert genau die Grenzfälle (4→5 und 5→6 Tage).
+Ein Lauf von 6+ Tagen erzeugt mehrere verletzende Pairs: [d1,d5], [d2,d6], etc.
+Solver reagiert korrekt (bevorzugt längere Pausen). False Positives (zwei separate
+5-Tage-Blöcke mit < 5 Tagen Abstand) sind möglich — für einen Soft-Constraint akzeptabel.
+
+### Folge-Milestones (noch nicht implementiert)
 
 Keine Tarif-Werte dürfen ohne Rückfrage erfunden werden — alle regulatorischen
 Constraints kommen erst nach Klärung mit Domänenexperten (OQ-006).
@@ -326,14 +363,6 @@ Pipeline in `backend/app/services/tarif_validation_service.py`, Endpoint
 dezenter als Konflikt-Dot (!, oben rechts). Klick öffnet ContextPanel mit
 `TarifWarning`-Liste (Severity-Chip + rule_id + message). Kein Schreibpfad-Eingriff.
 
-**Noch nicht implementierte Constraints** (warten auf Domänenklärung):
-
-| Constraint-ID | Klasse | Beschreibung |
-|---------------|--------|--------------|
-| max-weekly-hours | Regulatorisch-hart | TV-Ärzte/TdL + ArbZG max. Wochenstunden |
-| min-rest-time | Regulatorisch-hart | Mindestruhezeit zwischen Diensten |
-| max-consecutive-days | Regulatorisch-hart | Max. aufeinanderfolgende Arbeitstage |
-| fairness-distribution | Soft | Implementiert (M8-004) — FTE-gewichtet, per ShiftType |
 
 ## Excel-Export (M6-001, Phase A)
 
