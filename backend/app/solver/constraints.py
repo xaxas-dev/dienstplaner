@@ -27,7 +27,6 @@ from app.solver.tarif_rules import (
     MAX_BD_PER_MONAT,
     MAX_CONSECUTIVE_DAYS,
     MAX_WEEKEND_SHIFTS_PER_MONTH,
-    MAX_WEEKLY_HOURS_MINUTES,
     MIN_REST_HOURS,
     ConstraintId,
 )
@@ -193,12 +192,12 @@ def min_rest_time(cf: ConstraintFactory) -> Constraint:
 
 
 def max_weekly_hours(cf: ConstraintFactory) -> Constraint:
-    """Regulatorisch-harte Constraint: max. 48 h/Woche pro Arzt (ArbZG §3 Abs. 1).
+    """Regulatorisch-harte Constraint: Wochenstundenlimit pro Arzt (ArbZG §3 / TV §7 Abs. 5).
 
-    Opt-out-Stufen (BD-I: 58 h, BD-II: 54 h) sind Out of Scope für Phase B.
+    Limit per Arzt aus SolverDoctor.max_weekly_hours_minutes (Snapshot aus opt_out_bd_level):
+      None → 48 h (2880 min), BD-Stufe I → 58 h (3480 min), BD-Stufe II → 54 h (3240 min).
     Graceful Degradation: Shifts ohne Zeitdaten werden übersprungen.
-    Penalty-Gewicht: Überschuss in Minuten (skaliert mit Schwere).
-    ISO-Wochengrenze über Jahreswechsel korrekt: _iso_week_key gibt (year, week)-Tuple.
+    Penalty-Gewicht: Überschuss in Minuten.
     """
     return (
         cf.for_each(SolverShift)
@@ -216,10 +215,10 @@ def max_weekly_hours(cf: ConstraintFactory) -> Constraint:
                 lambda s: s.shift_end_minutes - s.shift_start_minutes
             ),
         )
-        .filter(lambda doc, week, total_min: total_min > MAX_WEEKLY_HOURS_MINUTES)
+        .filter(lambda doc, week, total_min: total_min > doc.max_weekly_hours_minutes)
         .penalize(
             HardSoftScore.ONE_HARD,
-            lambda doc, week, total_min: total_min - MAX_WEEKLY_HOURS_MINUTES,
+            lambda doc, week, total_min: total_min - doc.max_weekly_hours_minutes,
         )
         .as_constraint(ConstraintId.MAX_WEEKLY_HOURS)
     )
