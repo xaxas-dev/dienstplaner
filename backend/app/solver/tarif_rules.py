@@ -61,8 +61,20 @@ MAX_WEEKEND_SHIFTS_PER_MONTH: int = 2  # max. Wochenend-Dienste pro Arzt/Monat
 MIN_REST_HOURS: int = 11  # ArbZG §5 Abs. 1: Mindestruhezeit 11 Stunden
 # M8-007: Wochenstunden-Limit ArbZG §3 Abs. 1 Standard (48 h); Opt-out M8-007+
 MAX_WEEKLY_HOURS_MINUTES: int = 48 * 60
+# M9-002: TV-Ärzte/TdL §7 Abs. 5 Opt-out-Stufen für Bereitschaftsdienst
+MAX_WEEKLY_HOURS_MINUTES_BD1: int = 58 * 60  # BD-Stufe I: 58 h/Woche
+MAX_WEEKLY_HOURS_MINUTES_BD2: int = 54 * 60  # BD-Stufe II: 54 h/Woche
 # M8-008: Soft-Limit für Folgetage — mehr als 5 Folgetage → Penalty
 MAX_CONSECUTIVE_DAYS: int = 5
+
+
+def get_weekly_hours_limit(opt_out_level: int | None) -> int:
+    """Per-Arzt-Wochenstundenlimit aus BD-Opt-out-Stufe (OQ-010)."""
+    if opt_out_level == 1:
+        return MAX_WEEKLY_HOURS_MINUTES_BD1
+    if opt_out_level == 2:
+        return MAX_WEEKLY_HOURS_MINUTES_BD2
+    return MAX_WEEKLY_HOURS_MINUTES
 
 
 class TarifRule(Protocol):
