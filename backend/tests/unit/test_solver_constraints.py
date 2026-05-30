@@ -594,3 +594,91 @@ def test_max_weekly_hours_kein_penalize_bei_null_zeiten() -> None:
     ]
     solution = _solve(ShiftSchedule(doctors=[_DR_WH], shifts=shifts))
     assert solution.score.hard_score == 0
+
+
+# ---------------------------------------------------------------------------
+# MAX_CONSECUTIVE_DAYS-Tests (M8-008)
+#
+# Pair-Ansatz: Shifts desselben Arztes mit Ordinal-Diff == MAX_CONSECUTIVE_DAYS
+# werden bestraft. Lauf von 6 Tagen → 1 Pair → soft_score == -1.
+# ---------------------------------------------------------------------------
+
+# doctor_id=42/43 — kein Konflikt mit _DR_WE (id=40) aus den Weekend-Tests.
+# fair_targets auf ≥ Shift-Anzahl gesetzt, damit fair_distribution kein
+# Soft-Penalty erzeugt und der Test nur MAX_CONSECUTIVE_DAYS isoliert.
+_DR_CONSEC = SolverDoctor(doctor_id=42, name="Dr. Konsekutiv", fair_targets={1: 7, 2: 5})
+
+
+def test_max_consecutive_days_kein_penalty_bei_genau_5_tagen() -> None:
+    """5 aufeinanderfolgende Tage → maximale Ordinal-Diff == 4 < 5 → soft_score == 0."""
+    shifts = [
+        SolverShift(
+            shift_id=200 + i, plan_id=1,
+            shift_date=date(2026, 7, 1 + i),
+            shift_type_id=1, doctor=_DR_CONSEC, is_pinned=True,
+        )
+        for i in range(5)  # 2026-07-01 bis 2026-07-05
+    ]
+    solution = _solve(ShiftSchedule(doctors=[_DR_CONSEC], shifts=shifts))
+
+    assert solution.score.hard_score == 0
+    assert solution.score.soft_score == 0
+
+
+def test_max_consecutive_days_penalty_bei_6_tagen() -> None:
+    """6 aufeinanderfolgende Tage → 1 Pair (Diff==5) → soft_score == -1."""
+    shifts = [
+        SolverShift(
+            shift_id=210 + i, plan_id=1,
+            shift_date=date(2026, 7, 1 + i),
+            shift_type_id=1, doctor=_DR_CONSEC, is_pinned=True,
+        )
+        for i in range(6)  # 2026-07-01 bis 2026-07-06
+    ]
+    solution = _solve(ShiftSchedule(doctors=[_DR_CONSEC], shifts=shifts))
+
+    assert solution.score.hard_score == 0
+    assert solution.score.soft_score == -1
+
+
+def test_max_consecutive_days_skaliert_linear_bei_7_tagen() -> None:
+    """7 aufeinanderfolgende Tage → 2 Pairs (Diffs: 5) → soft_score == -2."""
+    shifts = [
+        SolverShift(
+            shift_id=220 + i, plan_id=1,
+            shift_date=date(2026, 7, 1 + i),
+            shift_type_id=1, doctor=_DR_CONSEC, is_pinned=True,
+        )
+        for i in range(7)  # 2026-07-01 bis 2026-07-07
+    ]
+    solution = _solve(ShiftSchedule(doctors=[_DR_CONSEC], shifts=shifts))
+
+    assert solution.score.hard_score == 0
+    assert solution.score.soft_score == -2
+
+
+def test_max_consecutive_days_verschiedene_aerzte_kein_penalty() -> None:
+    """Jeder Arzt nur 5 Folgetage — getrennte Doctors → kein Penalty."""
+    dr_b = SolverDoctor(doctor_id=43, name="Dr. Parallel", fair_targets={1: 5, 2: 5})
+    shifts_a = [
+        SolverShift(
+            shift_id=230 + i, plan_id=1,
+            shift_date=date(2026, 7, 1 + i),
+            shift_type_id=1, doctor=_DR_CONSEC, is_pinned=True,
+        )
+        for i in range(5)
+    ]
+    shifts_b = [
+        SolverShift(
+            shift_id=240 + i, plan_id=1,
+            shift_date=date(2026, 7, 1 + i),
+            shift_type_id=2, doctor=dr_b, is_pinned=True,
+        )
+        for i in range(5)
+    ]
+    solution = _solve(ShiftSchedule(
+        doctors=[_DR_CONSEC, dr_b], shifts=shifts_a + shifts_b
+    ))
+
+    assert solution.score.hard_score == 0
+    assert solution.score.soft_score == 0
