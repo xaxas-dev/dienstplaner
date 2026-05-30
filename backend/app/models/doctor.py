@@ -34,6 +34,7 @@ class Doctor(Base):
     virtual_entry_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    opt_out_bd_level: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     employment_periods: Mapped[list["EmploymentPeriod"]] = relationship(  # noqa: F821
         "EmploymentPeriod", back_populates="doctor", cascade="all, delete-orphan"
