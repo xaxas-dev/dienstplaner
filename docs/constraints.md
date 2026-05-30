@@ -255,16 +255,25 @@ cf.for_each_unique_pair(SolverShift, Joiners.equal(lambda s: s.doctor))
 `for_each_unique_pair` liefert ungeordnete Paare — beide Richtungen werden geprüft.
 Penalty: −1 Hard pro verletzendem Pair.
 
-### 7. MAX_WEEKLY_HOURS (regulatorisch-hart, ConstraintId.MAX_WEEKLY_HOURS, M8-007)
+### 7. MAX_WEEKLY_HOURS (regulatorisch-hart, ConstraintId.MAX_WEEKLY_HOURS, M8-007/M9-002)
 
-**Regel:** Kein Arzt darf mehr als 48 Stunden pro ISO-Kalenderwoche arbeiten
-(ArbZG § 3 Abs. 1, Standardschwelle). Opt-out-Stufen (BD-I: 58 h, BD-II: 54 h
-nach § 7 Abs. 5 TV-Ärzte/TdL) sind Out of Scope für Phase B.
+**Regel:** Kein Arzt darf mehr als sein per-Arzt-Wochenstundenlimit pro ISO-Kalenderwoche
+arbeiten. Standardschwelle: 48 h (ArbZG § 3 Abs. 1). BD-Opt-out nach § 7 Abs. 5
+TV-Ärzte/TdL: Stufe I = 58 h, Stufe II = 54 h (M9-002, ADR-088).
 
 **Klasse:** Regulatorisch-hart — overridebar per Override-Mechanismus A/B/C.
 
-**Tarif-Wert:** `MAX_WEEKLY_HOURS_MINUTES = 2880` (48 × 60) in `tarif_rules.py`.
-Einheitliche Schwelle für alle Ärzte in Phase B (kein per-Arzt-Opt-out-Feld).
+**Tarif-Werte (in `tarif_rules.py`):**
+- `MAX_WEEKLY_HOURS_MINUTES = 2880` (48 × 60) — ArbZG-Standard, Default für alle Ärzte
+- `MAX_WEEKLY_HOURS_MINUTES_BD1 = 3480` (58 × 60) — BD-Opt-out-Stufe I
+- `MAX_WEEKLY_HOURS_MINUTES_BD2 = 3240` (54 × 60) — BD-Opt-out-Stufe II
+- Helper `get_weekly_hours_limit(opt_out_level: int | None) -> int` gibt das per-Arzt-Limit zurück
+
+**Per-Arzt-Limit via Snapshot (ADR-088):** `Doctor.opt_out_bd_level: int | None`
+(None=48h, 1=58h, 2=54h). `to_solver()` ruft `get_weekly_hours_limit(doctor.opt_out_bd_level)`
+auf und speichert das Ergebnis als `SolverDoctor.max_weekly_hours_minutes: int`.
+Constraint liest ausschließlich `doc.max_weekly_hours_minutes` — kein Helper-Aufruf
+in JPy-Lambdas (Snapshot-Pattern ADR-071).
 
 **Snapshot-Basis:** `SolverShift.shift_start_minutes` / `shift_end_minutes`
 (aus M8-006, `date.toordinal() * 1440 + time_minutes`). Schichten ohne
@@ -287,8 +296,8 @@ cf.for_each(SolverShift)
       lambda s: _iso_week_key(s.shift_start_minutes),
       ConstraintCollectors.sum(lambda s: s.shift_end_minutes - s.shift_start_minutes),
   )
-  .filter(lambda doc, week, total_min: total_min > MAX_WEEKLY_HOURS_MINUTES)
-  .penalize(HardSoftScore.ONE_HARD, lambda doc, week, total_min: total_min - MAX_WEEKLY_HOURS_MINUTES)
+  .filter(lambda doc, week, total_min: total_min > doc.max_weekly_hours_minutes)
+  .penalize(HardSoftScore.ONE_HARD, lambda doc, week, total_min: total_min - doc.max_weekly_hours_minutes)
   .as_constraint(ConstraintId.MAX_WEEKLY_HOURS)
 ```
 

@@ -134,6 +134,11 @@ Details: docs/architecture.md
     durch Domänenexperten zu bestätigen (analog MAX_WEEKEND_SHIFTS_PER_MONTH).
     Pair-Ansatz: `for_each_unique_pair` + Ordinal-Diff == 5. `SolverShift.shift_date_ordinal: int`
     (in `__init__` gesetzt, JPy-sicher). ADR-087.
+  - `MAX_WEEKLY_HOURS_MINUTES = 2880` (48 × 60) — ArbZG-Standard-Wochenstundenlimit.
+    Opt-out BD-Stufe I: `MAX_WEEKLY_HOURS_MINUTES_BD1 = 58 * 60` (3480 min).
+    Opt-out BD-Stufe II: `MAX_WEEKLY_HOURS_MINUTES_BD2 = 54 * 60` (3240 min).
+    Helper `get_weekly_hours_limit(opt_out_level: int | None) -> int` gibt per-Arzt-Limit zurück.
+    Snapshot: `SolverDoctor.max_weekly_hours_minutes: int` (Default 2880). ADR-088.
   - Neue regulatorisch-harte Constraint = `mapping.py` + `domain.py` +
     `constraints.py` + `tarif_rules.py` (ConstraintId + REGULATORISCH_HART) + ADR.
 - **Timefold-Python-API (empirisch verifiziert, timefold==1.24.0b0):**
