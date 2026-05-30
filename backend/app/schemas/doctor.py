@@ -19,6 +19,7 @@ class DoctorBase(BaseModel):
     entry_date: date | None = None
     virtual_entry_date: date | None = None
     notes: str | None = None
+    opt_out_bd_level: int | None = None
 
 
 class DoctorCreate(DoctorBase): ...
@@ -34,6 +35,7 @@ class DoctorUpdate(BaseModel):
     entry_date: date | None = None
     virtual_entry_date: date | None = None
     notes: str | None = None
+    opt_out_bd_level: int | None = None
 
 
 class DoctorResponse(DoctorBase):
