@@ -119,13 +119,14 @@ schließen.
 | M8-004 | Solver-Constraint FAIR_DISTRIBUTION (soft, FTE-gewichtet) | ✅ Abgeschlossen (2026-05-26). Snapshot-Pattern (ADR-076); `get_fte_for_period` neu. `group_by(key1, key2, count())` + 3-arg Lambda verifiziert (timefold==1.24.0b0). |
 | M8-005 | Solver-Constraint MAX_BD_PER_MONTH (§ 7 Abs. 5a TV-Ärzte/TdL, max. 4 BD/Monat) | ✅ Abgeschlossen (2026-05-29). ShiftType-Flag `is_bereitschaftsdienst`; Snapshot in `to_solver()`; regulatorisch-harter Hard-Score. |
 | M8-006 | Solver-Constraints MAX_WEEKENDS_PER_MONTH + MIN_REST_TIME (ArbZG §5, TV-Ärzte/TdL) | ✅ Abgeschlossen (2026-05-29). Snapshot-Extension `shift_start/end_minutes` in SolverShift; `for_each_unique_pair`-Pattern für MIN_REST_TIME; Wochenend-Zählung per `weekday() in (5, 6)`. |
-| M8-007+ | Weitere Solver-Constraints (MAX_WEEKLY_HOURS, MAX_CONSECUTIVE_DAYS) | ⏳ Folge-Milestones |
+| M8-007 | Solver-Constraint MAX_WEEKLY_HOURS (ArbZG §3, 48 h/Woche) | ⏳ In Arbeit |
+| M8-008 | Solver-Constraint MAX_CONSECUTIVE_DAYS (soft) | ⏳ Geplant |
 
 ## Phase B — Frontend (separater Strang)
 
 | ID | Titel | Status |
 |----|-------|--------|
-| M9-001 | Solver Review-&-Apply UI (Diff anzeigen, anwenden) | ⏳ Geplant |
+| M9-001 | Solver Review-&-Apply UI (Diff anzeigen, anwenden) | ✅ Abgeschlossen (2026-05-29). Modal-Panel mit Diff-Tabelle, Apply-Button, JVM-Toast (ADR-084/085). |
 
 Erläuterung: Die Solver-Frontend-Arbeit wird bewusst von der
 Phase-A-Roadmap (M3–M7) getrennt geführt, damit M3–M7 thematisch
