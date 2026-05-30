@@ -1018,6 +1018,8 @@ export interface components {
             virtual_entry_date?: string | null;
             /** Notes */
             notes?: string | null;
+            /** Opt Out Bd Level */
+            opt_out_bd_level?: number | null;
         };
         /** DoctorInfo */
         DoctorInfo: {
@@ -1085,6 +1087,8 @@ export interface components {
             virtual_entry_date?: string | null;
             /** Notes */
             notes?: string | null;
+            /** Opt Out Bd Level */
+            opt_out_bd_level?: number | null;
             /** Id */
             id: number;
             /**
@@ -1124,6 +1128,8 @@ export interface components {
             virtual_entry_date?: string | null;
             /** Notes */
             notes?: string | null;
+            /** Opt Out Bd Level */
+            opt_out_bd_level?: number | null;
         };
         /** DoctorWithRelations */
         DoctorWithRelations: {
@@ -1151,6 +1157,8 @@ export interface components {
             virtual_entry_date?: string | null;
             /** Notes */
             notes?: string | null;
+            /** Opt Out Bd Level */
+            opt_out_bd_level?: number | null;
             /** Id */
             id: number;
             /**

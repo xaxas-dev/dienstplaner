@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch'
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -36,6 +37,7 @@ const schema = z.object({
   entry_date: z.string().nullable().optional(),
   virtual_entry_date: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
+  opt_out_bd_level: z.number().int().min(1).max(2).nullable(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -62,6 +64,7 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
       entry_date: doctor?.entry_date ?? null,
       virtual_entry_date: doctor?.virtual_entry_date ?? null,
       notes: doctor?.notes ?? null,
+      opt_out_bd_level: doctor?.opt_out_bd_level ?? null,
     },
   })
 
@@ -80,6 +83,7 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
         entry_date: doctor.entry_date ?? null,
         virtual_entry_date: doctor.virtual_entry_date ?? null,
         notes: doctor.notes ?? null,
+        opt_out_bd_level: doctor.opt_out_bd_level ?? null,
       })
     }
   }, [doctor, form])
@@ -228,6 +232,38 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
                 <Switch checked={field.value} onCheckedChange={field.onChange} />
               </FormControl>
               <FormLabel className="!mt-0 cursor-pointer">Facharzt</FormLabel>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* BD-Opt-out */}
+        <FormField
+          control={form.control}
+          name="opt_out_bd_level"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>BD-Opt-out-Stufe</FormLabel>
+              <Select
+                value={field.value == null ? '__none__' : String(field.value)}
+                onValueChange={(v) =>
+                  field.onChange(v === '__none__' ? null : parseInt(v, 10))
+                }
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Kein Opt-out" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="__none__">Kein Opt-out (48 h/Woche)</SelectItem>
+                  <SelectItem value="1">BD-Stufe I (58 h/Woche)</SelectItem>
+                  <SelectItem value="2">BD-Stufe II (54 h/Woche)</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Individuelle Vereinbarung nach TV-Ärzte/TdL §7 Abs. 5
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
