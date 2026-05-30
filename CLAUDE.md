@@ -130,6 +130,10 @@ Details: docs/architecture.md
     Nullable times → `None` → Constraint überspringt (Graceful Degradation).
     `for_each_unique_pair`-Bidirektional-Filter: beide Richtungen (s1→s2, s2→s1) per
     `or`-Verknüpfung prüfen, da Paare ungeordnet sind.
+  - `MAX_CONSECUTIVE_DAYS = 5` — Soft-Limit aufeinanderfolgende Arbeitstage. Platzhalter;
+    durch Domänenexperten zu bestätigen (analog MAX_WEEKEND_SHIFTS_PER_MONTH).
+    Pair-Ansatz: `for_each_unique_pair` + Ordinal-Diff == 5. `SolverShift.shift_date_ordinal: int`
+    (in `__init__` gesetzt, JPy-sicher). ADR-087.
   - Neue regulatorisch-harte Constraint = `mapping.py` + `domain.py` +
     `constraints.py` + `tarif_rules.py` (ConstraintId + REGULATORISCH_HART) + ADR.
 - **Timefold-Python-API (empirisch verifiziert, timefold==1.24.0b0):**
