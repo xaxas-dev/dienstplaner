@@ -25,6 +25,7 @@ from timefold.solver.score import (
 from app.solver.domain import SolverShift
 from app.solver.tarif_rules import (
     MAX_BD_PER_MONAT,
+    MAX_CONSECUTIVE_DAYS,
     MAX_WEEKEND_SHIFTS_PER_MONTH,
     MAX_WEEKLY_HOURS_MINUTES,
     MIN_REST_HOURS,
@@ -53,6 +54,7 @@ def constraint_definitions(cf: ConstraintFactory) -> list[Constraint]:
         min_rest_time(cf),
         max_weekly_hours(cf),
         fair_distribution(cf),
+        max_consecutive_days(cf),
     ]
 
 
@@ -87,6 +89,31 @@ def fair_distribution(cf: ConstraintFactory) -> Constraint:
             lambda doc, st, count: count - doc.fair_targets.get(st, 0),
         )
         .as_constraint(ConstraintId.FAIR_DISTRIBUTION)
+    )
+
+
+def max_consecutive_days(cf: ConstraintFactory) -> Constraint:
+    """Soft-Constraint: max. MAX_CONSECUTIVE_DAYS aufeinanderfolgende Dienste pro Arzt.
+
+    for_each_unique_pair liefert ungeordnete Paare — beide Richtungen (s1→s2, s2→s1) geprüft.
+    Snapshot-Pattern: shift_date_ordinal vorberechnet in to_solver().
+    """
+    return (
+        cf.for_each_unique_pair(
+            SolverShift,
+            Joiners.equal(lambda s: s.doctor),
+        )
+        .filter(
+            lambda s1, s2: s1.doctor is not None
+            and (
+                s2.shift_date_ordinal - s1.shift_date_ordinal
+                == MAX_CONSECUTIVE_DAYS
+                or s1.shift_date_ordinal - s2.shift_date_ordinal
+                == MAX_CONSECUTIVE_DAYS
+            )
+        )
+        .penalize(HardSoftScore.ONE_SOFT)
+        .as_constraint(ConstraintId.MAX_CONSECUTIVE_DAYS)
     )
 
 

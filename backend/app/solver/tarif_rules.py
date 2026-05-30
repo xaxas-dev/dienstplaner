@@ -35,6 +35,7 @@ class ConstraintId(enum.StrEnum):
 
     # --- Soft (Optimierungsziele) ---
     FAIR_DISTRIBUTION = "fair-distribution"
+    MAX_CONSECUTIVE_DAYS = "max-consecutive-days"
 
 
 # Klassifizierungs-Sets — für Override-Logik und Reporting.
@@ -49,7 +50,9 @@ REGULATORISCH_HART: frozenset[ConstraintId] = frozenset(
         ConstraintId.MAX_WEEKLY_HOURS,
     ]
 )
-SOFT: frozenset[ConstraintId] = frozenset([ConstraintId.FAIR_DISTRIBUTION])
+SOFT: frozenset[ConstraintId] = frozenset(
+    [ConstraintId.FAIR_DISTRIBUTION, ConstraintId.MAX_CONSECUTIVE_DAYS]
+)
 
 # Tarif-Werte TV-Ärzte/TdL i.d.F. 9. ÄnderungsTV (OQ-006, Option A hardcoded)
 MAX_BD_PER_MONAT: int = 4  # § 7 Abs. 5a Satz 1
@@ -58,6 +61,8 @@ MAX_WEEKEND_SHIFTS_PER_MONTH: int = 2  # max. Wochenend-Dienste pro Arzt/Monat
 MIN_REST_HOURS: int = 11  # ArbZG §5 Abs. 1: Mindestruhezeit 11 Stunden
 # M8-007: Wochenstunden-Limit ArbZG §3 Abs. 1 Standard (48 h); Opt-out M8-007+
 MAX_WEEKLY_HOURS_MINUTES: int = 48 * 60
+# M8-008: Soft-Limit für Folgetage — mehr als 5 Folgetage → Penalty
+MAX_CONSECUTIVE_DAYS: int = 5
 
 
 class TarifRule(Protocol):

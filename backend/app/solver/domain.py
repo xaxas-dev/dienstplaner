@@ -79,6 +79,7 @@ class SolverShift:
     plan_id: int
     shift_date: date
     shift_type_id: int
+    shift_date_ordinal: int
     is_bereitschaftsdienst: bool
     # Zeitdaten für MIN_REST_TIME: Minuten seit Datum-Epoch (None wenn ShiftType keine Zeiten hat)
     shift_start_minutes: int | None
@@ -101,6 +102,7 @@ class SolverShift:
         self.plan_id = plan_id
         self.shift_date = shift_date
         self.shift_type_id = shift_type_id
+        self.shift_date_ordinal = shift_date.toordinal()
         self.doctor = doctor
         # Sonderfall: gepinnt + kein Arzt → nicht pinnbar (Solver darf besetzen)
         self.is_pinned = is_pinned and doctor is not None
