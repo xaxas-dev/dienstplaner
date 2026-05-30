@@ -14,8 +14,6 @@ from __future__ import annotations
 from datetime import date
 from typing import Annotated
 
-from app.solver.tarif_rules import MAX_WEEKLY_HOURS_MINUTES
-
 from timefold.solver.domain import (
     PlanningEntityCollectionProperty,
     PlanningId,
@@ -28,6 +26,8 @@ from timefold.solver.domain import (
     planning_solution,
 )
 from timefold.solver.score import HardSoftScore
+
+from app.solver.tarif_rules import MAX_WEEKLY_HOURS_MINUTES
 
 
 class SolverDoctor:
