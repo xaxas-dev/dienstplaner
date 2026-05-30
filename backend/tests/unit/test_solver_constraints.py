@@ -682,3 +682,43 @@ def test_max_consecutive_days_verschiedene_aerzte_kein_penalty() -> None:
 
     assert solution.score.hard_score == 0
     assert solution.score.soft_score == 0
+
+
+# ---------------------------------------------------------------------------
+# MAX_WEEKLY_HOURS per-Arzt Opt-out-Tests (M9-002)
+#
+# BD-Stufe I: 58 h/Woche (3480 min). BD-Stufe II: 54 h/Woche (3240 min).
+# SolverDoctor mit max_weekly_hours_minutes direkt gesetzt (kein DB-Zugriff).
+# Existierende _wh_shift()-Helper und _KW23-Daten wiederverwenden.
+# ---------------------------------------------------------------------------
+
+_DR_WH_BD1 = SolverDoctor(
+    doctor_id=41, name="Dr. BD1-Optout", max_weekly_hours_minutes=58 * 60
+)
+_DR_WH_BD2 = SolverDoctor(
+    doctor_id=42, name="Dr. BD2-Optout", max_weekly_hours_minutes=54 * 60
+)
+
+
+def test_max_weekly_hours_bd1_kein_penalize_bei_55h() -> None:
+    """BD-Stufe-I-Arzt (58h-Limit): 5 × 11h = 55h (3300 min) in KW23 → kein Penalty."""
+    # 5 × 660 min = 3300 < 3480
+    shifts = [_wh_shift(440 + i, _KW23[i], 480, 660, _DR_WH_BD1) for i in range(5)]
+    solution = _solve(ShiftSchedule(doctors=[_DR_WH_BD1], shifts=shifts))
+    assert solution.score.hard_score == 0
+
+
+def test_max_weekly_hours_bd1_penalize_ueber_58h() -> None:
+    """BD-Stufe-I-Arzt (58h-Limit): 6 × 10h = 60h (3600 min) → Penalty 120 min."""
+    # 6 × 600 min = 3600 > 3480, Überschuss = 120
+    shifts = [_wh_shift(450 + i, _KW23[i], 480, 600, _DR_WH_BD1) for i in range(6)]
+    solution = _solve(ShiftSchedule(doctors=[_DR_WH_BD1], shifts=shifts))
+    assert solution.score.hard_score == -120
+
+
+def test_max_weekly_hours_bd2_kein_penalize_bei_50h() -> None:
+    """BD-Stufe-II-Arzt (54h-Limit): 5 × 10h = 50h (3000 min) in KW23 → kein Penalty."""
+    # 5 × 600 min = 3000 < 3240
+    shifts = [_wh_shift(460 + i, _KW23[i], 480, 600, _DR_WH_BD2) for i in range(5)]
+    solution = _solve(ShiftSchedule(doctors=[_DR_WH_BD2], shifts=shifts))
+    assert solution.score.hard_score == 0
