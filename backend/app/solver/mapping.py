@@ -18,6 +18,7 @@ from app.repositories.shift_repository import list_shifts_for_plan
 from app.services.employment_period_service import get_fte_for_period
 from app.services.ina_availability_service import get_ina_availability_for_period
 from app.solver.domain import ShiftSchedule, SolverDoctor, SolverShift
+from app.solver.tarif_rules import get_weekly_hours_limit
 
 
 def _time_to_minutes(t: time | None) -> int | None:
@@ -128,6 +129,7 @@ def to_solver(db: Session, plan_id: int) -> ShiftSchedule:
             unavailable_dates=unavailable_dates,
             fte_percentage=fte_per_doctor[d.id],
             fair_targets=_targets(d.id),
+            max_weekly_hours_minutes=get_weekly_hours_limit(d.opt_out_bd_level),
         )
 
     # --- Schichten mappen ---

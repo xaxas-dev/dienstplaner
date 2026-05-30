@@ -14,6 +14,8 @@ from __future__ import annotations
 from datetime import date
 from typing import Annotated
 
+from app.solver.tarif_rules import MAX_WEEKLY_HOURS_MINUTES
+
 from timefold.solver.domain import (
     PlanningEntityCollectionProperty,
     PlanningId,
@@ -39,12 +41,14 @@ class SolverDoctor:
         unavailable_dates: frozenset[date] = frozenset(),
         fte_percentage: int = 100,
         fair_targets: dict[int, int] | None = None,
+        max_weekly_hours_minutes: int = MAX_WEEKLY_HOURS_MINUTES,
     ) -> None:
         self.doctor_id = doctor_id
         self.name = name
         self.unavailable_dates = unavailable_dates
         self.fte_percentage = fte_percentage
         self.fair_targets = fair_targets if fair_targets is not None else {}
+        self.max_weekly_hours_minutes = max_weekly_hours_minutes
 
     def __repr__(self) -> str:
         return f"SolverDoctor(id={self.doctor_id}, name={self.name!r})"
