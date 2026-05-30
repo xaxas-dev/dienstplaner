@@ -141,6 +141,8 @@ Details: docs/architecture.md
   - Score: `Annotated[HardSoftScore, PlanningScore]`
   - Constraint-Streams: `cf.for_each_unique_pair(..., Joiners.equal(...)).filter(...).penalize(...).as_constraint(name)`
   - Constraint-Streams (group_by, verifiziert M8-004): `cf.for_each(E).filter(...).group_by(lambda e: key1, lambda e: key2, ConstraintCollectors.count()).filter(lambda k1, k2, count: ...).penalize(HardSoftScore.ONE_SOFT, lambda k1, k2, count: ...).as_constraint(name)` — 2-Key-groupBy + 3-Arg-Lambda in filter/penalize funktioniert in timefold==1.24.0b0
+  - Constraint-Streams (sum, verifiziert M8-007): `ConstraintCollectors.sum(lambda e: int_expr)` funktioniert in timefold==1.24.0b0; Ergebnis als dritter Wert in 3-Arg-Lambda
+  - JPy-Einschränkung (ADR-086): `date.isocalendar()` wird im JVM-Interpreter als Liste `[year, week, weekday]` übergeben — kein NamedTuple-Attributzugriff (`.year`, `.week` scheitern). Stattdessen `iso[0]`, `iso[1]` verwenden. Gilt für alle Python-Objekte in Constraint-Lambdas die JVM-seitig ausgeführt werden.
   - Config: `SolverConfig(solution_class=..., entity_class_list=[...], score_director_factory_config=ScoreDirectorFactoryConfig(constraint_provider_function=fn), termination_config=TerminationConfig(spent_limit=Duration(seconds=N)))`
   - Solve: `SolverFactory.create(config).build_solver().solve(problem)`
   - JVM-Prerequisite: Java 17+ (empfohlen: Eclipse Temurin 21)

@@ -17,6 +17,7 @@ Alle Tarifregeln sind zentral in `backend/app/solver/tarif_rules.py` definiert.
   - [4. MAX_BD_PER_MONTH](#4-max_bd_per_month-regulatorisch-hart-constraintidmax_bd_per_month-m8-005)
   - [5. MAX_WEEKENDS_PER_MONTH](#5-max_weekends_per_month-regulatorisch-hart-constraintidmax_weekends_per_month-m8-006)
   - [6. MIN_REST_TIME](#6-min_rest_time-regulatorisch-hart-constraintidmin_rest_time-m8-006)
+  - [7. MAX_WEEKLY_HOURS](#7-max_weekly_hours-regulatorisch-hart-constraintidmax_weekly_hours-m8-007)
   - [Folge-Milestones](#folge-milestones-noch-nicht-implementiert)
 - [Tarif-Validation-Framework (M5-001)](#tarif-validation-framework-m5-001-phase-a)
 - [Excel-Export (M6-001)](#excel-export-m6-001-phase-a)
@@ -254,11 +255,50 @@ cf.for_each_unique_pair(SolverShift, Joiners.equal(lambda s: s.doctor))
 `for_each_unique_pair` liefert ungeordnete Paare — beide Richtungen werden geprüft.
 Penalty: −1 Hard pro verletzendem Pair.
 
+### 7. MAX_WEEKLY_HOURS (regulatorisch-hart, ConstraintId.MAX_WEEKLY_HOURS, M8-007)
+
+**Regel:** Kein Arzt darf mehr als 48 Stunden pro ISO-Kalenderwoche arbeiten
+(ArbZG § 3 Abs. 1, Standardschwelle). Opt-out-Stufen (BD-I: 58 h, BD-II: 54 h
+nach § 7 Abs. 5 TV-Ärzte/TdL) sind Out of Scope für Phase B.
+
+**Klasse:** Regulatorisch-hart — overridebar per Override-Mechanismus A/B/C.
+
+**Tarif-Wert:** `MAX_WEEKLY_HOURS_MINUTES = 2880` (48 × 60) in `tarif_rules.py`.
+Einheitliche Schwelle für alle Ärzte in Phase B (kein per-Arzt-Opt-out-Feld).
+
+**Snapshot-Basis:** `SolverShift.shift_start_minutes` / `shift_end_minutes`
+(aus M8-006, `date.toordinal() * 1440 + time_minutes`). Schichten ohne
+Zeitdaten werden übersprungen (Graceful Degradation).
+
+**ISO-Wochengruppierung:** `_iso_week_key(start_minutes)` gibt `(iso_year, iso_week)`
+zurück. Index-Zugriff `iso[0]`, `iso[1]` statt Attribut `iso.year`, `iso.week` —
+JPy-Interpreter übergibt `isocalendar()`-Ergebnis als Liste (ADR-086).
+
+**ConstraintCollectors.sum() verifiziert:** `ConstraintCollectors.sum(lambda s: duration)`
+funktioniert in timefold==1.24.0b0 (Spike in M8-007-Tests).
+
+**Implementierung:**
+```python
+cf.for_each(SolverShift)
+  .filter(lambda s: s.doctor is not None
+      and s.shift_start_minutes is not None and s.shift_end_minutes is not None)
+  .group_by(
+      lambda s: s.doctor,
+      lambda s: _iso_week_key(s.shift_start_minutes),
+      ConstraintCollectors.sum(lambda s: s.shift_end_minutes - s.shift_start_minutes),
+  )
+  .filter(lambda doc, week, total_min: total_min > MAX_WEEKLY_HOURS_MINUTES)
+  .penalize(HardSoftScore.ONE_HARD, lambda doc, week, total_min: total_min - MAX_WEEKLY_HOURS_MINUTES)
+  .as_constraint(ConstraintId.MAX_WEEKLY_HOURS)
+```
+
+Penalty: −(überschüssige Minuten) Hard pro (Arzt, ISO-Woche)-Gruppe.
+Jahreswechsel korrekt: `_iso_week_key` gibt `(year, week)`-Tuple (nicht nur `week`).
+
 ### Folge-Milestones (noch nicht implementiert)
 
 | Constraint-ID | Klasse | Milestone | Beschreibung |
 |---------------|--------|-----------|--------------|
-| max-weekly-hours | Regulatorisch-hart | M8-007 | ArbZG § 3: 48 h/Woche (Std.), Opt-out BD-I: 58 h, BD-II: 54 h (§ 7 Abs. 5). Benötigt Schichtdauer-Snapshot auf SolverShift. |
 | max-consecutive-days | Soft | M8-008 | Max. aufeinanderfolgende Arbeitstage pro Arzt. |
 
 Keine Tarif-Werte dürfen ohne Rückfrage erfunden werden — alle regulatorischen
