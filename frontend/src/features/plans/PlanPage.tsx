@@ -57,6 +57,11 @@ import { useUpdatePlan } from './useUpdatePlan'
 import { useDeletePlan } from './useDeletePlan'
 import { useSolvePlan, JvmUnavailableError } from './useSolvePlan'
 import { useApplySolverResult } from './useApplySolverResult'
+import {
+  useConstraintOverrides,
+  useCreateConstraintOverride,
+  useDeleteConstraintOverride,
+} from './useConstraintOverrides'
 import { buildSolverDiff } from './solverUtils'
 import { SolverResultPanel } from './components/SolverResultPanel'
 import { PlanSettingsModal } from './components/PlanSettingsModal'
@@ -167,6 +172,9 @@ export function PlanPage() {
   const deleteRotation = useDeleteRotation(id)
   const solvePlan = useSolvePlan(id)
   const applySolver = useApplySolverResult(id)
+  const { data: constraintOverrides = [] } = useConstraintOverrides(isNaN(id) ? null : id)
+  const createOverrideMutation = useCreateConstraintOverride(isNaN(id) ? 0 : id)
+  const deleteOverrideMutation = useDeleteConstraintOverride(isNaN(id) ? 0 : id)
   const [solveResult, setSolveResult] = useState<SolveResult | null>(null)
   const [isSolverOpen, setIsSolverOpen] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -256,6 +264,23 @@ export function PlanPage() {
           toast.error(err instanceof Error ? `Solver-Fehler: ${err.message}` : 'Solver-Fehler')
         }
       },
+    })
+  }
+
+  function handleCreateCOverride(shiftId: number, constraintId: string, reason: string | null) {
+    createOverrideMutation.mutate(
+      { level: 'C', constraint_id: constraintId, shift_id: shiftId, reason },
+      {
+        onSuccess: () => toast.success('Override gespeichert'),
+        onError: () => toast.error('Override konnte nicht gespeichert werden'),
+      },
+    )
+  }
+
+  function handleDeleteOverride(overrideId: number) {
+    deleteOverrideMutation.mutate(overrideId, {
+      onSuccess: () => toast.success('Override widerrufen'),
+      onError: () => toast.error('Widerrufen fehlgeschlagen'),
     })
   }
 
@@ -853,6 +878,13 @@ export function PlanPage() {
             shift={contextShift}
             onClose={() => setContextShift(null)}
             tarifWarnings={tarifWarningsByShift[contextShift.id]}
+            shiftOverrides={constraintOverrides.filter(
+              (o) => o.level === 'C' && o.shift_id === contextShift.id,
+            )}
+            onCreateOverride={(constraintId, reason) =>
+              handleCreateCOverride(contextShift.id, constraintId, reason)
+            }
+            onDeleteOverride={handleDeleteOverride}
           />
         )}
       </div>
