@@ -27,7 +27,7 @@ from timefold.solver.domain import (
 )
 from timefold.solver.score import HardSoftScore
 
-from app.solver.tarif_rules import MAX_WEEKLY_HOURS_MINUTES
+from app.solver.tarif_rules import MAX_WEEKLY_HOURS_MINUTES, ConstraintId
 
 
 class SolverDoctor:
@@ -42,6 +42,7 @@ class SolverDoctor:
         fte_percentage: int = 100,
         fair_targets: dict[int, int] | None = None,
         max_weekly_hours_minutes: int = MAX_WEEKLY_HOURS_MINUTES,
+        overridden_constraints: frozenset[str] = frozenset(),
     ) -> None:
         self.doctor_id = doctor_id
         self.name = name
@@ -49,6 +50,7 @@ class SolverDoctor:
         self.fte_percentage = fte_percentage
         self.fair_targets = fair_targets if fair_targets is not None else {}
         self.max_weekly_hours_minutes = max_weekly_hours_minutes
+        self.overridden_constraints = overridden_constraints
 
     def __repr__(self) -> str:
         return f"SolverDoctor(id={self.doctor_id}, name={self.name!r})"
@@ -88,6 +90,12 @@ class SolverShift:
     # Zeitdaten für MIN_REST_TIME: Minuten seit Datum-Epoch (None wenn ShiftType keine Zeiten hat)
     shift_start_minutes: int | None
     shift_end_minutes: int | None
+    # Per-Constraint-Override-Flags (Ebene C) als bool — frozenset[str] wäre deep-clone-unsafe
+    # in timefold==1.24.0b0 (JPy-Cloner kann frozenset nicht als immutable Collection behandeln).
+    override_max_bd: bool
+    override_max_weekends: bool
+    override_min_rest: bool
+    override_max_weekly_hours: bool
 
     def __init__(
         self,
@@ -101,6 +109,7 @@ class SolverShift:
         is_bereitschaftsdienst: bool = False,
         shift_start_minutes: int | None = None,
         shift_end_minutes: int | None = None,
+        overridden_constraints: frozenset[str] = frozenset(),
     ) -> None:
         self.id = shift_id
         self.plan_id = plan_id
@@ -113,6 +122,11 @@ class SolverShift:
         self.is_bereitschaftsdienst = is_bereitschaftsdienst
         self.shift_start_minutes = shift_start_minutes
         self.shift_end_minutes = shift_end_minutes
+        # Ebene-C-Override-Flags aus frozenset[str] expandieren
+        self.override_max_bd = ConstraintId.MAX_BD_PER_MONTH in overridden_constraints
+        self.override_max_weekends = ConstraintId.MAX_WEEKENDS_PER_MONTH in overridden_constraints
+        self.override_min_rest = ConstraintId.MIN_REST_TIME in overridden_constraints
+        self.override_max_weekly_hours = ConstraintId.MAX_WEEKLY_HOURS in overridden_constraints
 
     def __repr__(self) -> str:
         return (
@@ -134,9 +148,15 @@ class ShiftSchedule:
     shifts: Annotated[list[SolverShift], PlanningEntityCollectionProperty]
     score: Annotated[HardSoftScore, PlanningScore]
 
-    def __init__(self, doctors: list[SolverDoctor], shifts: list[SolverShift]) -> None:
+    def __init__(
+        self,
+        doctors: list[SolverDoctor],
+        shifts: list[SolverShift],
+        disabled_constraints: frozenset[str] = frozenset(),
+    ) -> None:
         self.doctors = doctors
         self.shifts = shifts
+        self.disabled_constraints = disabled_constraints
         self.score = None  # type: ignore[assignment]  # wird vom Solver gesetzt
 
     def __repr__(self) -> str:

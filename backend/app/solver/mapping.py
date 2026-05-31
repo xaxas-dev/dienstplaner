@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.models.shift_type import ShiftType as ShiftTypeORM
 from app.repositories.doctor_repository import list_doctors
 from app.repositories.shift_repository import list_shifts_for_plan
+from app.services.constraint_override_service import get_override_snapshot
 from app.services.employment_period_service import get_fte_for_period
 from app.services.ina_availability_service import get_ina_availability_for_period
 from app.solver.domain import ShiftSchedule, SolverDoctor, SolverShift
@@ -87,6 +88,8 @@ def to_solver(db: Session, plan_id: int) -> ShiftSchedule:
     else:
         plan_start = plan_end = None
 
+    override_snapshot = get_override_snapshot(db, plan_id)
+
     # --- Ärzte: Werte-Bereich + Availability-Snapshot ---
     orm_doctors = list_doctors(db, include_inactive=False)
 
@@ -130,6 +133,7 @@ def to_solver(db: Session, plan_id: int) -> ShiftSchedule:
             fte_percentage=fte_per_doctor[d.id],
             fair_targets=_targets(d.id),
             max_weekly_hours_minutes=get_weekly_hours_limit(d.opt_out_bd_level),
+            overridden_constraints=override_snapshot.doctor_overrides.get(d.id, frozenset()),
         )
 
     # --- Schichten mappen ---
@@ -150,7 +154,12 @@ def to_solver(db: Session, plan_id: int) -> ShiftSchedule:
                 is_bereitschaftsdienst=shift_type_bd_map.get(shift.shift_type_id, False),
                 shift_start_minutes=_shift_start_minutes(shift.shift_date, start_t),
                 shift_end_minutes=_shift_end_minutes(shift.shift_date, start_t, end_t),
+                overridden_constraints=override_snapshot.shift_overrides.get(shift.id, frozenset()),
             )
         )
 
-    return ShiftSchedule(doctors=list(solver_doctors.values()), shifts=solver_shifts)
+    return ShiftSchedule(
+        doctors=list(solver_doctors.values()),
+        shifts=solver_shifts,
+        disabled_constraints=override_snapshot.disabled_constraints,
+    )

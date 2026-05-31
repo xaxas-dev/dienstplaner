@@ -44,7 +44,7 @@ def solve_plan(db: Session, plan_id: int) -> SolveResult:
         TerminationConfig,
     )
 
-    from app.solver.constraints import constraint_definitions
+    from app.solver.constraints import build_constraint_provider
     from app.solver.domain import ShiftSchedule, SolverShift
     from app.solver.mapping import to_solver
 
@@ -59,7 +59,7 @@ def solve_plan(db: Session, plan_id: int) -> SolveResult:
         solution_class=ShiftSchedule,
         entity_class_list=[SolverShift],
         score_director_factory_config=ScoreDirectorFactoryConfig(
-            constraint_provider_function=constraint_definitions,
+            constraint_provider_function=build_constraint_provider(schedule.disabled_constraints),
         ),
         termination_config=TerminationConfig(spent_limit=Duration(seconds=TERMINATION_SECONDS)),
     )
