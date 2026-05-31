@@ -1,6 +1,6 @@
 # Roadmap
 
-Stand: 2026-05-20. Schließt die Lücke aus ADR-044 (M3–M7 nicht ausgearbeitet).
+Stand: 2026-05-31. Schließt die Lücke aus ADR-044 (M3–M7 nicht ausgearbeitet).
 
 ## Phasen-Modell
 
@@ -119,19 +119,26 @@ schließen.
 | M8-004 | Solver-Constraint FAIR_DISTRIBUTION (soft, FTE-gewichtet) | ✅ Abgeschlossen (2026-05-26). Snapshot-Pattern (ADR-076); `get_fte_for_period` neu. `group_by(key1, key2, count())` + 3-arg Lambda verifiziert (timefold==1.24.0b0). |
 | M8-005 | Solver-Constraint MAX_BD_PER_MONTH (§ 7 Abs. 5a TV-Ärzte/TdL, max. 4 BD/Monat) | ✅ Abgeschlossen (2026-05-29). ShiftType-Flag `is_bereitschaftsdienst`; Snapshot in `to_solver()`; regulatorisch-harter Hard-Score. |
 | M8-006 | Solver-Constraints MAX_WEEKENDS_PER_MONTH + MIN_REST_TIME (ArbZG §5, TV-Ärzte/TdL) | ✅ Abgeschlossen (2026-05-29). Snapshot-Extension `shift_start/end_minutes` in SolverShift; `for_each_unique_pair`-Pattern für MIN_REST_TIME; Wochenend-Zählung per `weekday() in (5, 6)`. |
-| M8-007 | Solver-Constraint MAX_WEEKLY_HOURS (ArbZG §3, 48 h/Woche) | ⏳ In Arbeit |
-| M8-008 | Solver-Constraint MAX_CONSECUTIVE_DAYS (soft) | ⏳ Geplant |
+| M8-007 | Solver-Constraint MAX_WEEKLY_HOURS (ArbZG §3, 48 h/Woche) | ✅ Abgeschlossen (2026-05-30). ISO-Wochengruppierung; `ConstraintCollectors.sum()` verifiziert; JPy-Index-Zugriff (ADR-086). Per-Arzt-Opt-out via M9-002. |
+| M8-008 | Solver-Constraint MAX_CONSECUTIVE_DAYS (soft) | ✅ Abgeschlossen (2026-05-30). Pair-Ansatz (`for_each_unique_pair`, Ordinal-Diff == 5); `SolverShift.shift_date_ordinal` (ADR-087). Wert=5 ist Platzhalter (Domänenexperte ausstehend). |
 
 ## Phase B — Frontend (separater Strang)
 
 | ID | Titel | Status |
 |----|-------|--------|
 | M9-001 | Solver Review-&-Apply UI (Diff anzeigen, anwenden) | ✅ Abgeschlossen (2026-05-29). Modal-Panel mit Diff-Tabelle, Apply-Button, JVM-Toast (ADR-084/085). |
+| M9-002 | BD-Opt-out — Per-Arzt Wochenstundenlimit (§ 7 Abs. 5 TV-Ärzte/TdL) | ✅ Abgeschlossen (2026-05-30). `Doctor.opt_out_bd_level` + Migration 0010; `SolverDoctor.max_weekly_hours_minutes` Snapshot; `get_weekly_hours_limit()` Helper (ADR-088); Frontend-Select im Arztformular. |
 
 Erläuterung: Die Solver-Frontend-Arbeit wird bewusst von der
 Phase-A-Roadmap (M3–M7) getrennt geführt, damit M3–M7 thematisch
 „Phase-A-Abschluss" bleibt und nicht durch Solver-UX-Entscheidungen
 blockiert wird.
+
+## Phase B — Constraint-Override-System
+
+| ID | Titel | Status |
+|----|-------|--------|
+| M10-001 | Constraint-Override-Mechanismus A/B/C | ✅ Abgeschlossen (2026-05-31). Dreistufiges Override-System: Ebene A (Plan-global, PlanSettingsModal), Ebene B (Arzt+Regel+Zeitraum, Arzt-Detailseite), Ebene C (Einzelverstoß, ContextPanel §-Dot). DB: `constraint_overrides` (Migration 0011). Backend: ORM, Schemas, Repository, Service mit `OverrideSnapshot`-Pattern, REST-API (POST/GET/DELETE). Solver: 4 regulatorisch-harte Constraints respektieren Override-Flags (`disabled_*` auf `SolverShift`). Tarif-Validierung filtert Warnungen per Override. |
 
 ## Cross-cutting
 
