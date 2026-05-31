@@ -49,7 +49,7 @@ function SettingRow({ setting }: { setting: AppSettingResponse }) {
 
 export function SettingsPage() {
   const { data: settings, isLoading, isError } = useSettings()
-  const { devMode, setDevMode } = useAppSettings()
+  const { devMode, setDevMode, solverEnabled, setSolverEnabled } = useAppSettings()
 
   return (
     <div className="flex flex-col h-full">
@@ -67,6 +67,19 @@ export function SettingsPage() {
                 checked={devMode}
                 onCheckedChange={setDevMode}
                 aria-label="Entwicklermodus aktivieren"
+              />
+            </div>
+            <div className="flex items-center justify-between py-3">
+              <div>
+                <p className="text-sm font-medium text-ink">Solver (Plan generieren)</p>
+                <p className="text-xs text-ink-3 mt-0.5">
+                  Blendet den Plan-Generator ein. Erfordert Java 21 (Eclipse Temurin).
+                </p>
+              </div>
+              <Switch
+                checked={solverEnabled}
+                onCheckedChange={setSolverEnabled}
+                aria-label="Solver aktivieren"
               />
             </div>
           </div>

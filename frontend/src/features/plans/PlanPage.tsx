@@ -80,6 +80,7 @@ import type { AbsenceType } from '@/lib/types'
 import { DoctorDragSource, DoctorDragOverlayToken, parseDoctorDragId } from './components/DoctorDragSource'
 import { RotationAssignPopover } from './components/RotationAssignPopover'
 import { parseBereichHeaderDropId, parsePlaceholderDropId, parseRotationMemberDropId } from './components/BereichHeaderRow'
+import { useAppSettings } from '@/stores/useAppSettings'
 import { apiGet } from '@/lib/api'
 import type { ShiftWithDetails, TarifWarning, RotationAssignmentWithDetails, INAExclusion, SolveResult } from '@/lib/types'
 
@@ -172,6 +173,7 @@ export function PlanPage() {
   const deleteRotation = useDeleteRotation(id)
   const solvePlan = useSolvePlan(id)
   const applySolver = useApplySolverResult(id)
+  const { solverEnabled } = useAppSettings()
   const { data: constraintOverrides = [] } = useConstraintOverrides(isNaN(id) ? null : id)
   const createOverrideMutation = useCreateConstraintOverride(isNaN(id) ? 0 : id)
   const deleteOverrideMutation = useDeleteConstraintOverride(isNaN(id) ? 0 : id)
@@ -302,6 +304,13 @@ export function PlanPage() {
   useEffect(() => {
     cycleIdxRef.current = { open: 0, conflict: 0 }
   }, [conflicts])
+
+  useEffect(() => {
+    if (!solverEnabled) {
+      setIsSolverOpen(false)
+      setSolveResult(null)
+    }
+  }, [solverEnabled])
 
   // ESC-Taste: Mehrfach-Auswahl aufheben
   useEffect(() => {
@@ -729,15 +738,17 @@ export function PlanPage() {
               <Settings size={14} className="mr-1.5" />
               Einstellungen
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSolve}
-              disabled={solvePlan.isPending || isNaN(id)}
-            >
-              <Zap className="size-3.5 mr-1.5" />
-              {solvePlan.isPending ? 'Berechne…' : 'Plan generieren'}
-            </Button>
+            {solverEnabled && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSolve}
+                disabled={solvePlan.isPending || isNaN(id)}
+              >
+                <Zap className="size-3.5 mr-1.5" />
+                {solvePlan.isPending ? 'Berechne…' : 'Plan generieren'}
+              </Button>
+            )}
             <span className={cn(
               'text-xs px-2 py-0.5 rounded-full font-medium border',
               plan.status === 'RELEASED' ? 'bg-green-50 text-green-700 border-green-200'
@@ -959,7 +970,7 @@ export function PlanPage() {
       </DragOverlay>
     </DndContext>
 
-    {isSolverOpen && solveResult && (
+    {isSolverOpen && solveResult && solverEnabled && (
       <SolverResultPanel
         result={solveResult}
         diffRows={solverDiffRows}
