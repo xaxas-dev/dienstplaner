@@ -22,6 +22,7 @@ from app.api.rotations import plan_rotations_router, rotations_router
 from app.api.rule_overrides import router as rule_overrides_router
 from app.api.shift_types import router as shift_types_router
 from app.api.shifts import router as shifts_router
+from app.api.system import router as system_router
 from app.api.tarif_warnings import router as tarif_warnings_router
 from app.config import BASE_DIR
 
@@ -60,4 +61,5 @@ app.include_router(tarif_warnings_router, prefix="/api")
 app.include_router(app_settings_router, prefix="/api")
 app.include_router(constraint_overrides_router, prefix="/api")
 app.include_router(doctor_overrides_router, prefix="/api")
+app.include_router(system_router, prefix="/api/system")
 register_error_handlers(app)
