@@ -24,7 +24,7 @@ const avatarTopModifier: Modifier = ({ activatorEvent, draggingNodeRect, transfo
   const offsetY = activatorEvent.clientY - draggingNodeRect.top
   return { ...transform, x: transform.x + offsetX - 14, y: transform.y + offsetY }
 }
-import { FileDown, Trash2, ChevronDown, ChevronLeft, ChevronRight, Zap } from 'lucide-react'
+import { FileDown, Trash2, ChevronDown, ChevronLeft, ChevronRight, Zap, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -59,6 +59,7 @@ import { useSolvePlan, JvmUnavailableError } from './useSolvePlan'
 import { useApplySolverResult } from './useApplySolverResult'
 import { buildSolverDiff } from './solverUtils'
 import { SolverResultPanel } from './components/SolverResultPanel'
+import { PlanSettingsModal } from './components/PlanSettingsModal'
 import { useDoctors } from '@/features/doctors/useDoctors'
 import { useDepartments } from '@/features/departments/useDepartments'
 import { useShiftTypes } from '@/features/shift-types/useShiftTypes'
@@ -169,6 +170,7 @@ export function PlanPage() {
   const [solveResult, setSolveResult] = useState<SolveResult | null>(null)
   const [isSolverOpen, setIsSolverOpen] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [pendingDeleteRotation, setPendingDeleteRotation] = useState<RotationAssignmentWithDetails | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -697,6 +699,14 @@ export function PlanPage() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => setSettingsOpen(true)}
+            >
+              <Settings size={14} className="mr-1.5" />
+              Einstellungen
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleSolve}
               disabled={solvePlan.isPending || isNaN(id)}
             >
@@ -1018,6 +1028,14 @@ export function PlanPage() {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    {!isNaN(id) && (
+      <PlanSettingsModal
+        planId={id}
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+      />
+    )}
 
     <AlertDialog
       open={pendingDeleteAbsence !== null}
