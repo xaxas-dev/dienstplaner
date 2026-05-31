@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.absences import router as absences_router
 from app.api.app_settings import router as app_settings_router
+from app.api.constraint_overrides import doctor_overrides_router
+from app.api.constraint_overrides import router as constraint_overrides_router
 from app.api.departments import router as departments_router
 from app.api.doctors import ep_router
 from app.api.doctors import router as doctors_router
@@ -56,4 +58,6 @@ app.include_router(ina_exclusions_router, prefix="/api")
 app.include_router(absences_router, prefix="/api")
 app.include_router(tarif_warnings_router, prefix="/api")
 app.include_router(app_settings_router, prefix="/api")
+app.include_router(constraint_overrides_router, prefix="/api")
+app.include_router(doctor_overrides_router, prefix="/api")
 register_error_handlers(app)

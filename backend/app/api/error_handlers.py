@@ -4,6 +4,8 @@ from fastapi.responses import JSONResponse
 from app.services.exceptions import (
     AbsenceNotFoundError,
     AbsenceValidationError,
+    ConstraintOverrideNotFoundError,
+    ConstraintOverrideValidationError,
     DepartmentNotFoundError,
     DepartmentValidationError,
     DoctorNotFoundError,
@@ -135,4 +137,16 @@ def register_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(AbsenceValidationError)
     async def absence_validation(_: Request, exc: AbsenceValidationError) -> JSONResponse:
+        return JSONResponse(status_code=422, content={"detail": exc.detail})
+
+    @app.exception_handler(ConstraintOverrideNotFoundError)
+    async def constraint_override_not_found(
+        _: Request, exc: ConstraintOverrideNotFoundError
+    ) -> JSONResponse:
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+    @app.exception_handler(ConstraintOverrideValidationError)
+    async def constraint_override_validation(
+        _: Request, exc: ConstraintOverrideValidationError
+    ) -> JSONResponse:
         return JSONResponse(status_code=422, content={"detail": exc.detail})
