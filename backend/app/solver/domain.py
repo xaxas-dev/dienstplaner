@@ -9,6 +9,7 @@ Verifizierte API (timefold==1.24.0b0, empirisch):
   PlanningPin: True = gepinnt (Solver ändert nicht), False = frei
   PlanningVariable(allows_unassigned=True): Variable kann None sein (offener Shift)
 """
+
 from __future__ import annotations
 
 from datetime import date

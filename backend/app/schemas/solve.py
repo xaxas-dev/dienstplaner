@@ -1,4 +1,5 @@
 """Schemas für Solver-Vorschlag (SolveResult) und Apply-Endpoint."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
@@ -24,5 +25,5 @@ class ApplyRequest(BaseModel):
 
 class ApplyResult(BaseModel):
     plan_id: int
-    applied: list[int]         # shift_ids, die geschrieben wurden
+    applied: list[int]  # shift_ids, die geschrieben wurden
     skipped_pinned: list[int]  # shift_ids, die wegen is_pinned übersprungen wurden

@@ -114,7 +114,12 @@ def build_dashboard_summary(db: Session, plan_id: int, target_date: date) -> Das
         dept_id = ra.department_id
         if dept_id not in dept_totals:
             dept_name = ra.department.name if ra.department else f"Bereich {dept_id}"
-            dept_totals[dept_id] = {"name": dept_name, "max_headcount": None, "ra_count": 0, "filled": 0}
+            dept_totals[dept_id] = {
+                "name": dept_name,
+                "max_headcount": None,
+                "ra_count": 0,
+                "filled": 0,
+            }
         dept_totals[dept_id]["ra_count"] += 1
         if ra.valid_from <= target_date <= ra.valid_to:
             dept_totals[dept_id]["filled"] += 1
@@ -161,11 +166,7 @@ def build_dashboard_summary(db: Session, plan_id: int, target_date: date) -> Das
             )
 
     # Absences die morgen beginnen
-    upcoming_absences = (
-        db.query(Absence)
-        .filter(Absence.valid_from == tomorrow)
-        .all()
-    )
+    upcoming_absences = db.query(Absence).filter(Absence.valid_from == tomorrow).all()
     for absence in upcoming_absences:
         doctor_name = absence.doctor.name if absence.doctor else "Unbekannt"
         attention.append(

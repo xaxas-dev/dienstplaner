@@ -5,6 +5,7 @@ Kein from_solver / Writeback — der /solve-Endpunkt ist Vorschlags-Diff-only.
 
 Liest read-only über bestehende Repositories; keine eigenen DB-Queries.
 """
+
 from __future__ import annotations
 
 from collections import Counter
@@ -98,8 +99,7 @@ def to_solver(db: Session, plan_id: int) -> ShiftSchedule:
         fte_per_doctor = {d.id: 100 for d in orm_doctors}
     else:
         fte_per_doctor = {
-            d.id: get_fte_for_period(db, d.id, plan_start, plan_end)
-            for d in orm_doctors
+            d.id: get_fte_for_period(db, d.id, plan_start, plan_end) for d in orm_doctors
         }
 
     # Shift-Anzahl pro Schichttyp — einmalig für den gesamten Plan
@@ -112,10 +112,7 @@ def to_solver(db: Session, plan_id: int) -> ShiftSchedule:
         if sum_fte == 0 or not counts_by_type:
             return {}
         fte = fte_per_doctor[doctor_id]
-        return {
-            st: (count * fte) // sum_fte
-            for st, count in counts_by_type.items()
-        }
+        return {st: (count * fte) // sum_fte for st, count in counts_by_type.items()}
 
     solver_doctors: dict[int, SolverDoctor] = {}
     for d in orm_doctors:

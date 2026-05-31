@@ -26,9 +26,7 @@ def update_shift(db: Session, shift_id: int, update: ShiftUpdate) -> Shift:
     if "doctor_id" in data and data["doctor_id"] is not None:
         doctor = db.query(Doctor).filter(Doctor.id == data["doctor_id"]).first()
         if doctor is None:
-            raise ShiftValidationError(
-                f"Arzt mit ID {data['doctor_id']} existiert nicht"
-            )
+            raise ShiftValidationError(f"Arzt mit ID {data['doctor_id']} existiert nicht")
         if not doctor.active:
             raise ShiftValidationError(
                 f"Arzt {doctor.name} ist inaktiv und kann nicht zugewiesen werden"

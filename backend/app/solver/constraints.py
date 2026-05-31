@@ -12,6 +12,7 @@ JPy-Eigenheit: ConstraintId (StrEnum) darf NICHT innerhalb von Lambdas referenzi
 der JVM-Interpreter kann Python-Enum-Klassenattribute nicht auflösen. Constraint-ID-Strings
 werden als lokale Variablen VOR dem Lambda-Aufruf gecaptured (z.B. `_cid = str(ConstraintId.X)`).
 """
+
 from __future__ import annotations
 
 from datetime import date as _date
@@ -118,10 +119,12 @@ def max_consecutive_days(cf: ConstraintFactory) -> Constraint:
             Joiners.equal(lambda s: s.doctor),
         )
         .filter(
-            lambda s1, s2: s1.doctor is not None
-            and (
-                s2.shift_date_ordinal - s1.shift_date_ordinal == MAX_CONSECUTIVE_DAYS
-                or s1.shift_date_ordinal - s2.shift_date_ordinal == MAX_CONSECUTIVE_DAYS
+            lambda s1, s2: (
+                s1.doctor is not None
+                and (
+                    s2.shift_date_ordinal - s1.shift_date_ordinal == MAX_CONSECUTIVE_DAYS
+                    or s1.shift_date_ordinal - s2.shift_date_ordinal == MAX_CONSECUTIVE_DAYS
+                )
             )
         )
         .penalize(HardSoftScore.ONE_SOFT)
@@ -135,9 +138,7 @@ def max_bd_per_month(cf: ConstraintFactory) -> Constraint:
     return (
         cf.for_each(SolverShift)
         .filter(
-            lambda s: s.doctor is not None
-            and s.is_bereitschaftsdienst
-            and not s.override_max_bd
+            lambda s: s.doctor is not None and s.is_bereitschaftsdienst and not s.override_max_bd
         )
         .group_by(
             lambda s: s.doctor,
@@ -145,8 +146,9 @@ def max_bd_per_month(cf: ConstraintFactory) -> Constraint:
             ConstraintCollectors.count(),
         )
         .filter(
-            lambda doc, month, count: count > MAX_BD_PER_MONAT
-            and _cid not in doc.overridden_constraints
+            lambda doc, month, count: (
+                count > MAX_BD_PER_MONAT and _cid not in doc.overridden_constraints
+            )
         )
         .penalize(HardSoftScore.ONE_HARD, lambda doc, month, count: count - MAX_BD_PER_MONAT)
         .as_constraint(ConstraintId.MAX_BD_PER_MONTH)
@@ -159,9 +161,11 @@ def max_weekends_per_month(cf: ConstraintFactory) -> Constraint:
     return (
         cf.for_each(SolverShift)
         .filter(
-            lambda s: s.doctor is not None
-            and s.shift_date.weekday() in (5, 6)
-            and not s.override_max_weekends
+            lambda s: (
+                s.doctor is not None
+                and s.shift_date.weekday() in (5, 6)
+                and not s.override_max_weekends
+            )
         )
         .group_by(
             lambda s: s.doctor,
@@ -169,8 +173,9 @@ def max_weekends_per_month(cf: ConstraintFactory) -> Constraint:
             ConstraintCollectors.count(),
         )
         .filter(
-            lambda doc, month, count: count > MAX_WEEKEND_SHIFTS_PER_MONTH
-            and _cid not in doc.overridden_constraints
+            lambda doc, month, count: (
+                count > MAX_WEEKEND_SHIFTS_PER_MONTH and _cid not in doc.overridden_constraints
+            )
         )
         .penalize(
             HardSoftScore.ONE_HARD,
@@ -229,8 +234,9 @@ def max_weekly_hours(cf: ConstraintFactory) -> Constraint:
             ConstraintCollectors.sum(lambda s: s.shift_end_minutes - s.shift_start_minutes),
         )
         .filter(
-            lambda doc, week, total_min: total_min > doc.max_weekly_hours_minutes
-            and _cid not in doc.overridden_constraints
+            lambda doc, week, total_min: (
+                total_min > doc.max_weekly_hours_minutes and _cid not in doc.overridden_constraints
+            )
         )
         .penalize(
             HardSoftScore.ONE_HARD,
@@ -243,9 +249,7 @@ def max_weekly_hours(cf: ConstraintFactory) -> Constraint:
 def absent_doctor(cf: ConstraintFactory) -> Constraint:
     return (
         cf.for_each(SolverShift)
-        .filter(
-            lambda s: s.doctor is not None and s.shift_date in s.doctor.unavailable_dates
-        )
+        .filter(lambda s: s.doctor is not None and s.shift_date in s.doctor.unavailable_dates)
         .penalize(HardSoftScore.ONE_HARD)
         .as_constraint(ConstraintId.ABSENT_DOCTOR)
     )

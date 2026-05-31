@@ -12,6 +12,7 @@ der FastAPI-App-Start hängt nicht von der JVM ab.
 TERMINATION_SECONDS: zentrale Konstante für das Solver-Zeitlimit (Initial: 30s).
 Kann per monkeypatch in Tests überschrieben werden.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -111,9 +112,7 @@ def apply_solution(
         if assignment.doctor_id is not None:
             doctor = db.query(Doctor).filter(Doctor.id == assignment.doctor_id).first()
             if doctor is None:
-                raise ShiftValidationError(
-                    f"Arzt mit ID {assignment.doctor_id} existiert nicht"
-                )
+                raise ShiftValidationError(f"Arzt mit ID {assignment.doctor_id} existiert nicht")
             if not doctor.active:
                 raise ShiftValidationError(
                     f"Arzt {doctor.name} ist inaktiv und kann nicht zugewiesen werden"

@@ -32,6 +32,8 @@ def _is_overridden(warning: TarifWarning, snapshot: OverrideSnapshot) -> bool:
     cid = warning.rule_id
     if cid in snapshot.disabled_constraints:
         return True
-    if warning.shift_id is not None and cid in snapshot.shift_overrides.get(warning.shift_id, frozenset()):
+    if warning.shift_id is not None and cid in snapshot.shift_overrides.get(
+        warning.shift_id, frozenset()
+    ):
         return True
     return False

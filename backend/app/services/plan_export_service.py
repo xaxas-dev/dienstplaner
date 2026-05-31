@@ -1,4 +1,5 @@
 """Excel-Export für einen Plan (read-only, openpyxl, in-memory BytesIO)."""
+
 import re
 from io import BytesIO
 

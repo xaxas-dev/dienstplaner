@@ -11,6 +11,7 @@ Keine erfundenen Tarif-Werte; alle regulatorischen Constraints kommen erst in Fo
 TarifRule-Protocol: Plug-in-Schnittstelle für Phase-A-Validierungsregeln.
 REGISTERED_RULES bleibt leer im Prod-Code — konkrete Regeln kommen nach Domänenklärung.
 """
+
 from __future__ import annotations
 
 import enum

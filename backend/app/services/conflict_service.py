@@ -68,9 +68,7 @@ def detect_conflicts(db: Session, plan_id: int) -> PlanConflicts:
         if len(group) > 1:
             for shift in group:
                 others = [
-                    s.shift_type.short_name
-                    for s in group
-                    if s.id != shift.id and s.shift_type
+                    s.shift_type.short_name for s in group if s.id != shift.id and s.shift_type
                 ]
                 message = f"Mehrfachzuweisung am {shift_date}: auch {', '.join(others)}"
                 conflicts.append(

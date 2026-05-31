@@ -13,10 +13,10 @@ class AttentionSeverity(enum.StrEnum):
 
 
 class DashboardKpis(BaseModel):
-    coverage_pct: float        # 0.0–1.0, gefüllte Shifts / alle Shifts im Plan
-    open_shifts: int           # Shifts im Plan ohne Arzt (gesamt)
-    conflicts: int             # Konflikt-Anzahl (read-only, detect_conflicts)
-    on_leave: int              # Ärzte mit aktiver Abwesenheit am date
+    coverage_pct: float  # 0.0–1.0, gefüllte Shifts / alle Shifts im Plan
+    open_shifts: int  # Shifts im Plan ohne Arzt (gesamt)
+    conflicts: int  # Konflikt-Anzahl (read-only, detect_conflicts)
+    on_leave: int  # Ärzte mit aktiver Abwesenheit am date
 
 
 class DoctorInfo(BaseModel):
@@ -28,15 +28,15 @@ class DoctorInfo(BaseModel):
 class DutyShift(BaseModel):
     shift_type_name: str
     shift_type_short_name: str
-    time_label: str | None     # Optional: falls ShiftType-Zeitangaben vorhanden
+    time_label: str | None  # Optional: falls ShiftType-Zeitangaben vorhanden
     doctors: list[DoctorInfo]
 
 
 class CoverageBar(BaseModel):
     department_name: str
-    filled: int    # RAs aktiv am date
-    total: int     # Alle RAs für dieses Department im Plan
-    pct: float     # filled / total (0.0 wenn total==0)
+    filled: int  # RAs aktiv am date
+    total: int  # Alle RAs für dieses Department im Plan
+    pct: float  # filled / total (0.0 wenn total==0)
 
 
 class AttentionItem(BaseModel):
