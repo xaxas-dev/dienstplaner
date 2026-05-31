@@ -30,6 +30,7 @@ def upgrade() -> None:
         sa.Column("valid_to", sa.Date(), nullable=True),
         sa.Column("reason", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(["plan_id"], ["plans.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["doctor_id"], ["doctors.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["shift_id"], ["shifts.id"], ondelete="CASCADE"),

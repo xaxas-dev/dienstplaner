@@ -25,3 +25,6 @@ class ConstraintOverride(Base):
     valid_to: Mapped[date | None] = mapped_column(Date, nullable=True)
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
+    )
