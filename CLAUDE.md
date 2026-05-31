@@ -406,6 +406,14 @@ Punkte nennt.
 - **`GET /api/plans/{id}/absences`:** Liefert alle Abwesenheiten von Ärzten mit aktiver Rotation im Plan, deren Periode den Plan-Zeitraum überlappt. Hook `usePlanAbsences` mit Query-Key `planAbsenceKeys.byPlan(planId)`.
 - **`Department.color`:** Nullable Hex-String (`VARCHAR(9)`). Frontend: `<input type="color">` + Reset-Button in `DepartmentFormDialog`. Backend: in `DepartmentBase`, `DepartmentUpdate`, `DepartmentRead` als `color: str | None`.
 
+## Entwicklungs-Workflow
+- **Implementierung immer via `superpowers:subagent-driven-development`:** Für alle
+  Implementierungsaufgaben mit Implementierungsplan (aus `superpowers:writing-plans`)
+  stets den Subagent-Driven-Weg wählen. Kein Inline-Coding im Haupt-Thread.
+  Frischer Subagent pro Task + Spec-Review + Code-Quality-Review nach jedem Task.
+- **Brainstorming vor Implementierung:** `superpowers:brainstorming` → Plan →
+  `superpowers:subagent-driven-development`. Diese Reihenfolge nie überspringen.
+
 ## Was Claude Code NICHT tun soll
 - Keine neuen Bibliotheken ohne explizite Rückfrage einführen
 - Keine Bibliotheksfunktionen verwenden, die nicht in der Doku existieren
