@@ -136,3 +136,53 @@ export interface DashboardSummary {
   coverage_by_department: CoverageBar[]
   attention: AttentionItem[]
 }
+
+export type ConstraintOverride = {
+  id: number
+  level: 'A' | 'B' | 'C'
+  constraint_id: string
+  plan_id: number | null
+  doctor_id: number | null
+  shift_id: number | null
+  valid_from: string | null
+  valid_to: string | null
+  reason: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type ConstraintOverrideCreateA = {
+  level: 'A'
+  constraint_id: string
+  plan_id: number
+  reason?: string | null
+}
+
+export type ConstraintOverrideCreateB = {
+  level: 'B'
+  constraint_id: string
+  doctor_id: number
+  valid_from: string
+  valid_to?: string | null
+  reason?: string | null
+}
+
+export type ConstraintOverrideCreateC = {
+  level: 'C'
+  constraint_id: string
+  shift_id: number
+  reason?: string | null
+}
+
+export type ConstraintOverrideCreate =
+  | ConstraintOverrideCreateA
+  | ConstraintOverrideCreateB
+  | ConstraintOverrideCreateC
+
+/** ConstraintIds der regulatorisch-harten Constraints (overridebar). */
+export const REGULATORISCH_HART_IDS = [
+  'max-bd-per-month',
+  'max-weekends-per-month',
+  'min-rest-time',
+  'max-weekly-hours',
+] as const
