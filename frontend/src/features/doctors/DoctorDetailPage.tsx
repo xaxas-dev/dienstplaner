@@ -21,8 +21,9 @@ import { EmploymentPeriodList } from './EmploymentPeriodList'
 import { QualificationManager } from './QualificationManager'
 import { INAExclusionList } from './INAExclusionList'
 import { AbsenceList } from './AbsenceList'
+import { ConstraintOverrideList } from './ConstraintOverrideList'
 
-type Tab = 'stammdaten' | 'beschaeftigung' | 'qualifikationen' | 'ina-ausschluesse' | 'abwesenheiten'
+type Tab = 'stammdaten' | 'beschaeftigung' | 'qualifikationen' | 'ina-ausschluesse' | 'abwesenheiten' | 'overrides'
 
 export function DoctorDetailPage() {
   const { doctorId } = useParams<{ doctorId: string }>()
@@ -73,6 +74,7 @@ export function DoctorDetailPage() {
     { key: 'qualifikationen', label: 'Qualifikationen' },
     { key: 'ina-ausschluesse', label: 'INA-Ausschlüsse' },
     { key: 'abwesenheiten', label: 'Abwesenheiten' },
+    { key: 'overrides', label: 'Constraint-Overrides' },
   ]
 
   return (
@@ -172,6 +174,12 @@ export function DoctorDetailPage() {
         {activeTab === 'abwesenheiten' && (
           <div className="max-w-2xl">
             <AbsenceList doctorId={doctor.id} />
+          </div>
+        )}
+
+        {activeTab === 'overrides' && (
+          <div className="max-w-2xl">
+            <ConstraintOverrideList doctorId={doctor.id} />
           </div>
         )}
       </div>
