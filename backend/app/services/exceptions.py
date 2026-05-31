@@ -154,3 +154,15 @@ class AbsenceValidationError(Exception):
     def __init__(self, detail: str) -> None:
         super().__init__(detail)
         self.detail = detail
+
+
+class ConstraintOverrideNotFoundError(Exception):
+    def __init__(self, override_id: int) -> None:
+        super().__init__(f"Constraint-Override mit ID {override_id} nicht gefunden")
+        self.override_id = override_id
+
+
+class ConstraintOverrideValidationError(Exception):
+    def __init__(self, detail: str) -> None:
+        super().__init__(detail)
+        self.detail = detail
