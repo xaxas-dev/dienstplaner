@@ -749,18 +749,22 @@ export function PlanPage() {
                 {solvePlan.isPending ? 'Berechne…' : 'Plan generieren'}
               </Button>
             )}
-            <span className={cn(
-              'text-xs px-2 py-0.5 rounded-full font-medium border',
-              plan.status === 'RELEASED' ? 'bg-green-50 text-green-700 border-green-200'
-              : plan.status === 'ARCHIVED' ? 'bg-amber-50 text-amber-700 border-amber-200'
-              : 'bg-gray-50 text-gray-600 border-gray-200'
-            )}>
-              {statusLabel}
-            </span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" disabled={updatePlan.isPending}>
-                  <ChevronDown className="size-3.5" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={updatePlan.isPending}
+                  className="min-w-[110px] gap-1.5"
+                >
+                  <span className={cn(
+                    'size-1.5 rounded-full shrink-0',
+                    plan.status === 'RELEASED' ? 'bg-green-500'
+                    : plan.status === 'ARCHIVED' ? 'bg-amber-400'
+                    : 'bg-gray-400'
+                  )} />
+                  {statusLabel}
+                  <ChevronDown className="size-3.5 ml-auto" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
