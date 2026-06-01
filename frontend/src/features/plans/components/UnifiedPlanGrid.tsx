@@ -310,7 +310,7 @@ export function UnifiedPlanGrid({
         })}
 
         {/* Daten-Zeilen */}
-        {rows.flatMap((row) => {
+        {rows.flatMap((row, rowIndex) => {
           if (row.kind === 'header') {
             const rotationCount = rows.filter(
               (r) => r.kind === 'rotation' && r.department.id === row.department.id,
@@ -325,6 +325,14 @@ export function UnifiedPlanGrid({
           }
 
           if (row.kind === 'placeholder') {
+            if (onAddRotation) {
+              return [
+                <AddRotationRow
+                  key={`add-placeholder-${row.department.id}`}
+                  onAdd={() => onAddRotation(row.department.id)}
+                />,
+              ]
+            }
             const color = getDepartmentColor(row.department)
             return [
               <div key={row.rowKey} className="contents">
@@ -337,14 +345,6 @@ export function UnifiedPlanGrid({
                   />
                 ))}
               </div>,
-              ...(onAddRotation
-                ? [
-                    <AddRotationRow
-                      key={`add-placeholder-${row.department.id}`}
-                      onAdd={() => onAddRotation(row.department.id)}
-                    />,
-                  ]
-                : []),
             ]
           }
 
@@ -446,12 +446,18 @@ export function UnifiedPlanGrid({
             </div>
           )
 
+          const nextRow = rows[rowIndex + 1]
+          const isLastInDept =
+            !nextRow ||
+            nextRow.kind !== 'rotation' ||
+            nextRow.department.id !== row.department.id
+
           return [
             rotationEl,
-            ...(onAddRotation
+            ...(onAddRotation && isLastInDept
               ? [
                   <AddRotationRow
-                    key={`add-${row.rotation.id}`}
+                    key={`add-dept-${row.department.id}`}
                     onAdd={() => onAddRotation(row.department.id)}
                   />,
                 ]
