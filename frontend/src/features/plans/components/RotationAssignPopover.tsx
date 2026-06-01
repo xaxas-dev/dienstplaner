@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useCreateRotation, useUpdateRotation, useDeleteRotation } from '../usePlanRotations'
+import { useCreateRotation, useUpdateRotation, useDeleteRotation, usePlanRotations } from '../usePlanRotations'
 import { useDoctors } from '@/features/doctors/useDoctors'
 import type { RotationAssignmentWithDetails } from '@/lib/types'
 
@@ -34,8 +34,11 @@ export function RotationAssignPopover({
   const { mutate: updateMutate, isPending: isUpdating } = useUpdateRotation(planId)
   const { mutate: deleteMutate, isPending: isDeleting } = useDeleteRotation(planId)
   const { data: doctors = [] } = useDoctors()
+  const { data: rotations = [] } = usePlanRotations(planId)
 
   const [search, setSearch] = useState('')
+  const [focusedIndex, setFocusedIndex] = useState(0)
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(
     existingAssignment?.doctor_id ?? preselectedDoctorId ?? null,
   )
@@ -70,9 +73,26 @@ export function RotationAssignPopover({
 
   const isPending = isCreating || isUpdating || isDeleting
 
-  const filteredDoctors = doctors.filter(
-    (d) => d.active && d.name.toLowerCase().includes(search.toLowerCase()),
+  const assignedDoctorIds = new Set(
+    rotations
+      .filter((r) => r.id !== existingAssignment?.id)
+      .map((r) => r.doctor_id),
   )
+
+  const filteredDoctors = doctors.filter(
+    (d) =>
+      d.active &&
+      !assignedDoctorIds.has(d.id) &&
+      d.name.toLowerCase().includes(search.toLowerCase()),
+  )
+
+  useEffect(() => {
+    setFocusedIndex(0)
+  }, [search])
+
+  useEffect(() => {
+    itemRefs.current[focusedIndex]?.scrollIntoView({ block: 'nearest' })
+  }, [focusedIndex])
 
   const selectedDoctorName = doctors.find((d) => d.id === selectedDoctorId)?.name
 
@@ -176,11 +196,29 @@ export function RotationAssignPopover({
                 onChange={(e) => setSearch(e.target.value)}
                 className="h-7 text-xs"
                 autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault()
+                    setFocusedIndex((i) => Math.min(i + 1, filteredDoctors.length - 1))
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault()
+                    setFocusedIndex((i) => Math.max(i - 1, 0))
+                  } else if (e.key === 'Enter') {
+                    e.preventDefault()
+                    const d = filteredDoctors[focusedIndex]
+                    if (d) {
+                      setSelectedDoctorId(d.id)
+                      setShowDoctorPicker(false)
+                      setSearch('')
+                    }
+                  }
+                }}
               />
               <ul className="max-h-36 overflow-y-auto space-y-0.5">
-                {filteredDoctors.map((d) => (
+                {filteredDoctors.map((d, i) => (
                   <li key={d.id}>
                     <button
+                      ref={(el) => { itemRefs.current[i] = el }}
                       type="button"
                       disabled={isPending}
                       onClick={() => {
@@ -188,8 +226,9 @@ export function RotationAssignPopover({
                         setShowDoctorPicker(false)
                         setSearch('')
                       }}
+                      onMouseEnter={() => setFocusedIndex(i)}
                       className={`w-full text-left px-2 py-1 rounded-md text-xs transition ${
-                        selectedDoctorId === d.id
+                        i === focusedIndex || selectedDoctorId === d.id
                           ? 'bg-accent text-accent-foreground'
                           : 'hover:bg-paper'
                       }`}
