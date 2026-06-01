@@ -52,6 +52,7 @@ export function RotationAssignPopover({
   )
 
   const cardRef = useRef<HTMLDivElement>(null)
+  const saveBtnRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -161,6 +162,12 @@ export function RotationAssignPopover({
       <div
         ref={cardRef}
         className="bg-card border border-line rounded-2xl shadow-lg w-80 p-4 space-y-3"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !showDoctorPicker && selectedDoctorId !== null && !isPending) {
+            e.preventDefault()
+            handleSave()
+          }
+        }}
       >
         {/* Bereich-Label */}
         <p className="text-[10px] font-semibold text-ink-3 uppercase tracking-wide">{departmentName}</p>
@@ -205,11 +212,13 @@ export function RotationAssignPopover({
                     setFocusedIndex((i) => Math.max(i - 1, 0))
                   } else if (e.key === 'Enter') {
                     e.preventDefault()
+                    e.stopPropagation()
                     const d = filteredDoctors[focusedIndex]
                     if (d) {
                       setSelectedDoctorId(d.id)
                       setShowDoctorPicker(false)
                       setSearch('')
+                      setTimeout(() => saveBtnRef.current?.focus(), 0)
                     }
                   }
                 }}
@@ -286,6 +295,7 @@ export function RotationAssignPopover({
         )}
 
         <Button
+          ref={saveBtnRef}
           size="sm"
           className="w-full"
           disabled={isPending || selectedDoctorId === null}

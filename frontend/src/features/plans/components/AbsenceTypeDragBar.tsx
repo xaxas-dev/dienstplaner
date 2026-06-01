@@ -25,7 +25,7 @@ const ABSENCE_CHIP_META: Record<AbsenceType, { short: string; full: string }> = 
   FORTBILDUNG:  { short: 'FB',     full: 'Fortbildung' },
   ELTERNZEIT:   { short: 'EZ',     full: 'Elternzeit' },
   MUTTERSCHUTZ: { short: 'MuSchu', full: 'Mutterschutz' },
-  SONSTIGES:    { short: 'EA',     full: 'Sonstiges' },
+  SONSTIGES:    { short: 'DIV',    full: 'Sonstiges' },
 }
 
 export function AbsenceTypeDragBar() {

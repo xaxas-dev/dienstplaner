@@ -110,7 +110,7 @@ export function UnifiedShiftCell({
 
   const bereichColor = getDepartmentColor(department)
   const isVN = text === 'V' || text === 'N'
-  const isAbsenceCode = ['U', 'K', 'FB', 'EZ', 'MuSchu', 'EA'].includes(text)
+  const isAbsenceCode = ['U', 'K', 'FB', 'EZ', 'MuSchu', 'DIV'].includes(text)
   const dimmed = focusMode === 'vn' && text !== '' && !isVN && !isAbsenceCode
   const showCrosshair = (isHoveredRow || isHoveredCol) && !dimmed
 

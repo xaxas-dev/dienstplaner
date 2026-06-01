@@ -19,6 +19,7 @@ const ST: ShiftTypeResponse = {
   display_order: 0,
   active: true,
   notes: null,
+  is_bereitschaftsdienst: false,
   created_at: '',
   updated_at: '',
 }

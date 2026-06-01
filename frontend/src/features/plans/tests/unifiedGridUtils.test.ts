@@ -154,7 +154,7 @@ describe('resolveCell', () => {
       notes: null,
       created_at: '2026-01-01T00:00:00',
       updated_at: '2026-01-01T00:00:00',
-      shift_type: { id: 1, name: 'V-Dienst', short_name: 'V', applies_on_weekdays: true, applies_on_weekend: false, display_order: 1, active: true, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
+      shift_type: { id: 1, name: 'V-Dienst', short_name: 'V', applies_on_weekdays: true, applies_on_weekend: false, display_order: 1, active: true, is_bereitschaftsdienst: false, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
       conflicts: [],
     }
     const cell = resolveCell(row, '2026-05-10', [shift], [])
@@ -173,7 +173,7 @@ describe('resolveCell', () => {
       notes: null,
       created_at: '2026-01-01T00:00:00',
       updated_at: '2026-01-01T00:00:00',
-      shift_type: { id: 1, name: 'V-Dienst', short_name: 'V', applies_on_weekdays: true, applies_on_weekend: false, display_order: 1, active: true, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
+      shift_type: { id: 1, name: 'V-Dienst', short_name: 'V', applies_on_weekdays: true, applies_on_weekend: false, display_order: 1, active: true, is_bereitschaftsdienst: false, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
       conflicts: [],
     }
     const absence: Absence = {
@@ -217,7 +217,7 @@ describe('absenceCode', () => {
     ['FORTBILDUNG', 'Fo'],
     ['ELTERNZEIT', 'EZ'],
     ['MUTTERSCHUTZ', 'MuSchu'],
-    ['SONSTIGES', 'EA'],
+    ['SONSTIGES', 'DIV'],
   ] as const)('%s → %s', (type, expected) => {
     expect(absenceCode(type)).toBe(expected)
   })

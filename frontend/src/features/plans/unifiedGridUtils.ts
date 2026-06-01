@@ -74,7 +74,7 @@ const ABSENCE_CODES: Record<AbsenceType, string> = {
   FORTBILDUNG: 'Fo',
   ELTERNZEIT: 'EZ',
   MUTTERSCHUTZ: 'MuSchu',
-  SONSTIGES: 'EA',
+  SONSTIGES: 'DIV',
 }
 
 export function absenceCode(absenceType: AbsenceType): string {

@@ -1,6 +1,3 @@
-from datetime import date
-
-from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from app.models.absence import Absence

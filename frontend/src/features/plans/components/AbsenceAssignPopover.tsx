@@ -12,7 +12,7 @@ const ABSENCE_LABELS: Record<AbsenceType, string> = {
   FORTBILDUNG:  'FB — Fortbildung',
   ELTERNZEIT:   'EZ — Elternzeit',
   MUTTERSCHUTZ: 'MuSchu — Mutterschutz',
-  SONSTIGES:    'EA — Sonstiges',
+  SONSTIGES:    'DIV — Sonstiges',
 }
 
 interface AbsenceAssignPopoverProps {

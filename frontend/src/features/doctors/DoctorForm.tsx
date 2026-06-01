@@ -68,8 +68,6 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
     },
   })
 
-  const doctorType = form.watch('doctor_type')
-
   // Reset when doctor prop changes (e.g. after save)
   useEffect(() => {
     if (doctor) {

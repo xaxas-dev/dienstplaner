@@ -39,7 +39,7 @@ const ST = {
   id: 1, name: 'Frühdienst', short_name: 'F',
   applies_on_weekdays: true, applies_on_weekend: false,
   start_time: null, end_time: null, display_order: 0,
-  active: true, notes: null, created_at: '', updated_at: '',
+  active: true, notes: null, is_bereitschaftsdienst: false, created_at: '', updated_at: '',
 }
 
 function makeOpenShift(id: number, shortName: string): ShiftWithDetails {

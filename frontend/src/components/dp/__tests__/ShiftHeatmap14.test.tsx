@@ -14,6 +14,7 @@ const mockShiftType: ShiftType = {
   display_order: 1,
   active: true,
   notes: null,
+  is_bereitschaftsdienst: false,
   created_at: '2026-01-01T00:00:00',
   updated_at: '2026-01-01T00:00:00',
 }
