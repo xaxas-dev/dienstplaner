@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom'
 import { NavLink } from 'react-router-dom'
+import { useState } from 'react'
 import {
   LayoutDashboard,
   Calendar,
@@ -14,6 +15,8 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { Avatar } from '@/components/dp/Avatar'
 import { LogoMark } from '@/components/dp/LogoMark'
 import { cn } from '@/lib/utils'
+import { useUserProfile } from '@/stores/useUserProfile'
+import { ProfileEditModal } from '@/components/dp/ProfileEditModal'
 
 interface NavItem {
   label: string
@@ -34,6 +37,8 @@ const mainNavItems: NavItem[] = [
 
 export function MiniRail() {
   const location = useLocation()
+  const [profileOpen, setProfileOpen] = useState(false)
+  const { name } = useUserProfile()
 
   function isActive(to: string) {
     if (to === '/heute') return location.pathname === '/heute' || location.pathname === '/'
@@ -88,10 +93,16 @@ export function MiniRail() {
         <TooltipContent side="right">Einstellungen</TooltipContent>
       </Tooltip>
 
-      {/* Avatar */}
-      <div className="mt-1">
-        <Avatar name="Planer" id="planer" size={32} />
-      </div>
+      {/* Avatar / Profil */}
+      <button
+        type="button"
+        onClick={() => setProfileOpen(true)}
+        className="mt-1 rounded-full hover:opacity-80 transition-opacity"
+        aria-label="Profil bearbeiten"
+      >
+        <Avatar name={name} id="profile" size={32} />
+      </button>
+      <ProfileEditModal open={profileOpen} onOpenChange={setProfileOpen} />
     </aside>
   )
 }
