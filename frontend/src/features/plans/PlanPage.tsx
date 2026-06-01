@@ -49,7 +49,7 @@ import { usePlan, usePlans } from './usePlans'
 import { planToSlug } from './planSlug'
 import { usePlanShifts } from './usePlanShifts'
 import { usePlanConflicts } from './usePlanConflicts'
-import { usePlanRotations, useDeleteRotation } from './usePlanRotations'
+import { usePlanRotations, useDeleteRotation, useCreateRotation } from './usePlanRotations'
 import { useTarifWarnings } from './useTarifWarnings'
 import { usePlanAbsences } from './usePlanAbsences'
 import { useAssignShift, findShiftId } from './useAssignShift'
@@ -118,7 +118,6 @@ export function PlanPage() {
     day: string
     assignmentId: number | null
   } | null>(null)
-  const [preselectedDragDoctorId, setPreselectedDragDoctorId] = useState<number | null>(null)
   const [activeDragDoctor, setActiveDragDoctor] = useState<{
     id: number
     name: string
@@ -171,6 +170,7 @@ export function PlanPage() {
   const updatePlan = useUpdatePlan(id)
   const deletePlan = useDeletePlan()
   const deleteRotation = useDeleteRotation(id)
+  const createRotation = useCreateRotation(id)
   const solvePlan = useSolvePlan(id)
   const applySolver = useApplySolverResult(id)
   const { solverEnabled } = useAppSettings()
@@ -560,27 +560,53 @@ export function PlanPage() {
     // ── Doctor → Bereich-Header-Drop ──────────────────────────────────────────
     const doctorId = parseDoctorDragId(activeId)
     if (doctorId !== null) {
-      const deptId = parseBereichHeaderDropId(overId)
-      if (deptId !== null) {
-        setPreselectedDragDoctorId(doctorId)
-        setActiveRotationCell({ departmentId: deptId, day: plan?.valid_from ?? '', assignmentId: null })
-        return
+      if (!plan) return
+      const doctor = doctors.find((d) => d.id === doctorId)
+      const doctorName = doctor?.name ?? 'Arzt'
+
+      let deptId: number | null = null
+      let deptName = ''
+
+      const headerDeptId = parseBereichHeaderDropId(overId)
+      if (headerDeptId !== null) {
+        deptId = headerDeptId
+        deptName = departments.find((d) => d.id === headerDeptId)?.name ?? ''
       }
-      const placeholderDeptId = parsePlaceholderDropId(overId)
-      if (placeholderDeptId !== null) {
-        setPreselectedDragDoctorId(doctorId)
-        setActiveRotationCell({ departmentId: placeholderDeptId, day: plan?.valid_from ?? '', assignmentId: null })
-        return
-      }
-      const memberRotId = parseRotationMemberDropId(overId)
-      if (memberRotId !== null) {
-        const rot = rotations.find((r) => r.id === memberRotId)
-        if (rot) {
-          setPreselectedDragDoctorId(doctorId)
-          setActiveRotationCell({ departmentId: rot.department_id, day: plan?.valid_from ?? '', assignmentId: null })
+      if (deptId === null) {
+        const placeholderDeptId = parsePlaceholderDropId(overId)
+        if (placeholderDeptId !== null) {
+          deptId = placeholderDeptId
+          deptName = departments.find((d) => d.id === placeholderDeptId)?.name ?? ''
         }
-        return
       }
+      if (deptId === null) {
+        const memberRotId = parseRotationMemberDropId(overId)
+        if (memberRotId !== null) {
+          const rot = rotations.find((r) => r.id === memberRotId)
+          if (rot) {
+            deptId = rot.department_id
+            deptName = departments.find((d) => d.id === rot.department_id)?.name ?? ''
+          }
+        }
+      }
+
+      if (deptId === null) return
+
+      createRotation.mutate(
+        {
+          plan_id: id,
+          doctor_id: doctorId,
+          department_id: deptId,
+          valid_from: plan.valid_from,
+          valid_to: plan.valid_to,
+          is_einarbeitung: false,
+        },
+        {
+          onSuccess: () => toast.success(`${doctorName} → ${deptName} zugewiesen`),
+          onError: (err) =>
+            toast.error(err instanceof Error ? err.message : 'Zuweisung fehlgeschlagen'),
+        },
+      )
       return
     }
 
@@ -954,11 +980,7 @@ export function PlanPage() {
             validTo={plan!.valid_to}
             existingAssignment={existing}
             blocksIna={dept.blocks_ina_weekdays || dept.blocks_ina_weekends}
-            preselectedDoctorId={preselectedDragDoctorId ?? undefined}
-            onClose={() => {
-              setActiveRotationCell(null)
-              setPreselectedDragDoctorId(null)
-            }}
+            onClose={() => setActiveRotationCell(null)}
           />
         ) : null
       })()}
