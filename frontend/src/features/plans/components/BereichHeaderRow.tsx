@@ -31,26 +31,27 @@ export function parseRotationMemberDropId(id: string): number | null {
 
 interface BereichHeaderRowProps {
   department: Department
-  colCount: number
   rotationCount?: number
 }
 
-export function BereichHeaderRow({ department, colCount, rotationCount }: BereichHeaderRowProps) {
+export function BereichHeaderRow({ department, rotationCount }: BereichHeaderRowProps) {
   const color = getDepartmentColor(department)
   const { setNodeRef, isOver } = useDroppable({
     id: makeBereichHeaderDropId(department.id),
     data: { departmentId: department.id, departmentName: department.name },
   })
 
+  const bg = isOver ? `${color}35` : `${color}18`
+
   return (
     <div className="contents">
-      {/* Erste Spalte: Bereich-Name + Drop-Target */}
+      {/* Label-Cell: sticky, Drop-Target */}
       <div
         ref={setNodeRef}
         className="sticky left-0 z-10 flex items-center gap-2 px-3 py-1.5 border-b border-line"
         style={{
           borderLeft: `4px solid ${color}`,
-          backgroundColor: isOver ? `${color}35` : `${color}18`,
+          backgroundColor: bg,
         }}
       >
         <span className="text-xs font-semibold text-ink truncate leading-none flex-1">
@@ -62,14 +63,11 @@ export function BereichHeaderRow({ department, colCount, rotationCount }: Bereic
           </span>
         )}
       </div>
-      {/* Tag-Spalten: volle Breite, Farbtönung */}
-      {Array.from({ length: colCount }).map((_, i) => (
-        <div
-          key={i}
-          className="border-b border-r border-line"
-          style={{ backgroundColor: isOver ? `${color}35` : `${color}18` }}
-        />
-      ))}
+      {/* Spanning cell: füllt alle Tag-Spalten ohne interne Trennlinien */}
+      <div
+        className="border-b border-line"
+        style={{ gridColumn: '2 / -1', backgroundColor: bg }}
+      />
     </div>
   )
 }

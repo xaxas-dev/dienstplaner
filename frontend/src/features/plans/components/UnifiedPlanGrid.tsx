@@ -297,7 +297,6 @@ export function UnifiedPlanGrid({
               <BereichHeaderRow
                 key={row.rowKey}
                 department={row.department}
-                colCount={colCount}
                 rotationCount={rotationCount}
               />
             )
