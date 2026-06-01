@@ -911,6 +911,9 @@ export function PlanPage() {
                 setContextShift(shift)
               }}
               onDoubleClickRemoveAbsence={handleDoubleClickRemoveAbsence}
+              onAddRotation={(departmentId) =>
+                setActiveRotationCell({ departmentId, day: plan.valid_from, assignmentId: null })
+              }
             />
           )}
         </div>

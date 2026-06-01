@@ -35,6 +35,27 @@ interface UnifiedPlanGridProps {
   onRangeSelected?: (rotationId: number, doctorId: number, dayKeys: string[]) => void
   onConflictDotClick?: (shiftId: number) => void
   onTarifDotClick?: (shiftId: number) => void
+  onAddRotation?: (departmentId: number) => void
+}
+
+function AddRotationRow({ onAdd }: { onAdd: () => void }) {
+  return (
+    <div className="contents">
+      <button
+        type="button"
+        onClick={onAdd}
+        className="sticky left-0 z-10 flex items-center px-3 py-1 border-b border-line bg-card hover:bg-paper transition-colors group text-left w-full"
+      >
+        <span className="text-[10px] italic text-ink-3 group-hover:text-ink transition-colors">
+          + Arzt hinzufügen
+        </span>
+      </button>
+      <div
+        className="border-b border-line bg-card"
+        style={{ gridColumn: '2 / -1' }}
+      />
+    </div>
+  )
 }
 
 function PlaceholderLabelCell({ department }: { department: Department }) {
@@ -155,6 +176,7 @@ export function UnifiedPlanGrid({
   onEditRotation,
   onConflictDotClick,
   onTarifDotClick,
+  onAddRotation,
 }: UnifiedPlanGridProps) {
   const [hoverRow, setHoverRow] = useState<string | null>(null)
   const [hoverDay, setHoverDay] = useState<string | null>(null)
@@ -288,23 +310,23 @@ export function UnifiedPlanGrid({
         })}
 
         {/* Daten-Zeilen */}
-        {rows.map((row) => {
+        {rows.flatMap((row) => {
           if (row.kind === 'header') {
             const rotationCount = rows.filter(
               (r) => r.kind === 'rotation' && r.department.id === row.department.id,
             ).length
-            return (
+            return [
               <BereichHeaderRow
                 key={row.rowKey}
                 department={row.department}
                 rotationCount={rotationCount}
-              />
-            )
+              />,
+            ]
           }
 
           if (row.kind === 'placeholder') {
             const color = getDepartmentColor(row.department)
-            return (
+            return [
               <div key={row.rowKey} className="contents">
                 <PlaceholderLabelCell department={row.department} />
                 {dayKeys.map((dk) => (
@@ -314,8 +336,16 @@ export function UnifiedPlanGrid({
                     style={{ backgroundColor: `${color}10` }}
                   />
                 ))}
-              </div>
-            )
+              </div>,
+              ...(onAddRotation
+                ? [
+                    <AddRotationRow
+                      key={`add-placeholder-${row.department.id}`}
+                      onAdd={() => onAddRotation(row.department.id)}
+                    />,
+                  ]
+                : []),
+            ]
           }
 
           // kind === 'rotation'
@@ -329,7 +359,7 @@ export function UnifiedPlanGrid({
               })()
             : null
 
-          return (
+          const rotationEl = (
             <div key={row.rowKey} className="contents">
               <RotationLabelCell
                 row={row}
@@ -415,6 +445,18 @@ export function UnifiedPlanGrid({
               })}
             </div>
           )
+
+          return [
+            rotationEl,
+            ...(onAddRotation
+              ? [
+                  <AddRotationRow
+                    key={`add-${row.rotation.id}`}
+                    onAdd={() => onAddRotation(row.department.id)}
+                  />,
+                ]
+              : []),
+          ]
         })}
       </div>
     </div>
