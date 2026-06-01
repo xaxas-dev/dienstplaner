@@ -1,19 +1,13 @@
 from __future__ import annotations
 
-from datetime import time
+from sqlalchemy.orm import Session
 
-from sqlalchemy.orm import Session, joinedload
-
-from app.models.doctor import Doctor
 from app.models.shift import Shift
 from app.models.shift_type import ShiftType
 from app.schemas.tarif_warning import TarifSeverity, TarifWarning
 from app.solver.tarif_rules import (
     MAX_BD_PER_MONAT,
-    MAX_WEEKEND_SHIFTS_PER_MONTH,
-    MIN_REST_HOURS,
     ConstraintId,
-    get_weekly_hours_limit,
 )
 
 

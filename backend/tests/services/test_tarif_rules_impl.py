@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import date, time
 
-import pytest
 from sqlalchemy.orm import Session
 
 import app.models  # noqa: F401 — alle ORM-Modelle registrieren
@@ -12,7 +11,6 @@ from app.models.shift import Shift
 from app.models.shift_type import ShiftType
 from app.schemas.tarif_warning import TarifSeverity
 from app.solver.tarif_rules import ConstraintId
-
 
 # ---------------------------------------------------------------------------
 # Test-Helpers
@@ -31,7 +29,9 @@ def _make_plan(db: Session) -> Plan:
     return p
 
 
-def _make_doctor(db: Session, name: str = "Dr. Test", opt_out_bd_level: int | None = None) -> Doctor:
+def _make_doctor(
+    db: Session, name: str = "Dr. Test", opt_out_bd_level: int | None = None
+) -> Doctor:
     d = Doctor(name=name, opt_out_bd_level=opt_out_bd_level)
     db.add(d)
     db.flush()
