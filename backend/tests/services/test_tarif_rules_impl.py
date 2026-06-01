@@ -141,3 +141,61 @@ def test_max_bd_non_bd_shifts_not_counted(db: Session) -> None:
 
     warnings = MaxBdPerMonthRule().evaluate(db, plan.id)
     assert warnings == []
+
+
+# ---------------------------------------------------------------------------
+# MaxWeekendsPerMonthRule
+# ---------------------------------------------------------------------------
+
+
+def test_max_weekends_no_violation(db: Session) -> None:
+    from app.services.tarif_rules_impl import MaxWeekendsPerMonthRule
+
+    plan = _make_plan(db)
+    doctor = _make_doctor(db)
+    # June 2026: Sa=6, So=7 → Wochenende KW23; 13, 14 → KW24
+    we_type = _make_shift_type(db, "WE-Dienst", "WE")
+
+    # Genau 2 Wochenend-Shifts
+    _make_shift(db, plan.id, date(2026, 6, 6), we_type.id, doctor.id)   # Sa
+    _make_shift(db, plan.id, date(2026, 6, 7), we_type.id, doctor.id)   # So
+
+    warnings = MaxWeekendsPerMonthRule().evaluate(db, plan.id)
+    assert warnings == []
+
+
+def test_max_weekends_violation(db: Session) -> None:
+    from app.services.tarif_rules_impl import MaxWeekendsPerMonthRule
+
+    plan = _make_plan(db)
+    doctor = _make_doctor(db)
+    we_type = _make_shift_type(db, "WE-Dienst2", "WE2")
+
+    # 3 Wochenend-Shifts → 1 Excess
+    shifts = [
+        _make_shift(db, plan.id, date(2026, 6, 6), we_type.id, doctor.id),   # Sa
+        _make_shift(db, plan.id, date(2026, 6, 7), we_type.id, doctor.id),   # So
+        _make_shift(db, plan.id, date(2026, 6, 13), we_type.id, doctor.id),  # Sa
+    ]
+
+    warnings = MaxWeekendsPerMonthRule().evaluate(db, plan.id)
+
+    assert len(warnings) == 1
+    assert warnings[0].rule_id == ConstraintId.MAX_WEEKENDS_PER_MONTH
+    assert warnings[0].severity == TarifSeverity.WARNING
+    assert warnings[0].doctor_id == doctor.id
+    assert warnings[0].shift_id == shifts[2].id
+
+
+def test_max_weekends_weekday_shifts_not_counted(db: Session) -> None:
+    from app.services.tarif_rules_impl import MaxWeekendsPerMonthRule
+
+    plan = _make_plan(db)
+    doctor = _make_doctor(db)
+    wd_type = _make_shift_type(db, "Wochentag", "WT")
+
+    for day in range(1, 6):  # Mo–Fr
+        _make_shift(db, plan.id, date(2026, 6, day), wd_type.id, doctor.id)
+
+    warnings = MaxWeekendsPerMonthRule().evaluate(db, plan.id)
+    assert warnings == []
