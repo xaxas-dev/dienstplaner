@@ -12,7 +12,6 @@ from app.schemas.locked_week import LockedWeekCreate
 from app.services import locked_week_service
 from app.services.exceptions import PlanNotFoundError
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
