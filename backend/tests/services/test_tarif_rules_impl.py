@@ -276,3 +276,77 @@ def test_min_rest_missing_times_skipped(db: Session) -> None:
 
     warnings = MinRestTimeRule().evaluate(db, plan.id)
     assert warnings == []
+
+
+# ---------------------------------------------------------------------------
+# MaxWeeklyHoursRule
+# ---------------------------------------------------------------------------
+
+
+def test_max_weekly_no_violation(db: Session) -> None:
+    from app.services.tarif_rules_impl import MaxWeeklyHoursRule
+
+    plan = _make_plan(db)
+    doctor = _make_doctor(db)
+    # 5 Shifts × 9h = 45h < 48h Limit
+    nine_h = _make_shift_type(db, "9h-Dienst", "9H", start_time=time(8, 0), end_time=time(17, 0))
+
+    for day in range(1, 6):  # Mo–Fr KW23 (June 1–5, 2026)
+        _make_shift(db, plan.id, date(2026, 6, day), nine_h.id, doctor.id)
+
+    warnings = MaxWeeklyHoursRule().evaluate(db, plan.id)
+    assert warnings == []
+
+
+def test_max_weekly_violation(db: Session) -> None:
+    from app.services.tarif_rules_impl import MaxWeeklyHoursRule
+
+    plan = _make_plan(db)
+    doctor = _make_doctor(db)
+    # 5 Shifts × 11h = 55h > 48h Limit
+    eleven_h = _make_shift_type(
+        db, "11h-Dienst", "11H", start_time=time(7, 0), end_time=time(18, 0)
+    )
+
+    for day in range(1, 6):  # Mo–Fr KW23
+        _make_shift(db, plan.id, date(2026, 6, day), eleven_h.id, doctor.id)
+
+    warnings = MaxWeeklyHoursRule().evaluate(db, plan.id)
+
+    assert len(warnings) == 1
+    assert warnings[0].rule_id == ConstraintId.MAX_WEEKLY_HOURS
+    assert warnings[0].severity == TarifSeverity.CRITICAL
+    assert warnings[0].doctor_id == doctor.id
+    assert warnings[0].shift_id is None
+    assert "55h 0min" in warnings[0].message
+
+
+def test_max_weekly_opt_out_bd1_raises_limit(db: Session) -> None:
+    from app.services.tarif_rules_impl import MaxWeeklyHoursRule
+
+    plan = _make_plan(db)
+    # BD-Stufe I: Limit = 58h/Woche → 5 × 11h = 55h erlaubt
+    doctor = _make_doctor(db, opt_out_bd_level=1)
+    eleven_h = _make_shift_type(
+        db, "BD1-Dienst", "B1H", start_time=time(7, 0), end_time=time(18, 0)
+    )
+
+    for day in range(1, 6):
+        _make_shift(db, plan.id, date(2026, 6, day), eleven_h.id, doctor.id)
+
+    warnings = MaxWeeklyHoursRule().evaluate(db, plan.id)
+    assert warnings == []  # 55h < 58h → keine Verletzung
+
+
+def test_max_weekly_shifts_without_times_skipped(db: Session) -> None:
+    from app.services.tarif_rules_impl import MaxWeeklyHoursRule
+
+    plan = _make_plan(db)
+    doctor = _make_doctor(db)
+    no_time = _make_shift_type(db, "Zeitlos", "ZL", start_time=None, end_time=None)
+
+    for day in range(1, 6):
+        _make_shift(db, plan.id, date(2026, 6, day), no_time.id, doctor.id)
+
+    warnings = MaxWeeklyHoursRule().evaluate(db, plan.id)
+    assert warnings == []

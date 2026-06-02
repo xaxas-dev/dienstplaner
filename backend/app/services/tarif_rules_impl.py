@@ -4,6 +4,7 @@ from datetime import time
 
 from sqlalchemy.orm import Session, joinedload
 
+from app.models.doctor import Doctor
 from app.models.shift import Shift
 from app.models.shift_type import ShiftType
 from app.schemas.tarif_warning import TarifSeverity, TarifWarning
@@ -12,6 +13,7 @@ from app.solver.tarif_rules import (
     MAX_WEEKEND_SHIFTS_PER_MONTH,
     MIN_REST_HOURS,
     ConstraintId,
+    get_weekly_hours_limit,
 )
 
 
@@ -146,4 +148,58 @@ class MinRestTimeRule:
                             ),
                         )
                     )
+        return warnings
+
+
+class MaxWeeklyHoursRule:
+    id = ConstraintId.MAX_WEEKLY_HOURS
+    severity = TarifSeverity.CRITICAL
+
+    def evaluate(self, db: Session, plan_id: int) -> list[TarifWarning]:
+        shifts = (
+            db.query(Shift)
+            .options(joinedload(Shift.shift_type))
+            .filter(
+                Shift.plan_id == plan_id,
+                Shift.doctor_id.isnot(None),
+            )
+            .all()
+        )
+        doctor_ids = {s.doctor_id for s in shifts}
+        doctors: dict[int, Doctor] = {
+            d.id: d
+            for d in db.query(Doctor).filter(Doctor.id.in_(doctor_ids)).all()
+        }
+        weekly: dict[tuple[int, int, int], int] = {}
+        for s in shifts:
+            st = s.shift_type
+            if st.start_time is None or st.end_time is None:
+                continue
+            start_m = st.start_time.hour * 60 + st.start_time.minute
+            end_m = st.end_time.hour * 60 + st.end_time.minute
+            duration = end_m - start_m
+            if duration < 0:
+                duration += 1440
+            iso = s.shift_date.isocalendar()
+            key = (s.doctor_id, iso[0], iso[1])  # JPy-safe: iso[0]=year, iso[1]=week
+            weekly[key] = weekly.get(key, 0) + duration
+
+        warnings: list[TarifWarning] = []
+        for (doctor_id, iso_year, iso_week), total in weekly.items():
+            doctor = doctors.get(doctor_id)
+            limit = get_weekly_hours_limit(doctor.opt_out_bd_level if doctor else None)
+            if total > limit:
+                warnings.append(
+                    TarifWarning(
+                        shift_id=None,
+                        doctor_id=doctor_id,
+                        shift_date=None,
+                        rule_id=self.id,
+                        severity=self.severity,
+                        message=(
+                            f"KW {iso_week}/{iso_year}: {total // 60}h {total % 60}min"
+                            f" > {limit // 60}h Limit (ArbZG §3)"
+                        ),
+                    )
+                )
         return warnings
