@@ -15,6 +15,7 @@ class PlanBase(BaseModel):
     valid_to: date
     status: PlanStatus = PlanStatus.DRAFT
     notes: str | None = None
+    besetzung_locked: bool = False
 
 
 class PlanCreate(PlanBase):
@@ -27,6 +28,7 @@ class PlanUpdate(BaseModel):
     valid_to: date | None = None
     status: PlanStatus | None = None
     notes: str | None = None
+    besetzung_locked: bool | None = None
 
 
 class PlanClone(BaseModel):
