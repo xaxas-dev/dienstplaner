@@ -203,3 +203,17 @@ class MaxWeeklyHoursRule:
                     )
                 )
         return warnings
+
+
+# Selbstregistrierung — läuft einmal beim ersten Import dieses Moduls.
+# Zirkelimport-sicher: tarif_rules.py importiert NICHT von hier.
+import app.solver.tarif_rules as _registry  # noqa: E402
+
+_registry.REGISTERED_RULES.extend(
+    [
+        MaxBdPerMonthRule(),
+        MaxWeekendsPerMonthRule(),
+        MinRestTimeRule(),
+        MaxWeeklyHoursRule(),
+    ]
+)

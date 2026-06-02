@@ -149,9 +149,21 @@ def test_warning_count_matches_warnings_list_length(
     assert result.warning_count == len(result.warnings)
 
 
-def test_registered_rules_is_empty_in_prod() -> None:
-    """Stellt sicher, dass REGISTERED_RULES im Prod-Code leer bleibt."""
-    assert tarif_rules_module.REGISTERED_RULES == []
+def test_registered_rules_contains_all_four_prod_rules() -> None:
+    """REGISTERED_RULES enthält nach OQ-006-Klärung genau die 4 aktiven Prod-Regeln."""
+    from app.services.tarif_rules_impl import (
+        MaxBdPerMonthRule,
+        MaxWeekendsPerMonthRule,
+        MaxWeeklyHoursRule,
+        MinRestTimeRule,
+    )
+
+    rule_types = {type(r) for r in tarif_rules_module.REGISTERED_RULES}
+    assert MaxBdPerMonthRule in rule_types
+    assert MaxWeekendsPerMonthRule in rule_types
+    assert MinRestTimeRule in rule_types
+    assert MaxWeeklyHoursRule in rule_types
+    assert len(tarif_rules_module.REGISTERED_RULES) == 4
 
 
 def test_doctor_level_override_suppresses_warning(
