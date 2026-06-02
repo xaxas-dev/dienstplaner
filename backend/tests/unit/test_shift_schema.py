@@ -36,3 +36,12 @@ def test_shift_update_all_fields() -> None:
 def test_shift_update_extra_field_rejected() -> None:
     with pytest.raises(ValidationError):
         ShiftUpdate.model_validate({"doctorid": 5})  # Tippfehler
+
+
+def test_shift_response_has_is_locked() -> None:
+    """ShiftResponse muss is_locked exponieren."""
+    from app.schemas.shift import ShiftResponse
+
+    fields = ShiftResponse.model_fields
+    assert "is_locked" in fields
+    assert fields["is_locked"].default is False

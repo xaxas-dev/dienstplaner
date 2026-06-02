@@ -140,6 +140,21 @@ blockiert wird.
 |----|-------|--------|
 | M10-001 | Constraint-Override-Mechanismus A/B/C | ✅ Abgeschlossen (2026-05-31). Dreistufiges Override-System: Ebene A (Plan-global, PlanSettingsModal), Ebene B (Arzt+Regel+Zeitraum, Arzt-Detailseite), Ebene C (Einzelverstoß, ContextPanel §-Dot). DB: `constraint_overrides` (Migration 0011). Backend: ORM, Schemas, Repository, Service mit `OverrideSnapshot`-Pattern, REST-API (POST/GET/DELETE). Solver: 4 regulatorisch-harte Constraints respektieren Override-Flags (`disabled_*` auf `SolverShift`). Tarif-Validierung filtert Warnungen per Override. |
 
+## Phase A — Workflow-Konzept (M12, neu)
+
+Basis: docs/superpowers/specs/2026-06-02-ina-dienstplanung-workflow-design.md
+
+| ID | Titel | Status |
+|----|-------|--------|
+| M12-001 | Besetzungs-Layer read-only (`Plan.besetzung_locked`, Rotation-DnD-Sperre) | ✅ Abgeschlossen (2026-06-02) |
+| M12-002 | INA-Nachtdienstwochen als Input (`Shift.is_locked`) | ✅ Abgeschlossen (2026-06-02) |
+| M12-003 | Feiertagskalender (`Holiday`, SH-Auto + manuell) | offen |
+| M12-004 | Wünsche-Erfassung UI (`Wish`-CRUD) | offen |
+| M12-005 | Fokus-Filter Dienst-Phasen (Nacht/Tag/V) | offen |
+| M12-006 | Fairness-Zähler-Sidebar | offen |
+| M12-007 | Hinweis WE vor/nach Urlaub | offen |
+| M13-001 | Excel-Import Besetzung (blockiert durch OQ-012) | offen |
+
 ## Cross-cutting
 
 - **Konventionen.** Alle Milestones folgen den Konventionen aus

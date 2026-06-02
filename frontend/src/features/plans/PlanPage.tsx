@@ -24,7 +24,7 @@ const avatarTopModifier: Modifier = ({ activatorEvent, draggingNodeRect, transfo
   const offsetY = activatorEvent.clientY - draggingNodeRect.top
   return { ...transform, x: transform.x + offsetX - 14, y: transform.y + offsetY }
 }
-import { FileDown, Trash2, ChevronDown, ChevronLeft, ChevronRight, Zap, Settings } from 'lucide-react'
+import { FileDown, Trash2, ChevronDown, ChevronLeft, ChevronRight, Zap, Settings, MoonStar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -65,6 +65,7 @@ import {
 import { buildSolverDiff } from './solverUtils'
 import { SolverResultPanel } from './components/SolverResultPanel'
 import { PlanSettingsModal } from './components/PlanSettingsModal'
+import { LockedWeekDialog } from './components/LockedWeekDialog'
 import { useDoctors } from '@/features/doctors/useDoctors'
 import { useDepartments } from '@/features/departments/useDepartments'
 import { useShiftTypes } from '@/features/shift-types/useShiftTypes'
@@ -181,6 +182,7 @@ export function PlanPage() {
   const [isSolverOpen, setIsSolverOpen] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [lockedWeekDialogOpen, setLockedWeekDialogOpen] = useState(false)
   const [pendingDeleteRotation, setPendingDeleteRotation] = useState<RotationAssignmentWithDetails | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -766,6 +768,15 @@ export function PlanPage() {
               <Settings size={14} className="mr-1.5" />
               Einstellungen
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setLockedWeekDialogOpen(true)}
+              className="shrink-0"
+            >
+              <MoonStar className="size-4 mr-1.5" />
+              Nachtwoche
+            </Button>
             {solverEnabled && (
               <Button
                 variant="outline"
@@ -1109,6 +1120,16 @@ export function PlanPage() {
         planId={id}
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
+      />
+    )}
+
+    {!isNaN(id) && (
+      <LockedWeekDialog
+        open={lockedWeekDialogOpen}
+        onClose={() => setLockedWeekDialogOpen(false)}
+        planId={id}
+        doctors={doctors}
+        shiftTypes={shiftTypes}
       />
     )}
 

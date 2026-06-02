@@ -11,6 +11,7 @@ from app.repositories import plan_repository as plan_repo
 from app.schemas.absence import AbsenceResponse
 from app.schemas.conflict import PlanConflicts
 from app.schemas.dashboard import DashboardSummary
+from app.schemas.locked_week import LockedWeekCreate, LockedWeekResult
 from app.schemas.plan import (
     CloneResult,
     PlanClone,
@@ -23,6 +24,7 @@ from app.schemas.solve import ApplyRequest, ApplyResult, SolveResult
 from app.services import (
     conflict_service,
     dashboard_service,
+    locked_week_service,
     plan_absence_service,
     plan_export_service,
     plan_service,
@@ -145,3 +147,19 @@ def apply_plan(plan_id: int, body: ApplyRequest, db: Session = Depends(get_db)) 
     from app.solver import solver_service  # kein JVM-Import, aber konsistenter Importpfad
 
     return solver_service.apply_solution(db, plan_id, body.proposed_assignments)
+
+
+@router.post(
+    "/{plan_id}/locked-week",
+    response_model=LockedWeekResult,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_locked_week(
+    plan_id: int, data: LockedWeekCreate, db: Session = Depends(get_db)
+) -> LockedWeekResult:
+    try:
+        return locked_week_service.create_locked_week(db, plan_id, data)
+    except PlanNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Plan {plan_id} nicht gefunden")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))

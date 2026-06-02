@@ -47,6 +47,7 @@ function makeShiftWithConflicts(): ShiftWithDetails {
     shift_type_id: 1,
     doctor_id: 1,
     is_pinned: false,
+    is_locked: false,
     notes: null,
     created_at: '',
     updated_at: '',

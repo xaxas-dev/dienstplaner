@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { useDroppable } from '@dnd-kit/core'
+import { Lock } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { getDepartmentColor } from '@/lib/bereichColors'
@@ -26,6 +27,7 @@ interface UnifiedShiftCellProps {
   isConflictTarget?: boolean
   isPinned?: boolean
   shiftAssigned?: boolean
+  isLocked?: boolean
   isSelected?: boolean
   isHighlightedRow?: boolean
   absenceId?: number
@@ -53,6 +55,7 @@ export function UnifiedShiftCell({
   isHoveredCol,
   shiftId,
   isConflictTarget,
+  isLocked,
   isPinned,
   shiftAssigned,
   isSelected,
@@ -74,6 +77,7 @@ export function UnifiedShiftCell({
   })
 
   function handleClick(e: React.MouseEvent) {
+    if (isLocked) return
     const { shiftKey } = e
     const needsDoubleClickDelay =
       (onDoubleClickRemove && shiftAssigned) ||
@@ -136,6 +140,17 @@ export function UnifiedShiftCell({
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >
+      {/* Locked-Overlay */}
+      {isLocked && text && (
+        <div className="absolute inset-0 flex items-center justify-center bg-zinc-200">
+          <Lock
+            data-testid="lock-icon"
+            className="absolute top-0.5 left-0.5 size-2.5 text-zinc-400"
+          />
+          <span className="text-zinc-500 text-[11px] font-medium leading-none">{text}</span>
+        </div>
+      )}
+
       {/* Crosshair-Highlight */}
       {showCrosshair && !isSelected && (
         <div
@@ -173,7 +188,7 @@ export function UnifiedShiftCell({
       )}
 
       {/* Tarif-Dot (Sand, oben links) */}
-      {hasTarifWarning && (
+      {hasTarifWarning && !isLocked && (
         <button
           className="absolute top-0.5 left-0.5 w-2 h-2 rounded-full bg-sand border border-warn-line text-[7px] flex items-center justify-center z-[2]"
           onClick={(e) => { e.stopPropagation(); onTarifDotClick?.() }}
@@ -184,7 +199,7 @@ export function UnifiedShiftCell({
       )}
 
       {/* Konflikt-Dot (Warn, oben rechts) */}
-      {hasConflict && (
+      {hasConflict && !isLocked && (
         <button
           className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-warn text-[7px] flex items-center justify-center text-white z-[2]"
           onClick={(e) => { e.stopPropagation(); onConflictDotClick?.() }}

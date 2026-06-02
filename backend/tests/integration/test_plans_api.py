@@ -278,3 +278,73 @@ def test_patch_besetzung_locked_true(client: TestClient) -> None:
     # Persistenz prüfen
     g = client.get(f"/api/plans/{plan['id']}")
     assert g.json()["besetzung_locked"] is True
+
+
+# ---------------------------------------------------------------------------
+# POST /api/plans/{plan_id}/locked-week
+# ---------------------------------------------------------------------------
+
+
+def test_create_locked_week_returns_201(client, db):
+    """Gültiger Request → 201 + LockedWeekResult."""
+    from datetime import date as dt
+
+    from app.models.doctor import Doctor
+    from app.models.plan import Plan, PlanStatus
+    from app.models.shift_type import ShiftType
+
+    plan = Plan(name="Test", valid_from=dt(2026, 6, 1), valid_to=dt(2026, 6, 30), status=PlanStatus.DRAFT)
+    doctor = Doctor(name="Test Arzt", short_name="TA", active=True)
+    stype = ShiftType(name="Nacht", short_name="N", display_order=1, applies_on_weekend=True)
+    db.add_all([plan, doctor, stype])
+    db.commit()
+
+    resp = client.post(
+        f"/api/plans/{plan.id}/locked-week",
+        json={
+            "doctor_id": doctor.id,
+            "start_date": "2026-06-07",
+            "shift_type_id": stype.id,
+        },
+    )
+    assert resp.status_code == 201
+    body = resp.json()
+    assert len(body["created"]) == 5
+    assert body["skipped"] == []
+    for s in body["created"]:
+        assert s["is_locked"] is True
+        assert s["is_pinned"] is True
+
+
+def test_create_locked_week_422_on_non_sunday(client, db):
+    """Kein Sonntag → 422."""
+    from datetime import date as dt
+
+    from app.models.doctor import Doctor
+    from app.models.plan import Plan, PlanStatus
+    from app.models.shift_type import ShiftType
+
+    plan = Plan(name="Test2", valid_from=dt(2026, 6, 1), valid_to=dt(2026, 6, 30), status=PlanStatus.DRAFT)
+    doctor = Doctor(name="Test Arzt2", short_name="TA2", active=True)
+    stype = ShiftType(name="Nacht2", short_name="N2", display_order=2, applies_on_weekend=True)
+    db.add_all([plan, doctor, stype])
+    db.commit()
+
+    resp = client.post(
+        f"/api/plans/{plan.id}/locked-week",
+        json={
+            "doctor_id": doctor.id,
+            "start_date": "2026-06-08",  # Montag
+            "shift_type_id": stype.id,
+        },
+    )
+    assert resp.status_code == 422
+
+
+def test_create_locked_week_404_on_unknown_plan(client):
+    """Unbekannte plan_id → 404."""
+    resp = client.post(
+        "/api/plans/99999/locked-week",
+        json={"doctor_id": 1, "start_date": "2026-06-07", "shift_type_id": 1},
+    )
+    assert resp.status_code == 404

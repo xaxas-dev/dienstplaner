@@ -1810,6 +1810,11 @@ export interface components {
              * @default false
              */
             is_pinned: boolean;
+            /**
+             * Is Locked
+             * @default false
+             */
+            is_locked: boolean;
             /** Notes */
             notes?: string | null;
             /** Id */
@@ -1963,6 +1968,11 @@ export interface components {
              * @default false
              */
             is_pinned: boolean;
+            /**
+             * Is Locked
+             * @default false
+             */
+            is_locked: boolean;
             /** Notes */
             notes?: string | null;
             /** Id */
@@ -2034,6 +2044,25 @@ export interface components {
         VersionSnapshotRequest: {
             /** Comment */
             comment?: string | null;
+        };
+        /** LockedWeekCreate */
+        LockedWeekCreate: {
+            /** Doctor Id */
+            doctor_id: number;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /** Shift Type Id */
+            shift_type_id: number;
+        };
+        /** LockedWeekResult */
+        LockedWeekResult: {
+            /** Created */
+            created: unknown[];
+            /** Skipped */
+            skipped: number[];
         };
     };
     responses: never;

@@ -36,6 +36,7 @@ class ShiftResponse(ShiftBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    is_locked: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
