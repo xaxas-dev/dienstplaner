@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
+import app.services.tarif_rules_impl  # noqa: F401 — triggert REGISTERED_RULES-Befüllung
 from app.repositories import plan_repository
 from app.schemas.tarif_warning import PlanTarifWarnings, TarifWarning
 from app.services.constraint_override_service import OverrideSnapshot, get_override_snapshot
@@ -31,6 +32,10 @@ def compute_tarif_warnings(db: Session, plan_id: int) -> PlanTarifWarnings:
 def _is_overridden(warning: TarifWarning, snapshot: OverrideSnapshot) -> bool:
     cid = warning.rule_id
     if cid in snapshot.disabled_constraints:
+        return True
+    if warning.doctor_id is not None and cid in snapshot.doctor_overrides.get(
+        warning.doctor_id, frozenset()
+    ):
         return True
     if warning.shift_id is not None and cid in snapshot.shift_overrides.get(
         warning.shift_id, frozenset()

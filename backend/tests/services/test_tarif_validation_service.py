@@ -149,6 +149,56 @@ def test_warning_count_matches_warnings_list_length(
     assert result.warning_count == len(result.warnings)
 
 
-def test_registered_rules_is_empty_in_prod() -> None:
-    """Stellt sicher, dass REGISTERED_RULES im Prod-Code leer bleibt."""
-    assert tarif_rules_module.REGISTERED_RULES == []
+def test_registered_rules_contains_all_four_prod_rules() -> None:
+    """REGISTERED_RULES enthält nach OQ-006-Klärung genau die 4 aktiven Prod-Regeln."""
+    from app.services.tarif_rules_impl import (
+        MaxBdPerMonthRule,
+        MaxWeekendsPerMonthRule,
+        MaxWeeklyHoursRule,
+        MinRestTimeRule,
+    )
+
+    rule_types = {type(r) for r in tarif_rules_module.REGISTERED_RULES}
+    assert MaxBdPerMonthRule in rule_types
+    assert MaxWeekendsPerMonthRule in rule_types
+    assert MinRestTimeRule in rule_types
+    assert MaxWeeklyHoursRule in rule_types
+    assert len(tarif_rules_module.REGISTERED_RULES) == 4
+
+
+def test_doctor_level_override_suppresses_warning(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Ebene-B-Override (doctor_id + constraint_id) muss Warning unterdrücken."""
+    from app.models.doctor import Doctor
+    from app.services.constraint_override_service import OverrideSnapshot
+
+    plan = _make_plan(db)
+    doctor = Doctor(name="Dr. Override-Test")
+    db.add(doctor)
+    db.flush()
+
+    class _DoctorWarnRule:
+        id = "max-bd-per-month"
+        severity = "critical"
+
+        def evaluate(self, db: Session, plan_id: int) -> list[TarifWarning]:
+            return [
+                TarifWarning(
+                    rule_id=self.id,
+                    severity=TarifSeverity.CRITICAL,
+                    doctor_id=doctor.id,
+                    message="BD-Limit überschritten",
+                )
+            ]
+
+    monkeypatch.setattr(tarif_rules_module, "REGISTERED_RULES", [_DoctorWarnRule()])
+
+    mock_snapshot = OverrideSnapshot(
+        doctor_overrides={doctor.id: frozenset(["max-bd-per-month"])}
+    )
+    monkeypatch.setattr(svc, "get_override_snapshot", lambda _db, _pid: mock_snapshot)
+
+    result = svc.compute_tarif_warnings(db, plan.id)
+
+    assert result.warning_count == 0, "Ebene-B-Override muss Warning unterdrücken"
