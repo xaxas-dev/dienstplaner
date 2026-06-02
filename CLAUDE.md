@@ -79,6 +79,13 @@ Details: docs/architecture.md
   (Default `false`) sperrt nur die UI-Erfassung von Rotationen (Doctor→Bereich-DnD).
   Keine Backend-Validierung (weiche Validierung). Getrennt von `Shift.is_pinned`
   (Solver) und `Shift.is_locked` (Input-Shift, M12-002). ADR-089.
+- **Gesperrte Shifts (M12-002):** `Shift.is_locked: bool` (Default `false`).
+  Markiert Input-Shifts (INA-Nachtdienstwochen So–Do), die die Planerin nicht editiert.
+  Gesetzt via `POST /api/plans/{id}/locked-week` (5× N-Shift atomar, is_locked=True + is_pinned=True).
+  Frontend: grauer Block (`bg-zinc-200`) + Lucide-`Lock`-Icon (`data-testid="lock-icon"`), Klick/DnD deaktiviert.
+  Backend-Delete nicht geblockt (weiche Validierung, Phase A). ADR-090.
+  Abgrenzung: `is_pinned` = Solver-Konzept; `is_locked` = Editor-Konzept.
+  Service: `locked_week_service.create_locked_week(db, plan_id, data)`.
 - **Weiche Validierung (Phase A):** Beim Schreiben einer
   Schicht-Zuweisung wird NUR Datenkonsistenz hart geprüft (Entität
   existiert, Doctor aktiv). Semantische Constraints (Verfügbarkeit,
