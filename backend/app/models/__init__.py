@@ -5,6 +5,7 @@ from app.models.department import Department
 from app.models.doctor import Doctor, DoctorType
 from app.models.doctor_qualification import DoctorQualification
 from app.models.employment_period import EmploymentPeriod
+from app.models.holiday import Holiday, HolidaySource
 from app.models.ina_exclusion import INAExclusion, INAExclusionReason
 from app.models.plan import Plan, PlanStatus
 from app.models.plan_version import PlanVersion
@@ -25,6 +26,8 @@ __all__ = [
     "DoctorQualification",
     "DoctorType",
     "EmploymentPeriod",
+    "Holiday",
+    "HolidaySource",
     "INAExclusion",
     "INAExclusionReason",
     "OverrideScope",
