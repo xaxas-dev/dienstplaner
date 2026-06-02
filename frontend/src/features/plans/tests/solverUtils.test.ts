@@ -26,6 +26,7 @@ function makeShift(id: number, overrides: Partial<ShiftWithDetails> = {}): Shift
     shift_type_id: 10,
     doctor_id: null,
     is_pinned: false,
+    is_locked: false,
     notes: null,
     created_at: '2026-01-01T00:00:00',
     updated_at: '2026-01-01T00:00:00',

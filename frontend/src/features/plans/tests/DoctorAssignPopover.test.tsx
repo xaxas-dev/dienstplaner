@@ -45,7 +45,7 @@ const ST = {
 function makeOpenShift(id: number, shortName: string): ShiftWithDetails {
   return {
     id, plan_id: 1, shift_date: '2026-05-15',
-    shift_type_id: id, doctor_id: null, is_pinned: false,
+    shift_type_id: id, doctor_id: null, is_pinned: false, is_locked: false,
     notes: null, created_at: '', updated_at: '',
     shift_type: { ...ST, id, name: shortName, short_name: shortName },
     doctor: null, conflicts: [],
