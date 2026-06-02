@@ -20,6 +20,7 @@ from app.services.exceptions import (
     RotationNotFoundError,
     RotationValidationError,
 )
+from app.services.holiday_service import get_holiday_dates_for_period
 
 # T1 wird per short_name identifiziert (ADR dokumentiert in decisions.md)
 _T1_SHORT_NAME = "T1"
@@ -31,17 +32,23 @@ _T1_SHORT_NAME = "T1"
 
 
 def _generate_shift_dicts(
-    plan_id: int, valid_from: date, valid_to: date, shift_types: list[ShiftType]
+    plan_id: int,
+    valid_from: date,
+    valid_to: date,
+    shift_types: list[ShiftType],
+    holiday_dates: set[date] | None = None,
 ) -> list[dict[str, Any]]:
     """Erzeugt Shift-Dicts für jeden Tag im Zeitraum.
     isoweekday(): 1-5 = Werktag, 6-7 = Wochenende.
+    Feiertage (holiday_dates) werden wie Wochenendtage behandelt: applies_on_weekend-Shifts.
     """
+    _holidays = holiday_dates or set()
     result: list[dict[str, Any]] = []
     current = valid_from
     while current <= valid_to:
-        is_weekend = current.isoweekday() >= 6
+        is_weekend_or_holiday = current.isoweekday() >= 6 or current in _holidays
         for st in shift_types:
-            if is_weekend and st.applies_on_weekend:
+            if is_weekend_or_holiday and st.applies_on_weekend:
                 result.append(
                     {
                         "plan_id": plan_id,
@@ -51,7 +58,7 @@ def _generate_shift_dicts(
                         "is_pinned": False,
                     }
                 )
-            elif not is_weekend and st.applies_on_weekdays:
+            elif not is_weekend_or_holiday and st.applies_on_weekdays:
                 result.append(
                     {
                         "plan_id": plan_id,
@@ -139,7 +146,10 @@ def create_plan_with_shifts(
         raise PlanValidationError("Keine aktiven Schichttypen für die Schichtgenerierung verfügbar")
 
     plan = plan_repo.create_plan(db, data)
-    shift_dicts = _generate_shift_dicts(plan.id, plan.valid_from, plan.valid_to, shift_types)
+    holiday_dates = get_holiday_dates_for_period(db, plan.valid_from, plan.valid_to)
+    shift_dicts = _generate_shift_dicts(
+        plan.id, plan.valid_from, plan.valid_to, shift_types, holiday_dates
+    )
     shift_repo.bulk_create_shifts(db, shift_dicts)
 
     db.commit()
@@ -160,8 +170,9 @@ def clone_plan(db: Session, source_plan_id: int, new_plan_data: dict) -> tuple[P
     # Schichten neu generieren (Default: ohne T1)
     shift_types = _get_applicable_shift_types(db, None)
     if shift_types:
+        holiday_dates = get_holiday_dates_for_period(db, new_plan.valid_from, new_plan.valid_to)
         shift_dicts = _generate_shift_dicts(
-            new_plan.id, new_plan.valid_from, new_plan.valid_to, shift_types
+            new_plan.id, new_plan.valid_from, new_plan.valid_to, shift_types, holiday_dates
         )
         shift_repo.bulk_create_shifts(db, shift_dicts)
 

@@ -136,3 +136,74 @@ def test_clone_clipping_skipped_after() -> None:
         date(2026, 4, 1), date(2026, 4, 30), offset, date(2026, 4, 1), date(2026, 4, 30)
     )
     assert result is None
+
+
+# ---------------------------------------------------------------------------
+# T-Logik: WE ODER Feiertag
+# ---------------------------------------------------------------------------
+
+
+def test_generate_shifts_holiday_on_weekday_gets_weekend_shifts() -> None:
+    """Ein Feiertag (Montag) erhält applies_on_weekend-Shifts statt Werktags-Shifts."""
+    monday = date(2026, 4, 6)  # Ostermontag 2026 — ist Montag (Werktag)
+    assert monday.isoweekday() == 1  # Sicherstellung: das ist wirklich ein Montag
+
+    t_shift = _st(1, "T", weekday=False, weekend=True)
+    v_shift = _st(2, "V", weekday=True, weekend=False)
+    n_shift = _st(3, "N", weekday=True, weekend=True)
+
+    result = _generate_shift_dicts(1, monday, monday, [t_shift, v_shift, n_shift], {monday})
+
+    shift_type_ids = {d["shift_type_id"] for d in result}
+    assert 1 in shift_type_ids   # T-Shift auf Feiertag
+    assert 3 in shift_type_ids   # N-Shift (applies both) auf Feiertag
+    assert 2 not in shift_type_ids  # V-Shift NICHT auf Feiertag (weekday-only)
+
+
+def test_generate_shifts_regular_monday_no_holiday() -> None:
+    """Normaler Montag (kein Feiertag) behält ursprüngliches Verhalten."""
+    monday = date(2026, 4, 13)  # normaler Montag
+    assert monday.isoweekday() == 1
+
+    t_shift = _st(1, "T", weekday=False, weekend=True)
+    v_shift = _st(2, "V", weekday=True, weekend=False)
+
+    result = _generate_shift_dicts(1, monday, monday, [t_shift, v_shift])
+
+    shift_type_ids = {d["shift_type_id"] for d in result}
+    assert 1 not in shift_type_ids  # T-Shift NICHT auf normalem Montag
+    assert 2 in shift_type_ids      # V-Shift auf normalem Montag
+
+
+def test_generate_shifts_holiday_none_means_no_change() -> None:
+    """holiday_dates=None verhält sich wie leeres Set."""
+    monday = date(2026, 4, 13)
+    t_shift = _st(1, "T", weekday=False, weekend=True)
+
+    result_none = _generate_shift_dicts(1, monday, monday, [t_shift], None)
+    result_no_arg = _generate_shift_dicts(1, monday, monday, [t_shift])
+    assert result_none == result_no_arg == []
+
+
+def test_generate_shifts_april_with_easter_holidays() -> None:
+    """April 2026 mit Oster-Feiertagen verändert T/V-Zählung korrekt."""
+    t_shift = _st(1, "T", weekday=False, weekend=True)
+    v_shift = _st(2, "V", weekday=True, weekend=False)
+    n_shift = _st(3, "N", weekday=True, weekend=True)
+
+    # April 2026 ohne Feiertage: 8 WE-Tage (Sa/So), 22 Werktage.
+    # Feiertage: Karfreitag (Fr 3.4. = isoweekday 5, Werktag → WE-äquivalent),
+    #            Ostersonntag (So 5.4. = bereits WE, kein Effekt),
+    #            Ostermontag (Mo 6.4. = isoweekday 1, Werktag → WE-äquivalent).
+    # Ergebnis: 8 + 2 = 10 WE-äquivalente Tage, 22 - 2 = 20 Werktage.
+    holiday_dates = {date(2026, 4, 3), date(2026, 4, 5), date(2026, 4, 6)}
+    result = _generate_shift_dicts(
+        1, date(2026, 4, 1), date(2026, 4, 30),
+        [t_shift, v_shift, n_shift],
+        holiday_dates,
+    )
+
+    v_count = sum(1 for d in result if d["shift_type_id"] == 2)
+    t_count = sum(1 for d in result if d["shift_type_id"] == 1)
+    assert v_count == 20
+    assert t_count == 10
