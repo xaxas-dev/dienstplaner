@@ -186,3 +186,17 @@ export const REGULATORISCH_HART_IDS = [
   'min-rest-time',
   'max-weekly-hours',
 ] as const
+
+// Holiday (M12-003) — manuell da OpenAPI-Generator nicht auf Feature-Branches läuft
+export type HolidaySource = 'AUTO' | 'MANUAL'
+
+export interface Holiday {
+  date: string  // ISO 8601: "YYYY-MM-DD"
+  name: string
+  source: HolidaySource
+}
+
+export interface HolidayCreate {
+  date: string
+  name: string
+}
