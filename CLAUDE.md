@@ -75,6 +75,10 @@ Details: docs/architecture.md
 - **Pin-Konzept:** Manuelle Zuweisungen sind automatisch gepinnt.
   Gepinnte Zuweisungen werden vom Solver nicht überschrieben.
   Pin ist pro Zuweisung lösbar (Variante C)
+- **Besetzungs-Layer-Sperre (M12-001):** `Plan.besetzung_locked: bool`
+  (Default `false`) sperrt nur die UI-Erfassung von Rotationen (Doctor→Bereich-DnD).
+  Keine Backend-Validierung (weiche Validierung). Getrennt von `Shift.is_pinned`
+  (Solver) und `Shift.is_locked` (Input-Shift, M12-002). ADR-089.
 - **Weiche Validierung (Phase A):** Beim Schreiben einer
   Schicht-Zuweisung wird NUR Datenkonsistenz hart geprüft (Entität
   existiert, Doctor aktiv). Semantische Constraints (Verfügbarkeit,
