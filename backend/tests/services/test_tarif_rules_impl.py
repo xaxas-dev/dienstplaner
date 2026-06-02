@@ -199,3 +199,80 @@ def test_max_weekends_weekday_shifts_not_counted(db: Session) -> None:
 
     warnings = MaxWeekendsPerMonthRule().evaluate(db, plan.id)
     assert warnings == []
+
+
+# ---------------------------------------------------------------------------
+# MinRestTimeRule
+# ---------------------------------------------------------------------------
+
+
+def test_min_rest_no_violation(db: Session) -> None:
+    from app.services.tarif_rules_impl import MinRestTimeRule
+
+    plan = _make_plan(db)
+    doctor = _make_doctor(db)
+    # Tag-Dienst: 08:00–16:00 → Ruhezeit bis nächsten Tag 08:00 = 16h > 11h
+    tag_type = _make_shift_type(db, "Tag", "T", start_time=time(8, 0), end_time=time(16, 0))
+
+    _make_shift(db, plan.id, date(2026, 6, 1), tag_type.id, doctor.id)
+    _make_shift(db, plan.id, date(2026, 6, 2), tag_type.id, doctor.id)
+
+    warnings = MinRestTimeRule().evaluate(db, plan.id)
+    assert warnings == []
+
+
+def test_min_rest_violation(db: Session) -> None:
+    from app.services.tarif_rules_impl import MinRestTimeRule
+
+    plan = _make_plan(db)
+    doctor = _make_doctor(db)
+    # Spätdienst: 14:00–22:00 auf June 1
+    spaet_type = _make_shift_type(db, "Spät", "S", start_time=time(14, 0), end_time=time(22, 0))
+    # Frühdienst: 06:00–14:00 auf June 2 → Ruhezeit = 22:00–06:00 = 8h < 11h
+    frueh_type = _make_shift_type(db, "Früh", "Fr", start_time=time(6, 0), end_time=time(14, 0))
+
+    _make_shift(db, plan.id, date(2026, 6, 1), spaet_type.id, doctor.id)
+    shift2 = _make_shift(db, plan.id, date(2026, 6, 2), frueh_type.id, doctor.id)
+
+    warnings = MinRestTimeRule().evaluate(db, plan.id)
+
+    assert len(warnings) == 1
+    assert warnings[0].rule_id == ConstraintId.MIN_REST_TIME
+    assert warnings[0].severity == TarifSeverity.CRITICAL
+    assert warnings[0].shift_id == shift2.id
+    assert warnings[0].doctor_id == doctor.id
+    assert "8h 0min" in warnings[0].message
+
+
+def test_min_rest_overnight_shift_handled(db: Session) -> None:
+    from app.services.tarif_rules_impl import MinRestTimeRule
+
+    plan = _make_plan(db)
+    doctor = _make_doctor(db)
+    # Nachtdienst: 20:00–08:00 (overnight) auf June 1 → endet June 2 08:00
+    nacht_type = _make_shift_type(db, "Nacht", "N", start_time=time(20, 0), end_time=time(8, 0))
+    # Folgedienst: 12:00 June 2 → Ruhezeit 08:00–12:00 = 4h < 11h → Violation
+    mittag_type = _make_shift_type(db, "Mittag", "M", start_time=time(12, 0), end_time=time(20, 0))
+
+    _make_shift(db, plan.id, date(2026, 6, 1), nacht_type.id, doctor.id)
+    shift2 = _make_shift(db, plan.id, date(2026, 6, 2), mittag_type.id, doctor.id)
+
+    warnings = MinRestTimeRule().evaluate(db, plan.id)
+
+    assert len(warnings) == 1
+    assert warnings[0].shift_id == shift2.id
+
+
+def test_min_rest_missing_times_skipped(db: Session) -> None:
+    from app.services.tarif_rules_impl import MinRestTimeRule
+
+    plan = _make_plan(db)
+    doctor = _make_doctor(db)
+    # ShiftType ohne Zeiten → Paar überspringen
+    no_time_type = _make_shift_type(db, "Allgemein", "AG", start_time=None, end_time=None)
+
+    _make_shift(db, plan.id, date(2026, 6, 1), no_time_type.id, doctor.id)
+    _make_shift(db, plan.id, date(2026, 6, 2), no_time_type.id, doctor.id)
+
+    warnings = MinRestTimeRule().evaluate(db, plan.id)
+    assert warnings == []
