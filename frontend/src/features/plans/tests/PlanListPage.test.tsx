@@ -15,13 +15,13 @@ const mockPlans: Plan[] = [
   {
     id: 1, name: 'Mai 2026',
     valid_from: '2026-05-01', valid_to: '2026-05-31',
-    status: 'DRAFT', notes: null,
+    status: 'DRAFT', notes: null, besetzung_locked: false,
     created_at: '2026-05-01T00:00:00', updated_at: '2026-05-01T00:00:00',
   },
   {
     id: 2, name: 'Juni 2026',
     valid_from: '2026-06-01', valid_to: '2026-06-30',
-    status: 'RELEASED', notes: null,
+    status: 'RELEASED', notes: null, besetzung_locked: true,
     created_at: '2026-05-01T00:00:00', updated_at: '2026-05-01T00:00:00',
   },
 ]

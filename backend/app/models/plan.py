@@ -1,7 +1,7 @@
 import enum
 from datetime import date, datetime
 
-from sqlalchemy import CheckConstraint, Date, DateTime, Enum, Integer, String, Text
+from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, Enum, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -36,6 +36,9 @@ class Plan(Base):
         default=PlanStatus.DRAFT,
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    besetzung_locked: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="0"
+    )
 
     plan_versions: Mapped[list["PlanVersion"]] = relationship(  # noqa: F821
         "PlanVersion", back_populates="plan", cascade="all, delete-orphan"

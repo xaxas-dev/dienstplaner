@@ -488,6 +488,7 @@ export function PlanPage() {
 
     const doctorId = parseDoctorDragId(activeId)
     if (doctorId !== null) {
+      if (plan?.besetzung_locked) return
       const doctor = doctors.find((d) => d.id === doctorId)
       const name = (event.active.data.current as { doctorName?: string } | undefined)?.doctorName ?? doctor?.name ?? ''
       setActiveDragDoctor({ id: doctorId, name, shortName: doctor?.short_name })
@@ -561,6 +562,7 @@ export function PlanPage() {
     const doctorId = parseDoctorDragId(activeId)
     if (doctorId !== null) {
       if (!plan) return
+      if (plan.besetzung_locked) return
       const doctor = doctors.find((d) => d.id === doctorId)
       const doctorName = doctor?.name ?? 'Arzt'
 
@@ -868,6 +870,7 @@ export function PlanPage() {
           rotationDoctorIds={assignedDoctorIds}
           highlightedDoctorId={highlightedDoctorId}
           onHighlightDoctor={setHighlightedDoctorId}
+          locked={plan?.besetzung_locked ?? false}
         />
         <div className="flex flex-1 min-w-0 overflow-hidden">
           {plan && (

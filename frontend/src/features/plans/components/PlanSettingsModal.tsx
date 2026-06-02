@@ -10,6 +10,8 @@ import {
   useCreateConstraintOverride,
   useDeleteConstraintOverride,
 } from '../useConstraintOverrides'
+import { usePlan } from '../usePlans'
+import { useUpdatePlan } from '../useUpdatePlan'
 import type { ConstraintOverride } from '@/lib/types'
 
 const REGULATORISCH_HART = [
@@ -52,6 +54,10 @@ export function PlanSettingsModal({ planId, open, onOpenChange }: Props) {
     }
   }
 
+  const { data: plan } = usePlan(planId)
+  const updatePlan = useUpdatePlan(planId)
+  const besetzungLocked = plan?.besetzung_locked ?? false
+
   const isPending = createMutation.isPending || deleteMutation.isPending
 
   return (
@@ -64,6 +70,25 @@ export function PlanSettingsModal({ planId, open, onOpenChange }: Props) {
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
+          <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
+            <div>
+              <Label className="text-sm cursor-pointer" htmlFor="toggle-besetzung-locked">
+                Besetzung gesperrt
+              </Label>
+              <p className="text-[12px] text-muted-foreground">
+                Rotations-Zuweisungen sind dann nur Kontext (read-only).
+              </p>
+            </div>
+            <Switch
+              id="toggle-besetzung-locked"
+              checked={besetzungLocked}
+              onCheckedChange={(checked) =>
+                updatePlan.mutate({ besetzung_locked: checked })
+              }
+              disabled={updatePlan.isPending}
+              aria-label={besetzungLocked ? 'Besetzung entsperren' : 'Besetzung sperren'}
+            />
+          </div>
           <p className="text-[13px] text-muted-foreground">
             Deaktivierte Constraints werden beim Solver und bei Tarif-Warnungen ignoriert.
           </p>

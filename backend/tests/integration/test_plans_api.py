@@ -256,3 +256,25 @@ def test_dashboard_summary_smoke(client: TestClient) -> None:
 def test_dashboard_summary_404_unknown_plan(client: TestClient) -> None:
     r = client.get("/api/plans/9999/dashboard?today=2026-05-15")
     assert r.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# besetzung_locked Feature (M12-001)
+# ---------------------------------------------------------------------------
+
+
+def test_besetzung_locked_defaults_false(client: TestClient) -> None:
+    _seed_shift_types(client)
+    data = _create_plan(client, name="Lock-Default")
+    assert data["besetzung_locked"] is False
+
+
+def test_patch_besetzung_locked_true(client: TestClient) -> None:
+    _seed_shift_types(client)
+    plan = _create_plan(client, name="Lock-Patch")
+    r = client.patch(f"/api/plans/{plan['id']}", json={"besetzung_locked": True})
+    assert r.status_code == 200, r.text
+    assert r.json()["besetzung_locked"] is True
+    # Persistenz prüfen
+    g = client.get(f"/api/plans/{plan['id']}")
+    assert g.json()["besetzung_locked"] is True

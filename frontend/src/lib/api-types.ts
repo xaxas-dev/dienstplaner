@@ -1423,6 +1423,8 @@ export interface components {
             status: components["schemas"]["PlanStatus"];
             /** Notes */
             notes?: string | null;
+            /** Besetzung Locked */
+            besetzung_locked: boolean;
             /** Id */
             id: number;
             /**
@@ -1461,6 +1463,8 @@ export interface components {
             status?: components["schemas"]["PlanStatus"] | null;
             /** Notes */
             notes?: string | null;
+            /** Besetzung Locked */
+            besetzung_locked?: boolean | null;
         };
         /** PlanVersionResponse */
         PlanVersionResponse: {
@@ -1505,6 +1509,8 @@ export interface components {
             status: components["schemas"]["PlanStatus"];
             /** Notes */
             notes?: string | null;
+            /** Besetzung Locked */
+            besetzung_locked?: boolean | null;
             /** Id */
             id: number;
             /**
