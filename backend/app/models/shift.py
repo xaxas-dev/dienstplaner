@@ -30,6 +30,7 @@ class Shift(Base):
         Integer, ForeignKey("doctors.id", ondelete="SET NULL"), nullable=True
     )
     is_pinned: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_locked: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     plan: Mapped["Plan"] = relationship("Plan", back_populates="shifts")  # noqa: F821
