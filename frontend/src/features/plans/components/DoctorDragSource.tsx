@@ -20,6 +20,7 @@ interface DoctorDragSourceProps {
   rotationDoctorIds?: Set<number>
   highlightedDoctorId?: number | null
   onHighlightDoctor?: (doctorId: number | null) => void
+  locked?: boolean
 }
 
 export function DoctorDragSource({
@@ -27,6 +28,7 @@ export function DoctorDragSource({
   rotationDoctorIds = new Set(),
   highlightedDoctorId,
   onHighlightDoctor,
+  locked = false,
 }: DoctorDragSourceProps) {
   const activeDoctors = doctors.filter((d) => d.active)
   const assigned = activeDoctors.filter((d) => rotationDoctorIds.has(d.id))
@@ -37,6 +39,11 @@ export function DoctorDragSource({
       aria-label="Ärzte"
       className="w-48 shrink-0 flex flex-col gap-3 p-3 rounded-2xl border border-line bg-card overflow-y-auto"
     >
+      {locked && (
+        <p className="text-[11px] text-ink-3 italic px-1">
+          Besetzung gesperrt — nur Kontext
+        </p>
+      )}
       {assigned.length > 0 && (
         <section>
           <div className="text-xs font-medium text-ink-3 uppercase tracking-wide mb-1">
@@ -68,7 +75,7 @@ export function DoctorDragSource({
           <ul className="flex flex-col gap-1">
             {available.map((doctor) => (
               <li key={doctor.id}>
-                <DoctorToken doctor={doctor} />
+                <DoctorToken doctor={doctor} locked={locked} />
               </li>
             ))}
           </ul>
@@ -120,26 +127,28 @@ function AssignedDoctorToken({ doctor, isHighlighted, onHighlight }: AssignedDoc
 
 interface DoctorTokenProps {
   doctor: Doctor
+  locked?: boolean
 }
 
-function DoctorToken({ doctor }: DoctorTokenProps) {
+function DoctorToken({ doctor, locked = false }: DoctorTokenProps) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: makeDoctorDragId(doctor.id),
     data: { doctorId: doctor.id, doctorName: doctor.name },
+    disabled: locked,
   })
 
   return (
     <button
       ref={setNodeRef}
       type="button"
-      {...attributes}
-      {...listeners}
-      aria-roledescription="ziehbarer Arzt"
+      {...(locked ? {} : attributes)}
+      {...(locked ? {} : listeners)}
+      {...(locked ? {} : { 'aria-roledescription': 'ziehbarer Arzt' })}
       className={[
         'w-full flex items-center gap-2 px-2 py-1 rounded-lg text-left',
         'transition hover:bg-paper',
         'focus:outline-none focus:ring-2 focus:ring-accent',
-        'cursor-grab active:cursor-grabbing',
+        locked ? 'cursor-default opacity-70' : 'cursor-grab active:cursor-grabbing',
         isDragging ? 'opacity-40' : '',
       ].join(' ')}
     >
