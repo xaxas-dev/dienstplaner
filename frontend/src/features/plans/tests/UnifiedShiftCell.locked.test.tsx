@@ -9,8 +9,14 @@ const mockDept: Department = {
   name: 'INA',
   display_order: 1,
   color: null,
-  is_ina: true,
-  full_time_slots: 1,
+  is_external: false,
+  is_shift_relevant: true,
+  active: true,
+  requires_full_time: false,
+  blocks_ina_weekdays: false,
+  blocks_ina_weekends: false,
+  created_at: '2026-01-01T00:00:00',
+  updated_at: '2026-01-01T00:00:00',
 }
 
 vi.mock('@/features/command-palette/useCommandPalette', () => ({

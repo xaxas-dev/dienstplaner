@@ -407,6 +407,7 @@ export function UnifiedPlanGrid({
                     isConflictTarget={isConflictTarget}
                     shiftAssigned={shift != null && shift.doctor_id != null}
                     isPinned={shift?.is_pinned ?? false}
+                    isLocked={shift?.is_locked ?? false}
                     isSelected={isSelected || mouseSelectKeys.has(cellKey)}
                     isHighlightedRow={isRowHighlighted}
                     onMouseDown={() => {
