@@ -166,3 +166,9 @@ class ConstraintOverrideValidationError(Exception):
     def __init__(self, detail: str) -> None:
         super().__init__(detail)
         self.detail = detail
+
+
+class WishNotFoundError(Exception):
+    def __init__(self, wish_id: int) -> None:
+        super().__init__(f"Wunsch mit ID {wish_id} nicht gefunden")
+        self.wish_id = wish_id
