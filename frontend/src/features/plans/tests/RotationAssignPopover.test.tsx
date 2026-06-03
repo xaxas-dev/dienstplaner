@@ -13,6 +13,7 @@ const mockUpdate = vi.fn()
 const mockDelete = vi.fn()
 
 vi.mock('../usePlanRotations', () => ({
+  usePlanRotations: () => ({ data: [], isLoading: false }),
   useCreateRotation: () => ({ mutate: mockCreate, isPending: false }),
   useUpdateRotation: () => ({ mutate: mockUpdate, isPending: false }),
   useDeleteRotation: () => ({ mutate: mockDelete, isPending: false }),

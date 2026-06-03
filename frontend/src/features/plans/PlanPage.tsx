@@ -24,7 +24,7 @@ const avatarTopModifier: Modifier = ({ activatorEvent, draggingNodeRect, transfo
   const offsetY = activatorEvent.clientY - draggingNodeRect.top
   return { ...transform, x: transform.x + offsetX - 14, y: transform.y + offsetY }
 }
-import { FileDown, Trash2, ChevronDown, ChevronLeft, ChevronRight, Zap, Settings, MoonStar } from 'lucide-react'
+import { FileDown, Trash2, ChevronDown, ChevronLeft, ChevronRight, Zap, Settings, MoonStar, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -52,6 +52,7 @@ import { usePlanConflicts } from './usePlanConflicts'
 import { usePlanRotations, useDeleteRotation, useCreateRotation } from './usePlanRotations'
 import { useTarifWarnings } from './useTarifWarnings'
 import { usePlanAbsences } from './usePlanAbsences'
+import { usePlanWishes } from './useWishes'
 import { useHolidays } from '@/features/holidays/useHolidays'
 import { useAssignShift, findShiftId } from './useAssignShift'
 import { useUpdatePlan } from './useUpdatePlan'
@@ -81,6 +82,7 @@ import { useDeleteAbsence } from './useDeleteAbsence'
 import type { AbsenceType } from '@/lib/types'
 import { DoctorDragSource, DoctorDragOverlayToken, parseDoctorDragId } from './components/DoctorDragSource'
 import { RotationAssignPopover } from './components/RotationAssignPopover'
+import { WishFormDialog } from '@/features/doctors/WishFormDialog'
 import { parseBereichHeaderDropId, parsePlaceholderDropId, parseRotationMemberDropId } from './components/BereichHeaderRow'
 import { useAppSettings } from '@/stores/useAppSettings'
 import { apiGet } from '@/lib/api'
@@ -147,6 +149,8 @@ export function PlanPage() {
     from: string
     to: string
   } | null>(null)
+  const [showWishes, setShowWishes] = useState(true)
+  const [wishCreateTarget, setWishCreateTarget] = useState<{ doctorId: number; date: string } | null>(null)
 
   const deleteAbsence = useDeleteAbsence(id)
 
@@ -170,6 +174,7 @@ export function PlanPage() {
   const { data: tarifWarningsData } = useTarifWarnings(id)
   const planYear = plan ? new Date(plan.valid_from).getFullYear() : null
   const { data: holidaysData } = useHolidays(planYear)
+  const { data: wishes = [] } = usePlanWishes(isNaN(id) ? null : id)
   const holidayDates = useMemo(
     () => new Set((holidaysData ?? []).map((h) => h.date)),
     [holidaysData],
@@ -861,6 +866,25 @@ export function PlanPage() {
         </div>
       </div>
 
+      {/* Wunsch-Toggle */}
+      <div className="px-6 pb-1 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setShowWishes((v) => !v)}
+          className={cn(
+            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors',
+            showWishes
+              ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
+              : 'bg-paper border-line text-ink-3 hover:bg-line',
+          )}
+          aria-pressed={showWishes}
+          title="Wünsche im Grid anzeigen / ausblenden"
+        >
+          <Star className="size-3" />
+          Wünsche
+        </button>
+      </div>
+
       {/* Mehrfach-Auswahl-Indikator */}
       {selectedCells.length > 0 && (
         <div className="px-6 pb-2 flex items-center gap-2">
@@ -936,6 +960,9 @@ export function PlanPage() {
               onAddRotation={(departmentId) =>
                 setActiveRotationCell({ departmentId, day: plan.valid_from, assignmentId: null })
               }
+              wishes={wishes}
+              showWishes={showWishes}
+              onWishCreate={(doctorId, date) => setWishCreateTarget({ doctorId, date })}
             />
           )}
         </div>
@@ -1138,6 +1165,15 @@ export function PlanPage() {
         planId={id}
         doctors={doctors}
         shiftTypes={shiftTypes}
+      />
+    )}
+
+    {wishCreateTarget && (
+      <WishFormDialog
+        doctorId={wishCreateTarget.doctorId}
+        open={true}
+        onOpenChange={(open) => { if (!open) setWishCreateTarget(null) }}
+        prefilledDate={wishCreateTarget.date}
       />
     )}
 

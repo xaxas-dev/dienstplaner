@@ -8,9 +8,10 @@ import { getDepartmentColor } from '@/lib/bereichColors'
 import { getCurrentEmploymentPeriod } from '@/features/doctors/doctorHelpers'
 import { buildUnifiedRows, resolveCell } from '../unifiedGridUtils'
 import type { RotationRow } from '../unifiedGridUtils'
+import { getWishHint } from '../wishGridUtils'
 import { BereichHeaderRow, makePlaceholderDropId, makeRotationMemberDropId } from './BereichHeaderRow'
 import { UnifiedShiftCell } from './UnifiedShiftCell'
-import type { Department, Doctor, RotationAssignmentWithDetails, ShiftWithDetails, Absence, TarifWarning } from '@/lib/types'
+import type { Department, Doctor, RotationAssignmentWithDetails, ShiftWithDetails, Absence, TarifWarning, Wish } from '@/lib/types'
 
 const WEEKDAY_ABBR = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 
@@ -37,6 +38,9 @@ interface UnifiedPlanGridProps {
   onConflictDotClick?: (shiftId: number) => void
   onTarifDotClick?: (shiftId: number) => void
   onAddRotation?: (departmentId: number) => void
+  wishes?: Wish[]
+  showWishes?: boolean
+  onWishCreate?: (doctorId: number, date: string) => void
 }
 
 function AddRotationRow({ onAdd }: { onAdd: () => void }) {
@@ -179,6 +183,9 @@ export function UnifiedPlanGrid({
   onConflictDotClick,
   onTarifDotClick,
   onAddRotation,
+  wishes,
+  showWishes,
+  onWishCreate,
 }: UnifiedPlanGridProps) {
   const [hoverRow, setHoverRow] = useState<string | null>(null)
   const [hoverDay, setHoverDay] = useState<string | null>(null)
@@ -448,6 +455,11 @@ export function UnifiedPlanGrid({
                     onDoubleClickRemoveAbsence={onDoubleClickRemoveAbsence}
                     onConflictDotClick={() => shift && onConflictDotClick?.(shift.id)}
                     onTarifDotClick={() => shift && onTarifDotClick?.(shift.id)}
+                    wishHint={showWishes && row.kind === 'rotation'
+                      ? getWishHint(wishes ?? [], row.doctor.id, dk)
+                      : null}
+                    doctorId={row.doctor.id}
+                    onWishCreate={onWishCreate}
                   />
                 )
               })}

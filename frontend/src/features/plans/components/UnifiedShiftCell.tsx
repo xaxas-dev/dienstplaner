@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { useDroppable } from '@dnd-kit/core'
-import { Lock } from 'lucide-react'
+import { Lock, Star } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { getDepartmentColor } from '@/lib/bereichColors'
@@ -38,6 +38,9 @@ interface UnifiedShiftCellProps {
   onDoubleClickRemove?: () => void
   onConflictDotClick?: () => void
   onTarifDotClick?: () => void
+  wishHint?: 'avoid' | 'require' | null
+  doctorId?: number
+  onWishCreate?: (doctorId: number, date: string) => void
 }
 
 export function UnifiedShiftCell({
@@ -68,6 +71,9 @@ export function UnifiedShiftCell({
   onDoubleClickRemove,
   onConflictDotClick,
   onTarifDotClick,
+  wishHint,
+  doctorId,
+  onWishCreate,
 }: UnifiedShiftCellProps) {
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -129,7 +135,7 @@ export function UnifiedShiftCell({
       className={cn(
         'relative h-full min-h-[28px] flex items-center justify-center',
         'border-b border-r border-line cursor-pointer select-none',
-        'text-[11px] font-medium leading-none',
+        'text-[11px] font-medium leading-none group',
         isToday && 'ring-1 ring-inset ring-accent',
         isOver && 'ring-2 ring-inset ring-blue-400',
         isConflictTarget && 'bg-red-50/70 ring-1 ring-inset ring-red-400/50',
@@ -206,6 +212,30 @@ export function UnifiedShiftCell({
           aria-label="Konflikt"
         >
           !
+        </button>
+      )}
+
+      {/* Wish-Hint */}
+      {wishHint && !isLocked && (
+        <span
+          className={cn(
+            'absolute inset-0 pointer-events-none',
+            text
+              ? cn('ring-2 ring-inset', wishHint === 'avoid' ? 'ring-amber-400' : 'ring-green-500')
+              : (wishHint === 'avoid' ? 'bg-amber-50/60' : 'bg-green-50/60'),
+          )}
+        />
+      )}
+
+      {/* Wish Schnellerfassung */}
+      {onWishCreate && doctorId !== undefined && !isLocked && (
+        <button
+          className="absolute bottom-0.5 right-0.5 w-3 h-3 flex items-center justify-center opacity-0 group-hover:opacity-50 hover:!opacity-100 z-[3]"
+          onClick={(e) => { e.stopPropagation(); onWishCreate(doctorId, dayKey) }}
+          aria-label="Wunsch erfassen"
+          tabIndex={-1}
+        >
+          <Star className="w-2.5 h-2.5 text-muted-foreground" />
         </button>
       )}
     </div>

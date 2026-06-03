@@ -8,6 +8,10 @@ vi.mock('@/lib/useSettings', () => ({
   useClinicName: () => ({ data: null }),
 }))
 
+vi.mock('@/components/dp/ProfileEditModal', () => ({
+  ProfileEditModal: () => null,
+}))
+
 function Wrapper({ initialPath = '/' }: { initialPath?: string }) {
   return (
     <MemoryRouter initialEntries={[initialPath]}>
