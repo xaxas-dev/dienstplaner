@@ -17,11 +17,25 @@ export function parseShiftTypeDragId(id: string): number | null {
 
 interface ShiftTypeDragBarProps {
   shiftTypes: ShiftType[]
-  focusMode: 'alle' | 'vn'
-  onFocusToggle: () => void
+  activeFilterGroups: Set<string>
+  onFilterGroupToggle: (group: string) => void
+  onFilterGroupClear: () => void
 }
 
-export function ShiftTypeDragBar({ shiftTypes, focusMode, onFocusToggle }: ShiftTypeDragBarProps) {
+export function ShiftTypeDragBar({
+  shiftTypes,
+  activeFilterGroups,
+  onFilterGroupToggle,
+  onFilterGroupClear,
+}: ShiftTypeDragBarProps) {
+  const groups = [
+    ...new Set(
+      shiftTypes
+        .map((st) => st.filter_group)
+        .filter((g): g is string => g != null),
+    ),
+  ].sort()
+
   return (
     <div
       className="flex flex-wrap gap-2 p-3 rounded-xl border border-line bg-card"
@@ -30,27 +44,46 @@ export function ShiftTypeDragBar({ shiftTypes, focusMode, onFocusToggle }: Shift
       <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide self-center">
         Dienste
       </span>
-      {shiftTypes.map((st) => {
-        const isVN = st.short_name === 'V' || st.short_name === 'N'
-        return (
-          <ShiftTypeChip
-            key={st.id}
-            shiftType={st}
-            dimmed={focusMode === 'vn' && !isVN}
-          />
-        )
-      })}
-      <button
-        onClick={onFocusToggle}
-        className={[
-          'ml-auto px-3 py-1 rounded-lg text-xs font-medium border transition self-center',
-          focusMode === 'vn'
-            ? 'bg-accent text-white border-accent'
-            : 'bg-paper text-ink-3 border-line hover:bg-paper/80',
-        ].join(' ')}
-      >
-        {focusMode === 'vn' ? 'Fokus: V+N' : 'Alle Dienste'}
-      </button>
+      {shiftTypes.map((st) => (
+        <ShiftTypeChip
+          key={st.id}
+          shiftType={st}
+          dimmed={
+            activeFilterGroups.size > 0 &&
+            st.filter_group != null &&
+            !activeFilterGroups.has(st.filter_group)
+          }
+        />
+      ))}
+      {groups.length > 0 && (
+        <div className="ml-auto flex gap-1 self-center flex-wrap">
+          <button
+            onClick={onFilterGroupClear}
+            className={[
+              'px-3 py-1 rounded-lg text-xs font-medium border transition',
+              activeFilterGroups.size === 0
+                ? 'bg-accent text-white border-accent'
+                : 'bg-paper text-ink-3 border-line hover:bg-paper/80',
+            ].join(' ')}
+          >
+            Alle
+          </button>
+          {groups.map((group) => (
+            <button
+              key={group}
+              onClick={() => onFilterGroupToggle(group)}
+              className={[
+                'px-3 py-1 rounded-lg text-xs font-medium border transition',
+                activeFilterGroups.has(group)
+                  ? 'bg-accent text-white border-accent'
+                  : 'bg-paper text-ink-3 border-line hover:bg-paper/80',
+              ].join(' ')}
+            >
+              {group}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
