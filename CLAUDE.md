@@ -104,6 +104,13 @@ Details: docs/architecture.md
   Toggle-Button ein-/ausblendbar; Schnellerfassung via Hover-Stern-Icon in Zelle.
   JS→Python-Wochentag: `(getDay()+6)%7`. AVOID dominiert REQUIRE bei mehreren Wünschen
   für dieselbe Zelle. ADR-092.
+- **Fokus-Filter (M12-005):** `ShiftType.filter_group: str | None` — frei konfigurierbares
+  Gruppen-Label (z.B. „Nacht", „Tag", „V"). Null = ShiftType immer sichtbar.
+  Filter-State `activeFilterGroups: Set<string>` in `PlanPage` (Session-only, kein
+  localStorage). Multi-Select: leer = Alle, sonst dim Zellen deren ShiftType-filter_group
+  nicht in der aktiven Menge. `ShiftTypeDragBar` leitet Gruppen-Chips dynamisch aus
+  ShiftType-Daten ab: `[...new Set(shiftTypes.map(st => st.filter_group).filter(Boolean))].sort()`.
+  ADR-093.
 - **Weiche Validierung (Phase A):** Beim Schreiben einer
   Schicht-Zuweisung wird NUR Datenkonsistenz hart geprüft (Entität
   existiert, Doctor aktiv). Semantische Constraints (Verfügbarkeit,
