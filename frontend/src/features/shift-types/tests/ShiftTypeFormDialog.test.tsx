@@ -102,3 +102,33 @@ describe('ShiftTypeFormDialog – Validierung', () => {
     })
   })
 })
+
+describe('ShiftTypeFormDialog – Filter-Gruppe', () => {
+  it('rendert Filter-Gruppe Feld und nimmt Eingaben an', async () => {
+    renderDialog()
+
+    const filterGroupInput = screen.getByLabelText(/Filter-Gruppe/i)
+    expect(filterGroupInput).toBeInTheDocument()
+    expect((filterGroupInput as HTMLInputElement).value).toBe('')
+
+    await userEvent.type(filterGroupInput, 'Nacht')
+    expect((filterGroupInput as HTMLInputElement).value).toBe('Nacht')
+  })
+
+  it('zeigt Filter-Gruppe Feld als optional (kein Pflicht-Fehler)', async () => {
+    renderDialog()
+
+    fireEvent.change(screen.getByPlaceholderText(/Tagdienst/i), {
+      target: { value: 'Tagdienst' },
+    })
+    fireEvent.change(screen.getByLabelText(/Kurzname/i), {
+      target: { value: 'T' },
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: /^Speichern$/i }))
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Filter-Gruppe.*erforderlich/i)).not.toBeInTheDocument()
+    })
+  })
+})

@@ -40,6 +40,7 @@ const schema = z
     display_order: z.number({ error: 'Zahl erforderlich' }).int(),
     active: z.boolean(),
     notes: z.string().nullable().optional(),
+    filter_group: z.string().nullable().optional(),
   })
   .refine((d) => d.applies_on_weekdays || d.applies_on_weekend, {
     message: 'Mindestens ein Tag-Typ muss aktiv sein (Werktag oder Wochenende)',
@@ -91,6 +92,7 @@ export function ShiftTypeFormDialog({ open, onOpenChange, shiftType }: ShiftType
       display_order: shiftType?.display_order ?? 0,
       active: shiftType?.active ?? true,
       notes: shiftType?.notes ?? null,
+      filter_group: shiftType?.filter_group ?? null,
     },
   })
 
@@ -106,6 +108,7 @@ export function ShiftTypeFormDialog({ open, onOpenChange, shiftType }: ShiftType
         display_order: shiftType?.display_order ?? 0,
         active: shiftType?.active ?? true,
         notes: shiftType?.notes ?? null,
+        filter_group: shiftType?.filter_group ?? null,
       })
     }
   }, [open, shiftType, form])
@@ -121,6 +124,7 @@ export function ShiftTypeFormDialog({ open, onOpenChange, shiftType }: ShiftType
       start_time: values.start_time || null,
       end_time: values.end_time || null,
       notes: values.notes || null,
+      filter_group: values.filter_group || null,
     }
 
     const handleError = (err: unknown) => {
@@ -313,6 +317,27 @@ export function ShiftTypeFormDialog({ open, onOpenChange, shiftType }: ShiftType
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="filter_group"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Filter-Gruppe</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="z.B. Nacht, Tag, V"
+                      {...field}
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Optional. Zellen ohne Gruppe werden beim Filtern nie gedimmt.
+                  </FormDescription>
                 </FormItem>
               )}
             />
