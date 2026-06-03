@@ -23,6 +23,7 @@ interface UnifiedPlanGridProps {
   validFrom: string
   validTo: string
   tarifWarningsByShift?: Record<number, TarifWarning[]>
+  holidayDates?: Set<string>
   focusMode: 'alle' | 'vn'
   dragConflictMap?: Map<number, Set<string>> | null
   selectedCellKeys?: Set<string>
@@ -164,6 +165,7 @@ export function UnifiedPlanGrid({
   validFrom,
   validTo,
   tarifWarningsByShift = {},
+  holidayDates,
   focusMode,
   dragConflictMap,
   selectedCellKeys,
@@ -305,6 +307,11 @@ export function UnifiedPlanGrid({
             >
               <div className="text-[9px] leading-none">{WEEKDAY_ABBR[day.getDay() === 0 ? 6 : day.getDay() - 1]}</div>
               <div className="text-[11px] leading-none mt-0.5">{day.getDate()}</div>
+              {holidayDates?.has(dk) && (
+                <span className="block text-[9px] font-medium leading-none mt-0.5 text-orange-500">
+                  FT
+                </span>
+              )}
             </div>
           )
         })}

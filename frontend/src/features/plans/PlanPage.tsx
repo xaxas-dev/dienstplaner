@@ -52,6 +52,7 @@ import { usePlanConflicts } from './usePlanConflicts'
 import { usePlanRotations, useDeleteRotation, useCreateRotation } from './usePlanRotations'
 import { useTarifWarnings } from './useTarifWarnings'
 import { usePlanAbsences } from './usePlanAbsences'
+import { useHolidays } from '@/features/holidays/useHolidays'
 import { useAssignShift, findShiftId } from './useAssignShift'
 import { useUpdatePlan } from './useUpdatePlan'
 import { useDeletePlan } from './useDeletePlan'
@@ -167,6 +168,12 @@ export function PlanPage() {
   const { data: absences = [] } = usePlanAbsences(id)
   const { data: shiftTypes = [] } = useShiftTypes()
   const { data: tarifWarningsData } = useTarifWarnings(id)
+  const planYear = plan ? new Date(plan.valid_from).getFullYear() : new Date().getFullYear()
+  const { data: holidaysData } = useHolidays(planYear)
+  const holidayDates = useMemo(
+    () => new Set((holidaysData ?? []).map((h) => h.date)),
+    [holidaysData],
+  )
   const assignShift = useAssignShift(id)
   const updatePlan = useUpdatePlan(id)
   const deletePlan = useDeletePlan()
@@ -894,6 +901,7 @@ export function PlanPage() {
               validFrom={plan.valid_from}
               validTo={plan.valid_to}
               tarifWarningsByShift={tarifWarningsByShift}
+              holidayDates={holidayDates}
               focusMode={focusMode}
               dragConflictMap={dragConflictMap}
               selectedCellKeys={selectedCellKeys}
