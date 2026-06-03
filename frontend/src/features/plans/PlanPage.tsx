@@ -168,7 +168,7 @@ export function PlanPage() {
   const { data: absences = [] } = usePlanAbsences(id)
   const { data: shiftTypes = [] } = useShiftTypes()
   const { data: tarifWarningsData } = useTarifWarnings(id)
-  const planYear = plan ? new Date(plan.valid_from).getFullYear() : new Date().getFullYear()
+  const planYear = plan ? new Date(plan.valid_from).getFullYear() : null
   const { data: holidaysData } = useHolidays(planYear)
   const holidayDates = useMemo(
     () => new Set((holidaysData ?? []).map((h) => h.date)),

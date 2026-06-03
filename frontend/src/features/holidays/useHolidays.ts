@@ -6,10 +6,11 @@ export const holidayKeys = {
   byYear: (year: number) => ['holidays', year] as const,
 }
 
-export function useHolidays(year: number) {
+export function useHolidays(year: number | null) {
   return useQuery({
-    queryKey: holidayKeys.byYear(year),
+    queryKey: holidayKeys.byYear(year ?? 0),
     queryFn: () => apiGet<Holiday[]>(`/api/holidays?year=${year}`),
+    enabled: year !== null,
   })
 }
 
