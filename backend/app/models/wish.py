@@ -18,6 +18,14 @@ class Wish(Base):
 
     __table_args__ = (
         CheckConstraint("priority >= 1 AND priority <= 3", name="ck_wishes_priority_range"),
+        CheckConstraint(
+            "NOT (wish_date IS NOT NULL AND day_of_week IS NOT NULL)",
+            name="ck_wishes_not_both_date_and_weekday",
+        ),
+        CheckConstraint(
+            "day_of_week IS NULL OR (day_of_week >= 0 AND day_of_week <= 6)",
+            name="ck_wishes_day_of_week_range",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -25,17 +33,17 @@ class Wish(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
     )
-
     doctor_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("doctors.id", ondelete="CASCADE"), nullable=False
     )
-    wish_date: Mapped[date] = mapped_column(Date, nullable=False)
+    wish_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     wish_type: Mapped[WishType] = mapped_column(
         Enum(WishType, native_enum=False, length=50), nullable=False
     )
     shift_type_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("shift_types.id", ondelete="SET NULL"), nullable=True
     )
+    day_of_week: Mapped[int | None] = mapped_column(Integer, nullable=True)
     priority: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
