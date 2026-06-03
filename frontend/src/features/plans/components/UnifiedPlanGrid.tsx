@@ -25,7 +25,7 @@ interface UnifiedPlanGridProps {
   validTo: string
   tarifWarningsByShift?: Record<number, TarifWarning[]>
   holidayDates?: Set<string>
-  focusMode: 'alle' | 'vn'
+  activeFilterGroups: Set<string>
   dragConflictMap?: Map<number, Set<string>> | null
   selectedCellKeys?: Set<string>
   highlightedDoctorId?: number | null
@@ -170,7 +170,7 @@ export function UnifiedPlanGrid({
   validTo,
   tarifWarningsByShift = {},
   holidayDates,
-  focusMode,
+  activeFilterGroups,
   dragConflictMap,
   selectedCellKeys,
   highlightedDoctorId,
@@ -394,6 +394,11 @@ export function UnifiedPlanGrid({
 
                 const cellShiftId = shift?.id ?? unassignedShiftByDate.get(dk)?.id
 
+                const shiftFilterGroup =
+                  shift?.shift_type?.filter_group ??
+                  unassignedShiftByDate.get(dk)?.shift_type?.filter_group ??
+                  null
+
                 const isConflictTarget =
                   dragConflictMap != null &&
                   !!(dragConflictMap.get(row.doctor.id)?.has(dk)) &&
@@ -414,7 +419,8 @@ export function UnifiedPlanGrid({
                     isToday={isToday(day)}
                     hasConflict={hasConflict}
                     hasTarifWarning={hasTarifWarning}
-                    focusMode={focusMode}
+                    activeFilterGroups={activeFilterGroups}
+                    shiftFilterGroup={shiftFilterGroup}
                     isHoveredRow={isRowHovered}
                     isHoveredCol={effectiveHoverDay === dk}
                     shiftId={cellShiftId}

@@ -114,7 +114,18 @@ export function PlanPage() {
     return matched?.id ?? NaN
   })()
 
-  const [focusMode, setFocusMode] = useState<'alle' | 'vn'>('alle')
+  const [activeFilterGroups, setActiveFilterGroups] = useState<Set<string>>(new Set())
+
+  function toggleFilterGroup(group: string) {
+    setActiveFilterGroups((prev) => {
+      const next = new Set(prev)
+      next.has(group) ? next.delete(group) : next.add(group)
+      return next
+    })
+  }
+  function clearFilterGroups() {
+    setActiveFilterGroups(new Set())
+  }
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null)
   const [contextShift, setContextShift] = useState<ShiftWithDetails | null>(null)
   const [activeRotationCell, setActiveRotationCell] = useState<{
@@ -857,8 +868,9 @@ export function PlanPage() {
         <div className="flex-1 min-w-0">
           <ShiftTypeDragBar
             shiftTypes={shiftTypes}
-            focusMode={focusMode}
-            onFocusToggle={() => setFocusMode((m) => (m === 'alle' ? 'vn' : 'alle'))}
+            activeFilterGroups={activeFilterGroups}
+            onFilterGroupToggle={toggleFilterGroup}
+            onFilterGroupClear={clearFilterGroups}
           />
         </div>
         <div className="flex-1 min-w-0">
@@ -926,7 +938,7 @@ export function PlanPage() {
               validTo={plan.valid_to}
               tarifWarningsByShift={tarifWarningsByShift}
               holidayDates={holidayDates}
-              focusMode={focusMode}
+              activeFilterGroups={activeFilterGroups}
               dragConflictMap={dragConflictMap}
               selectedCellKeys={selectedCellKeys}
               highlightedDoctorId={highlightedDoctorId}
