@@ -92,6 +92,18 @@ Details: docs/architecture.md
   für `applies_on_weekend`-Shifts. Repository: `holiday_repository.get_holiday_dates_for_period(db, from, to)`.
   Frontend: `useHolidays(year: number | null)` mit `enabled`-Guard; Route `/holidays` (HolidayListPage);
   Plan-Grid zeigt `FT`-Badge in Spaltenheadern. ADR-091.
+- **Wünsche (M12-004):** `Wish`-Tabelle (`doctor_id`, `wish_date: Date | None`,
+  `day_of_week: int | None` 0=Mo…6=So Python-Konvention, `wish_type` AVOID_DAY/AVOID_SHIFT/REQUIRE_SHIFT,
+  `shift_type_id`, `priority` 1–3). Drei Sub-Typen: Datumswunsch (`wish_date` gesetzt),
+  Wochentag-Präferenz (`day_of_week` gesetzt), Allgemeine Präferenz (beide null).
+  DB-CheckConstraint + Pydantic verhindern gleichzeitiges Setzen beider Felder.
+  API: `GET/POST /api/doctors/{id}/wishes`, `PATCH/DELETE /api/wishes/{id}`,
+  `GET /api/plans/{id}/wishes` (nur Ärzte mit aktiver Rotation im Plan-Zeitraum).
+  Frontend: `WishList`+`WishFormDialog` in DoctorDetailPage Tab „Wünsche" (dauerhafte Wünsche);
+  Grid-Hint-Layer in PlanPage: Amber-Ring/Tint = AVOID, Grün-Ring/Tint = REQUIRE, über
+  Toggle-Button ein-/ausblendbar; Schnellerfassung via Hover-Stern-Icon in Zelle.
+  JS→Python-Wochentag: `(getDay()+6)%7`. AVOID dominiert REQUIRE bei mehreren Wünschen
+  für dieselbe Zelle. ADR-092.
 - **Weiche Validierung (Phase A):** Beim Schreiben einer
   Schicht-Zuweisung wird NUR Datenkonsistenz hart geprüft (Entität
   existiert, Doctor aktiv). Semantische Constraints (Verfügbarkeit,
