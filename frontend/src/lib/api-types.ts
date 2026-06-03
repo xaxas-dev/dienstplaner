@@ -1867,6 +1867,8 @@ export interface components {
             is_bereitschaftsdienst: boolean;
             /** Notes */
             notes?: string | null;
+            /** Filter Group */
+            filter_group?: string | null;
         };
         /** ShiftTypeResponse */
         ShiftTypeResponse: {
@@ -1905,6 +1907,8 @@ export interface components {
             is_bereitschaftsdienst: boolean;
             /** Notes */
             notes?: string | null;
+            /** Filter Group */
+            filter_group?: string | null;
             /** Id */
             id: number;
             /**
@@ -1940,6 +1944,8 @@ export interface components {
             is_bereitschaftsdienst?: boolean | null;
             /** Notes */
             notes?: string | null;
+            /** Filter Group */
+            filter_group?: string | null;
         };
         /** ShiftUpdate */
         ShiftUpdate: {
