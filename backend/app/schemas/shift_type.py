@@ -14,6 +14,7 @@ class ShiftTypeBase(BaseModel):
     active: bool = True
     is_bereitschaftsdienst: bool = False
     notes: str | None = None
+    filter_group: str | None = None
 
 
 class ShiftTypeCreate(ShiftTypeBase): ...
@@ -30,6 +31,7 @@ class ShiftTypeUpdate(BaseModel):
     active: bool | None = None
     is_bereitschaftsdienst: bool | None = None
     notes: str | None = None
+    filter_group: str | None = None
 
 
 class ShiftTypeResponse(ShiftTypeBase):
