@@ -186,7 +186,7 @@ export function DoctorDetailPage() {
         )}
 
         {activeTab === 'wuensche' && (
-          <WishList doctorId={id} />
+          <WishList doctorId={doctor.id} />
         )}
       </div>
 

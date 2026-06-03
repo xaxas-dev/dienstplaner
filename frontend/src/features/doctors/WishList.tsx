@@ -20,8 +20,9 @@ const WEEKDAY_SHORT = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 function formatScope(wish: Wish): string {
   if (wish.wish_date) {
     // Parse ISO date (YYYY-MM-DD) and format as DD.MM.YYYY without timezone shift
-    const [year, month, day] = wish.wish_date.split('-')
-    return `${day}.${month}.${year}`
+    const parts = wish.wish_date.split('-')
+    if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`
+    return wish.wish_date
   }
   if (wish.day_of_week != null) return `Jeden ${WEEKDAY_SHORT[wish.day_of_week]}`
   return 'Allgemein'
