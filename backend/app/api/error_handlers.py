@@ -29,6 +29,7 @@ from app.services.exceptions import (
     ShiftTypeNotFoundError,
     ShiftTypeValidationError,
     ShiftValidationError,
+    WishNotFoundError,
 )
 
 
@@ -150,3 +151,7 @@ def register_error_handlers(app: FastAPI) -> None:
         _: Request, exc: ConstraintOverrideValidationError
     ) -> JSONResponse:
         return JSONResponse(status_code=422, content={"detail": exc.detail})
+
+    @app.exception_handler(WishNotFoundError)
+    async def wish_not_found(_: Request, exc: WishNotFoundError) -> JSONResponse:
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
