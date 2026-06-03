@@ -22,8 +22,9 @@ import { QualificationManager } from './QualificationManager'
 import { INAExclusionList } from './INAExclusionList'
 import { AbsenceList } from './AbsenceList'
 import { ConstraintOverrideList } from './ConstraintOverrideList'
+import { WishList } from './WishList'
 
-type Tab = 'stammdaten' | 'beschaeftigung' | 'qualifikationen' | 'ina-ausschluesse' | 'abwesenheiten' | 'overrides'
+type Tab = 'stammdaten' | 'beschaeftigung' | 'qualifikationen' | 'ina-ausschluesse' | 'abwesenheiten' | 'overrides' | 'wuensche'
 
 export function DoctorDetailPage() {
   const { doctorId } = useParams<{ doctorId: string }>()
@@ -75,6 +76,7 @@ export function DoctorDetailPage() {
     { key: 'ina-ausschluesse', label: 'INA-Ausschlüsse' },
     { key: 'abwesenheiten', label: 'Abwesenheiten' },
     { key: 'overrides', label: 'Constraint-Overrides' },
+    { key: 'wuensche', label: 'Wünsche' },
   ]
 
   return (
@@ -181,6 +183,10 @@ export function DoctorDetailPage() {
           <div className="max-w-2xl">
             <ConstraintOverrideList doctorId={doctor.id} />
           </div>
+        )}
+
+        {activeTab === 'wuensche' && (
+          <WishList doctorId={id} />
         )}
       </div>
 
