@@ -9,6 +9,7 @@ import {
   Clock,
   Award,
   Shield,
+  CalendarDays,
   Settings,
 } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
@@ -33,6 +34,7 @@ const mainNavItems: NavItem[] = [
   { label: 'Qualifikationen', to: '/qualifications', icon: Award },
   // Shield statt Settings2 — semantisch klarer, keine Verwechslung mit echtem Settings-Icon
   { label: 'Sonderregelungen', to: '/rule-overrides', icon: Shield },
+  { label: 'Feiertage', to: '/holidays', icon: CalendarDays },
 ]
 
 export function MiniRail() {

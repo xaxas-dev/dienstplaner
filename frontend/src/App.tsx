@@ -9,6 +9,7 @@ import { DepartmentListPage } from '@/features/departments/DepartmentListPage'
 import { ShiftTypeListPage } from '@/features/shift-types/ShiftTypeListPage'
 import { QualificationListPage } from '@/features/qualifications/QualificationListPage'
 import { RuleOverrideListPage } from '@/features/rule-overrides/RuleOverrideListPage'
+import { HolidayListPage } from '@/features/holidays/HolidayListPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
 import { TodayPage } from '@/features/today/TodayPage'
 import { PlanListPage } from '@/features/plans/PlanListPage'
@@ -49,6 +50,7 @@ export default function App() {
         <Route path="/shift-types" element={<ShiftTypeListPage />} />
         <Route path="/qualifications" element={<QualificationListPage />} />
         <Route path="/rule-overrides" element={<RuleOverrideListPage />} />
+        <Route path="/holidays" element={<HolidayListPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         {isDev && <Route path="/playground" element={<PlaygroundPage />} />}
         <Route path="*" element={<NotFoundPage />} />
