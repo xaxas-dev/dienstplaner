@@ -200,3 +200,37 @@ export interface HolidayCreate {
   date: string
   name: string
 }
+
+// Wish (M12-004) — manuell, OpenAPI-Generator läuft nicht auf Feature-Branches
+export type WishType = 'AVOID_DAY' | 'AVOID_SHIFT' | 'REQUIRE_SHIFT'
+
+export interface Wish {
+  id: number
+  doctor_id: number
+  wish_date: string | null   // ISO "YYYY-MM-DD" oder null
+  day_of_week: number | null // 0=Mo…6=So (Python weekday())
+  wish_type: WishType
+  shift_type_id: number | null
+  priority: number           // 1–3
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface WishCreateBody {
+  wish_date?: string | null
+  day_of_week?: number | null
+  wish_type: WishType
+  shift_type_id?: number | null
+  priority?: number
+  notes?: string | null
+}
+
+export interface WishUpdate {
+  wish_date?: string | null
+  day_of_week?: number | null
+  wish_type?: WishType
+  shift_type_id?: number | null
+  priority?: number | null
+  notes?: string | null
+}
