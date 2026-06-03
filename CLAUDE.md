@@ -86,6 +86,12 @@ Details: docs/architecture.md
   Backend-Delete nicht geblockt (weiche Validierung, Phase A). ADR-090.
   Abgrenzung: `is_pinned` = Solver-Konzept; `is_locked` = Editor-Konzept.
   Service: `locked_week_service.create_locked_week(db, plan_id, data)`.
+- **Feiertagskalender (M12-003):** `Holiday`-Tabelle (`date` PK, `name`, `source` AUTO/MANUAL).
+  SH-Feiertage via `holiday_service.seed_sh_holidays(db, year)` (Gauss-Oster-Algorithmus, idempotent).
+  T-Logik: `_generate_shift_dicts` erhält `holiday_dates: set[date]` — Feiertage zählen wie Wochenendtage
+  für `applies_on_weekend`-Shifts. Repository: `holiday_repository.get_holiday_dates_for_period(db, from, to)`.
+  Frontend: `useHolidays(year: number | null)` mit `enabled`-Guard; Route `/holidays` (HolidayListPage);
+  Plan-Grid zeigt `FT`-Badge in Spaltenheadern. ADR-091.
 - **Weiche Validierung (Phase A):** Beim Schreiben einer
   Schicht-Zuweisung wird NUR Datenkonsistenz hart geprüft (Entität
   existiert, Doctor aktiv). Semantische Constraints (Verfügbarkeit,
