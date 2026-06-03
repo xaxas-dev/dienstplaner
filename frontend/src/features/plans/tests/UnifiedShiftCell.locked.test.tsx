@@ -31,7 +31,7 @@ const baseProps = {
   text: 'AMü',
   isWeekend: false,
   isToday: false,
-  focusMode: 'alle' as const,
+  activeFilterGroups: new Set<string>(),
   shiftId: 42,
   shiftAssigned: true,
 }
@@ -58,5 +58,53 @@ describe('UnifiedShiftCell locked', () => {
   it('rendert kein Schloss-Icon wenn isLocked=false', () => {
     wrap(<UnifiedShiftCell {...baseProps} isLocked={false} />)
     expect(screen.queryByTestId('lock-icon')).not.toBeInTheDocument()
+  })
+})
+
+describe('UnifiedShiftCell – Dimming', () => {
+  const basePropsNew = {
+    rotationId: 1,
+    dayKey: '2026-06-07',
+    department: mockDept,
+    inRotation: true,
+    text: 'T',
+    isWeekend: false,
+    isToday: false,
+    activeFilterGroups: new Set<string>(),
+    shiftFilterGroup: null as string | null,
+    shiftId: 42,
+    shiftAssigned: true,
+  }
+
+  it('dimmt nicht wenn activeFilterGroups leer', () => {
+    const { container } = wrap(
+      <UnifiedShiftCell {...basePropsNew} activeFilterGroups={new Set()} shiftFilterGroup="Nacht" />
+    )
+    const cell = container.firstChild as HTMLElement
+    expect(cell.className).not.toMatch(/opacity-30/)
+  })
+
+  it('dimmt nicht wenn shiftFilterGroup null', () => {
+    const { container } = wrap(
+      <UnifiedShiftCell {...basePropsNew} activeFilterGroups={new Set(['Nacht'])} shiftFilterGroup={null} />
+    )
+    const cell = container.firstChild as HTMLElement
+    expect(cell.className).not.toMatch(/opacity-30/)
+  })
+
+  it('dimmt wenn shiftFilterGroup nicht in aktiver Gruppe', () => {
+    const { container } = wrap(
+      <UnifiedShiftCell {...basePropsNew} activeFilterGroups={new Set(['Nacht'])} shiftFilterGroup="Tag" />
+    )
+    const cell = container.firstChild as HTMLElement
+    expect(cell.className).toMatch(/opacity-30/)
+  })
+
+  it('dimmt nicht wenn shiftFilterGroup in aktiver Gruppe', () => {
+    const { container } = wrap(
+      <UnifiedShiftCell {...basePropsNew} activeFilterGroups={new Set(['Nacht'])} shiftFilterGroup="Nacht" />
+    )
+    const cell = container.firstChild as HTMLElement
+    expect(cell.className).not.toMatch(/opacity-30/)
   })
 })

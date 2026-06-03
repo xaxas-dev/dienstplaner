@@ -20,7 +20,8 @@ interface UnifiedShiftCellProps {
   isToday: boolean
   hasConflict?: boolean
   hasTarifWarning?: boolean
-  focusMode: 'alle' | 'vn'
+  activeFilterGroups: Set<string>
+  shiftFilterGroup?: string | null
   isHoveredRow?: boolean
   isHoveredCol?: boolean
   shiftId?: number
@@ -53,7 +54,8 @@ export function UnifiedShiftCell({
   isToday,
   hasConflict,
   hasTarifWarning,
-  focusMode,
+  activeFilterGroups,
+  shiftFilterGroup,
   isHoveredRow,
   isHoveredCol,
   shiftId,
@@ -119,9 +121,10 @@ export function UnifiedShiftCell({
   }
 
   const bereichColor = getDepartmentColor(department)
-  const isVN = text === 'V' || text === 'N'
-  const isAbsenceCode = ['U', 'K', 'FB', 'EZ', 'MuSchu', 'DIV'].includes(text)
-  const dimmed = focusMode === 'vn' && text !== '' && !isVN && !isAbsenceCode
+  const dimmed =
+    activeFilterGroups.size > 0 &&
+    shiftFilterGroup != null &&
+    !activeFilterGroups.has(shiftFilterGroup)
   const showCrosshair = (isHoveredRow || isHoveredCol) && !dimmed
 
   const bg = inRotation ? bereichColor : `${bereichColor}28`
