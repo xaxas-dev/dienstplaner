@@ -56,10 +56,10 @@ export function FairnessSidebar({ stats, groups, onClose }: FairnessSidebarProps
                 <div
                   key={g}
                   className={`px-1 py-1.5 text-center tabular-nums ${
-                    stat.byGroup[g] > 0 ? 'text-ink' : 'text-ink-3'
+                    (stat.byGroup[g] ?? 0) > 0 ? 'text-ink' : 'text-ink-3'
                   }`}
                 >
-                  {stat.byGroup[g]}
+                  {stat.byGroup[g] ?? 0}
                 </div>
               ))}
               <div
