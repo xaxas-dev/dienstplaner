@@ -373,6 +373,36 @@ dezenter als Konflikt-Dot (!, oben rechts). Klick öffnet ContextPanel mit
 `TarifWarning`-Liste (Severity-Chip + rule_id + message). Kein Schreibpfad-Eingriff.
 
 
+## Planungs-Hinweise via TarifRule-Pipeline (M12-007, Phase A)
+
+Erweitert das Tarif-Validation-Framework (M5-001) um weiche Advisory-Hinweise ohne Solver- oder Tarif-Hintergrund. Registrierte Regeln in `REGISTERED_RULES` — fünf Regeln total (Stand M12-007).
+
+### WE_URLAUB (info, ConstraintId.WE_URLAUB, M12-007)
+
+**Regel:** Wenn ein Arzt an einem Samstag oder Sonntag einen Dienst hat, der unmittelbar (≤ 7 Tage) vor dem Beginn oder nach dem Ende eines Urlaubs liegt, wird ein informativer Hinweis erzeugt.
+
+**Klasse:** Planungs-Hinweis — kein Tarif, kein Solver, keine Frozenset-Klassifizierung. `TarifSeverity.INFO`.
+
+**Implementierung:**
+- Helper `_vacation_weekend_dates(valid_from, valid_to)` berechnet Sa+So im 7-Tage-Fenster beidseitig
+- Nur `AbsenceType.URLAUB` — Krankheit und andere Abwesenheiten ignoriert
+- Absence-Query mit Plan-Zeitraum-Puffer `±7 Tage` begrenzt (kein historischer Full-Scan)
+- Frontend: Sand-Dot (§) am ShiftCell, Klick öffnet ContextPanel
+
+**Abgrenzung:** Kein Schreibpfad-Eingriff (weiche Validierung, ADR-033). Kein Override-Mechanismus nötig (INFO-Severity).
+
+## Fairness-Zähler-Sidebar (M12-006, Phase A)
+
+Read-only Live-Aggregation im Frontend — kein Backend-Endpoint, kein Constraint.
+
+**`buildFairnessStats(shifts, rotations, doctors)`** in `fairnessUtils.ts`:
+- Zählt zugewiesene Shifts pro Arzt, aufgeteilt nach `ShiftType.filter_group`
+- Nur Ärzte mit aktiver Rotation im Plan (`rotations`-Parameter)
+- Shifts ohne `filter_group` zählen im Total, aber nicht in Gruppen-Spalten
+- Alphabetische Sortierung nach Arztname (deutsch)
+
+**`FairnessSidebar`-Komponente:** Toggle-Panel (`showFairness`-State in `PlanPage`, Default `false`). Dynamisches CSS-Grid (`1fr` Arzt-Spalte + `2.25rem` pro Gruppe + `2.25rem` ∑-Spalte). Zeigt Kurzkürzel (`short_name`) mit Fallback auf vollen Namen.
+
 ## Excel-Export (M6-001, Phase A)
 
 Read-only Export des aktuellen Plan-Stands als `.xlsx`-Datei.

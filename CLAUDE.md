@@ -111,6 +111,20 @@ Details: docs/architecture.md
   nicht in der aktiven Menge. `ShiftTypeDragBar` leitet Gruppen-Chips dynamisch aus
   ShiftType-Daten ab: `[...new Set(shiftTypes.map(st => st.filter_group).filter(Boolean))].sort()`.
   ADR-093.
+- **Fairness-Zähler-Sidebar (M12-006):** `buildFairnessStats(shifts, rotations, doctors)`
+  in `frontend/src/features/plans/fairnessUtils.ts` — pure Funktion, kein React, kein API-Call.
+  Gibt `{ stats: FairnessStat[], groups: string[] }` zurück. `FairnessStat` enthält
+  `doctorId, doctorName, shortName, total, byGroup: Record<string, number>`.
+  Nur Ärzte mit aktiver Rotation werden gezählt; Shifts ohne `filter_group` erscheinen nur in `total`.
+  `FairnessSidebar`-Komponente: Toggle via `showFairness`-State in `PlanPage` (Default `false`).
+  `byGroup[g] ?? 0` bei Rendering verwenden (defensive Fallback). ADR-094.
+- **WE-vor/nach-Urlaub-Hinweis (M12-007):** `WeekendAroundVacationRule` in
+  `backend/app/services/tarif_rules_impl.py` implementiert `TarifRule`-Protocol.
+  `ConstraintId.WE_URLAUB = "we-urlaub"`, `TarifSeverity.INFO`.
+  Nur `AbsenceType.URLAUB` löst Warnings aus; 7-Tage-Fenster beidseitig (Sa+So in `range(1,8)`
+  vor `valid_from` und nach `valid_to`). Absence-Query ist auf Plan-Zeitraum ± 7 Tage begrenzt.
+  `WE_URLAUB` ist in keiner Frozenset-Klassifizierung — Phase-A-Advisory-Rule ohne Solver-Bezug.
+  ADR-095.
 - **Weiche Validierung (Phase A):** Beim Schreiben einer
   Schicht-Zuweisung wird NUR Datenkonsistenz hart geprüft (Entität
   existiert, Doctor aktiv). Semantische Constraints (Verfügbarkeit,

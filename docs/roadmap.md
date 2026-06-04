@@ -151,8 +151,8 @@ Basis: docs/superpowers/specs/2026-06-02-ina-dienstplanung-workflow-design.md
 | M12-003 | Feiertagskalender (`Holiday`, SH-Auto + manuell) | ✅ Abgeschlossen (2026-06-03) |
 | M12-004 | Wünsche-Erfassung UI (`Wish`-CRUD) | ✅ Abgeschlossen (2026-06-03) |
 | M12-005 | Fokus-Filter Dienst-Phasen (Nacht/Tag/V) | ✅ Abgeschlossen (2026-06-04) |
-| M12-006 | Fairness-Zähler-Sidebar | offen |
-| M12-007 | Hinweis WE vor/nach Urlaub | offen |
+| M12-006 | Fairness-Zähler-Sidebar | ✅ Abgeschlossen (2026-06-04) |
+| M12-007 | Hinweis WE vor/nach Urlaub | ✅ Abgeschlossen (2026-06-04) |
 | M13-001 | Excel-Import Besetzung (blockiert durch OQ-012) | offen |
 
 ## Cross-cutting
