@@ -58,6 +58,10 @@ SOFT: frozenset[ConstraintId] = frozenset(
     [ConstraintId.FAIR_DISTRIBUTION, ConstraintId.MAX_CONSECUTIVE_DAYS]
 )
 
+# Planungs-Hinweise-IDs (z.B. WE_URLAUB) gehören bewusst zu keinem der obigen
+# frozensets — sie sind Phase-A-advisory-Regeln, keine Solver-Constraints und
+# nicht overridebar über den Constraint-Override-Mechanismus (A/B/C).
+
 # Tarif-Werte TV-Ärzte/TdL i.d.F. 9. ÄnderungsTV (OQ-006, Option A hardcoded)
 MAX_BD_PER_MONAT: int = 4  # § 7 Abs. 5a Satz 1
 # M8-006: Wochenend-Limit (Platzhalter — exakter TV-Ärzte/TdL-Wert noch zu bestätigen)

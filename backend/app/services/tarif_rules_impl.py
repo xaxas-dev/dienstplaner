@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.absence import Absence, AbsenceType
 from app.models.doctor import Doctor
+from app.models.plan import Plan
 from app.models.shift import Shift
 from app.models.shift_type import ShiftType
 from app.schemas.tarif_warning import TarifSeverity, TarifWarning
@@ -224,6 +225,10 @@ class WeekendAroundVacationRule:
     severity = TarifSeverity.INFO
 
     def evaluate(self, db: Session, plan_id: int) -> list[TarifWarning]:
+        plan = db.get(Plan, plan_id)
+        if plan is None:
+            return []
+
         shifts = (
             db.query(Shift)
             .filter(
@@ -237,11 +242,18 @@ class WeekendAroundVacationRule:
 
         doctor_ids = {s.doctor_id for s in shifts}
 
+        # Nur Abwesenheiten im relevanten Fenster laden (Plan-Zeitraum ± 7 Tage),
+        # um keine historischen Urlaubseinträge zu ziehen.
+        window_start = plan.valid_from - timedelta(days=7)
+        window_end = plan.valid_to + timedelta(days=7)
+
         absences = (
             db.query(Absence)
             .filter(
                 Absence.doctor_id.in_(doctor_ids),
                 Absence.absence_type == AbsenceType.URLAUB,
+                Absence.valid_from <= window_end,
+                Absence.valid_to >= window_start,
             )
             .all()
         )

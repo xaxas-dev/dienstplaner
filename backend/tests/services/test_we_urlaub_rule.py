@@ -210,6 +210,19 @@ class TestWeekendAroundVacationRule:
 
         assert len(warnings) == 0
 
+    def test_no_absence_no_warning(self, db: Session) -> None:
+        from app.services.tarif_rules_impl import WeekendAroundVacationRule
+
+        plan = _make_plan(db)
+        doctor = _make_doctor(db)
+        st = _make_shift_type(db)
+        _make_shift(db, plan.id, SA_BEFORE, st.id, doctor.id)
+        # No absence created at all
+
+        warnings = WeekendAroundVacationRule().evaluate(db, plan.id)
+
+        assert len(warnings) == 0
+
     def test_saturday_outside_7_day_window_no_warning(self, db: Session) -> None:
         from app.services.tarif_rules_impl import WeekendAroundVacationRule
 
