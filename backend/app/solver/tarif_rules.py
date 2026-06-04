@@ -38,6 +38,9 @@ class ConstraintId(enum.StrEnum):
     FAIR_DISTRIBUTION = "fair-distribution"
     MAX_CONSECUTIVE_DAYS = "max-consecutive-days"
 
+    # --- Planungs-Hinweise (Phase A, kein Tarif-Hintergrund) ---
+    WE_URLAUB = "we-urlaub"
+
 
 # Klassifizierungs-Sets — für Override-Logik und Reporting.
 LOGISCH_HART: frozenset[ConstraintId] = frozenset(

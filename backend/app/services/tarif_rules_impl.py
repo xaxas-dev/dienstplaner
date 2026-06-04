@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from datetime import time
+from datetime import date, time, timedelta
 
 from sqlalchemy.orm import Session, joinedload
 
+from app.models.absence import Absence, AbsenceType
 from app.models.doctor import Doctor
 from app.models.shift import Shift
 from app.models.shift_type import ShiftType
@@ -15,6 +16,19 @@ from app.solver.tarif_rules import (
     ConstraintId,
     get_weekly_hours_limit,
 )
+
+
+def _vacation_weekend_dates(valid_from: date, valid_to: date) -> set[date]:
+    """Sa+So im 7-Tage-Fenster unmittelbar vor valid_from und nach valid_to."""
+    result: set[date] = set()
+    for delta in range(1, 8):
+        d_before = valid_from - timedelta(days=delta)
+        if d_before.weekday() in (5, 6):
+            result.add(d_before)
+        d_after = valid_to + timedelta(days=delta)
+        if d_after.weekday() in (5, 6):
+            result.add(d_after)
+    return result
 
 
 class MaxBdPerMonthRule:
@@ -205,6 +219,54 @@ class MaxWeeklyHoursRule:
         return warnings
 
 
+class WeekendAroundVacationRule:
+    id = ConstraintId.WE_URLAUB
+    severity = TarifSeverity.INFO
+
+    def evaluate(self, db: Session, plan_id: int) -> list[TarifWarning]:
+        shifts = (
+            db.query(Shift)
+            .filter(
+                Shift.plan_id == plan_id,
+                Shift.doctor_id.isnot(None),
+            )
+            .all()
+        )
+        if not shifts:
+            return []
+
+        doctor_ids = {s.doctor_id for s in shifts}
+
+        absences = (
+            db.query(Absence)
+            .filter(
+                Absence.doctor_id.in_(doctor_ids),
+                Absence.absence_type == AbsenceType.URLAUB,
+            )
+            .all()
+        )
+
+        weekend_dates_by_doctor: dict[int, set[date]] = {}
+        for absence in absences:
+            dates = _vacation_weekend_dates(absence.valid_from, absence.valid_to)
+            weekend_dates_by_doctor.setdefault(absence.doctor_id, set()).update(dates)
+
+        warnings: list[TarifWarning] = []
+        for shift in shifts:
+            if shift.shift_date in weekend_dates_by_doctor.get(shift.doctor_id, set()):
+                warnings.append(
+                    TarifWarning(
+                        shift_id=shift.id,
+                        doctor_id=shift.doctor_id,
+                        shift_date=shift.shift_date,
+                        rule_id=self.id,
+                        severity=self.severity,
+                        message="Dienst am WE direkt vor/nach Urlaub",
+                    )
+                )
+        return warnings
+
+
 # Selbstregistrierung — läuft einmal beim ersten Import dieses Moduls.
 # Zirkelimport-sicher: tarif_rules.py importiert NICHT von hier.
 import app.solver.tarif_rules as _registry  # noqa: E402
@@ -215,5 +277,6 @@ _registry.REGISTERED_RULES.extend(
         MaxWeekendsPerMonthRule(),
         MinRestTimeRule(),
         MaxWeeklyHoursRule(),
+        WeekendAroundVacationRule(),
     ]
 )
