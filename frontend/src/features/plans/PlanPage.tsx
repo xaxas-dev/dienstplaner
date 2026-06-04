@@ -24,7 +24,7 @@ const avatarTopModifier: Modifier = ({ activatorEvent, draggingNodeRect, transfo
   const offsetY = activatorEvent.clientY - draggingNodeRect.top
   return { ...transform, x: transform.x + offsetX - 14, y: transform.y + offsetY }
 }
-import { FileDown, Trash2, ChevronDown, ChevronLeft, ChevronRight, Zap, Settings, MoonStar, Star } from 'lucide-react'
+import { FileDown, Trash2, ChevronDown, ChevronLeft, ChevronRight, Zap, Settings, MoonStar, Star, BarChart2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -83,6 +83,8 @@ import type { AbsenceType } from '@/lib/types'
 import { DoctorDragSource, DoctorDragOverlayToken, parseDoctorDragId } from './components/DoctorDragSource'
 import { RotationAssignPopover } from './components/RotationAssignPopover'
 import { WishFormDialog } from '@/features/doctors/WishFormDialog'
+import { FairnessSidebar } from './components/FairnessSidebar'
+import { buildFairnessStats } from './fairnessUtils'
 import { parseBereichHeaderDropId, parsePlaceholderDropId, parseRotationMemberDropId } from './components/BereichHeaderRow'
 import { useAppSettings } from '@/stores/useAppSettings'
 import { apiGet } from '@/lib/api'
@@ -161,6 +163,7 @@ export function PlanPage() {
     to: string
   } | null>(null)
   const [showWishes, setShowWishes] = useState(true)
+  const [showFairness, setShowFairness] = useState(false)
   const [wishCreateTarget, setWishCreateTarget] = useState<{ doctorId: number; date: string } | null>(null)
 
   const deleteAbsence = useDeleteAbsence(id)
@@ -276,6 +279,11 @@ export function PlanPage() {
   const solverDiffRows = useMemo(
     () => (solveResult ? buildSolverDiff(shifts, doctors, solveResult.proposed_assignments) : []),
     [shifts, doctors, solveResult],
+  )
+
+  const { stats: fairnessStats, groups: fairnessGroups } = useMemo(
+    () => buildFairnessStats(shifts, rotations, doctors),
+    [shifts, rotations, doctors],
   )
 
   function handleSolve() {
@@ -895,6 +903,21 @@ export function PlanPage() {
           <Star className="size-3" />
           Wünsche
         </button>
+        <button
+          type="button"
+          onClick={() => setShowFairness((v) => !v)}
+          className={cn(
+            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors',
+            showFairness
+              ? 'bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100'
+              : 'bg-paper border-line text-ink-3 hover:bg-line',
+          )}
+          aria-pressed={showFairness}
+          title="Fairness-Zähler ein-/ausblenden"
+        >
+          <BarChart2 className="size-3" />
+          Fairness
+        </button>
       </div>
 
       {/* Mehrfach-Auswahl-Indikator */}
@@ -978,6 +1001,13 @@ export function PlanPage() {
             />
           )}
         </div>
+        {showFairness && (
+          <FairnessSidebar
+            stats={fairnessStats}
+            groups={fairnessGroups}
+            onClose={() => setShowFairness(false)}
+          />
+        )}
         {contextShift && (
           <ContextPanel
             shift={contextShift}

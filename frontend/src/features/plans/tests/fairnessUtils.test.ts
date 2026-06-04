@@ -32,6 +32,7 @@ function makeShift(overrides: Partial<ShiftWithDetails>): ShiftWithDetails {
     shift_type_id: 1,
     is_pinned: false,
     is_locked: false,
+    conflicts: [],
     created_at: '',
     updated_at: '',
     ...overrides,
