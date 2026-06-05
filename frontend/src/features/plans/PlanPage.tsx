@@ -131,6 +131,7 @@ export function PlanPage() {
   }
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null)
   const [contextShift, setContextShift] = useState<ShiftWithDetails | null>(null)
+  const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null)
   const [activeRotationCell, setActiveRotationCell] = useState<{
     departmentId: number
     day: string
@@ -442,6 +443,7 @@ export function PlanPage() {
 
     setContextShift(null)
     setActiveCell({ rotationId, doctorId, day, shiftId })
+    setSelectedDoctorId(doctorId)
   }
 
   function handleMultiAssign(shiftTypeId: number) {
@@ -964,20 +966,24 @@ export function PlanPage() {
             onClose={() => setShowFairness(false)}
           />
         )}
-        {contextShift && (
-          <ContextPanel
-            shift={contextShift}
-            onClose={() => setContextShift(null)}
-            tarifWarnings={tarifWarningsByShift[contextShift.id]}
-            shiftOverrides={constraintOverrides.filter(
-              (o) => o.level === 'C' && o.shift_id === contextShift.id,
-            )}
-            onCreateOverride={(constraintId, reason) =>
-              handleCreateCOverride(contextShift.id, constraintId, reason)
-            }
-            onDeleteOverride={handleDeleteOverride}
-          />
-        )}
+        <ContextPanel
+          shift={contextShift ?? undefined}
+          onClose={contextShift ? () => setContextShift(null) : undefined}
+          tarifWarnings={contextShift ? tarifWarningsByShift[contextShift.id] : undefined}
+          shiftOverrides={contextShift
+            ? constraintOverrides.filter((o) => o.level === 'C' && o.shift_id === contextShift.id)
+            : []}
+          onCreateOverride={contextShift
+            ? (constraintId, reason) => handleCreateCOverride(contextShift.id, constraintId, reason)
+            : undefined}
+          onDeleteOverride={handleDeleteOverride}
+          selectedDoctorId={selectedDoctorId}
+          doctors={doctors}
+          shifts={shifts}
+          shiftTypes={shiftTypes}
+          wishes={wishes}
+          planMonth={planMonth}
+        />
       </div>
 
       {activeCell && (
