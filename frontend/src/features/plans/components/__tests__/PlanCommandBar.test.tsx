@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { vi } from 'vitest'
+import { vi, test, expect } from 'vitest'
 import { PlanCommandBar } from '../PlanCommandBar'
 
 vi.mock('@/features/command-palette/useCommandPalette', () => ({

@@ -24,7 +24,7 @@ const avatarTopModifier: Modifier = ({ activatorEvent, draggingNodeRect, transfo
   const offsetY = activatorEvent.clientY - draggingNodeRect.top
   return { ...transform, x: transform.x + offsetX - 14, y: transform.y + offsetY }
 }
-import { FileDown, Trash2, ChevronDown, ChevronLeft, ChevronRight, Zap, Settings, MoonStar, Star, BarChart2 } from 'lucide-react'
+import { Trash2, ChevronDown, Zap, Settings, MoonStar, Star, BarChart2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -43,8 +43,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { CommandBar } from '@/components/dp/CommandBar'
-import { KpiBar } from '@/components/dp/KpiBar'
+import { PlanCommandBar } from './components/PlanCommandBar'
+import { PlanKpiBar } from './components/PlanKpiBar'
+import { useCommandPalette } from '@/features/command-palette/useCommandPalette'
 import { usePlan, usePlans } from './usePlans'
 import { planToSlug } from './planSlug'
 import { usePlanShifts } from './usePlanShifts'
@@ -391,9 +392,16 @@ export function PlanPage() {
     return () => clearTimeout(t)
   }, [searchParams, scrollToFirstMatch, setSearchParams])
 
-  const planTitle = plan
-    ? format(new Date(plan.valid_from), 'MMMM yyyy', { locale: de })
-    : '…'
+  const { open: openCommandPalette } = useCommandPalette()
+
+  const planMonth = plan ? format(parseISO(plan.valid_from), 'MMMM', { locale: de }) : ''
+  const planYearLabel = plan ? format(parseISO(plan.valid_from), 'yyyy') : ''
+  const kwRange = useMemo(() => {
+    if (!plan) return ''
+    const kwFrom = format(parseISO(plan.valid_from), 'I', { locale: de })
+    const kwTo = format(parseISO(plan.valid_to), 'I', { locale: de })
+    return kwFrom === kwTo ? kwFrom : `${kwFrom}–${kwTo}`
+  }, [plan])
 
   const sortedPlans = useMemo(
     () => [...allPlans].sort((a, b) => a.valid_from.localeCompare(b.valid_from)),
@@ -408,23 +416,6 @@ export function PlanPage() {
 
   const openCount = conflicts?.open_shift_count ?? 0
   const conflictCount = conflicts?.conflict_count ?? 0
-
-  const kpiTiles = [
-    { label: 'Ärzte', value: doctors.length },
-    { label: 'Schichten', value: shifts.length },
-    {
-      label: 'Offen',
-      value: openCount,
-      tone: openCount > 0 ? ('warn' as const) : ('default' as const),
-      onClick: openCount > 0 ? () => scrollToFirstMatch('open') : undefined,
-    },
-    {
-      label: 'Konflikte',
-      value: conflictCount,
-      tone: conflictCount > 0 ? ('warn' as const) : ('default' as const),
-      onClick: conflictCount > 0 ? () => scrollToFirstMatch('conflict') : undefined,
-    },
-  ]
 
   function handleCellClick(
     rotationId: number,
@@ -752,124 +743,89 @@ export function PlanPage() {
       }}
     >
     <div className="flex flex-col flex-1 overflow-hidden">
-      <CommandBar
-        title={planTitle}
-        titleNode={
-          <span className="inline-flex items-center gap-0.5">
-            <button
-              type="button"
-              onClick={() => prevPlan && navigate(`/plans/${planToSlug(prevPlan)}`)}
-              disabled={!prevPlan}
-              title={prevPlan ? format(new Date(prevPlan.valid_from), 'MMMM yyyy', { locale: de }) : undefined}
-              className="p-0.5 rounded text-ink-3 hover:text-ink hover:bg-line disabled:opacity-20 transition"
-              aria-label="Vorheriger Plan"
-            >
-              <ChevronLeft className="size-4" />
-            </button>
-            <span>{planTitle}</span>
-            <button
-              type="button"
-              onClick={() => nextPlan && navigate(`/plans/${planToSlug(nextPlan)}`)}
-              disabled={!nextPlan}
-              title={nextPlan ? format(new Date(nextPlan.valid_from), 'MMMM yyyy', { locale: de }) : undefined}
-              className="p-0.5 rounded text-ink-3 hover:text-ink hover:bg-line disabled:opacity-20 transition"
-              aria-label="Nächster Plan"
-            >
-              <ChevronRight className="size-4" />
-            </button>
-          </span>
-        }
-        breadcrumb={[{ label: 'Pläne', href: '/plans' }]}
-        primaryAction={
-          !isNaN(id)
-            ? {
-                label: 'Exportieren',
-                icon: FileDown,
-                onClick: () => window.location.assign(`/api/plans/${id}/export`),
-              }
-            : undefined
-        }
-        extras={plan ? (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSettingsOpen(true)}
-            >
-              <Settings size={14} className="mr-1.5" />
-              Einstellungen
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setLockedWeekDialogOpen(true)}
-              className="shrink-0"
-            >
-              <MoonStar className="size-4 mr-1.5" />
-              Nachtwoche
-            </Button>
-            {solverEnabled && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSolve}
-                disabled={solvePlan.isPending || isNaN(id)}
-              >
-                <Zap className="size-3.5 mr-1.5" />
-                {solvePlan.isPending ? 'Berechne…' : 'Plan generieren'}
-              </Button>
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={updatePlan.isPending}
-                  className="min-w-[110px] gap-1.5"
-                >
-                  <span className={cn(
-                    'size-1.5 rounded-full shrink-0',
-                    plan.status === 'RELEASED' ? 'bg-green-500'
-                    : plan.status === 'ARCHIVED' ? 'bg-amber-400'
-                    : 'bg-gray-400'
-                  )} />
-                  {statusLabel}
-                  <ChevronDown className="size-3.5 ml-auto" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {plan.status !== 'RELEASED' && (
-                  <DropdownMenuItem onClick={() => handleStatusChange('RELEASED')}>
-                    Freigeben
-                  </DropdownMenuItem>
-                )}
-                {plan.status !== 'ARCHIVED' && (
-                  <DropdownMenuItem onClick={() => handleStatusChange('ARCHIVED')}>
-                    Archivieren
-                  </DropdownMenuItem>
-                )}
-                {plan.status !== 'DRAFT' && (
-                  <DropdownMenuItem onClick={() => handleStatusChange('DRAFT')}>
-                    Zurück zu Entwurf
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowDeleteDialog(true)}
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-              aria-label="Plan löschen"
-            >
-              <Trash2 className="size-4" />
-            </Button>
-          </div>
-        ) : undefined}
+      <PlanCommandBar
+        planMonth={planMonth}
+        planYear={planYearLabel}
+        kwRange={kwRange}
+        rotationCount={rotations.length}
+        conflictCount={conflictCount}
+        prevPlan={prevPlan}
+        nextPlan={nextPlan}
+        solverEnabled={solverEnabled}
+        isSolving={solvePlan.isPending}
+        onNavigatePrev={() => prevPlan && navigate(`/plans/${planToSlug(prevPlan)}`)}
+        onNavigateNext={() => nextPlan && navigate(`/plans/${planToSlug(nextPlan)}`)}
+        onSolve={handleSolve}
+        onExport={() => !isNaN(id) && window.location.assign(`/api/plans/${id}/export`)}
+        onScrollToConflict={() => scrollToFirstMatch('conflict')}
+        onOpenCommandPalette={openCommandPalette}
       />
-      <div className="px-6 py-3">
-        <KpiBar tiles={kpiTiles} />
-      </div>
+      {plan && (
+        <div className="flex items-center gap-2 px-6 py-1.5 border-b border-line bg-paper shrink-0">
+          <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
+            <Settings size={14} className="mr-1.5" />
+            Einstellungen
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setLockedWeekDialogOpen(true)} className="shrink-0">
+            <MoonStar className="size-4 mr-1.5" />
+            Nachtwoche
+          </Button>
+          {solverEnabled && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSolve}
+              disabled={solvePlan.isPending || isNaN(id)}
+            >
+              <Zap className="size-3.5 mr-1.5" />
+              {solvePlan.isPending ? 'Berechne…' : 'Solver'}
+            </Button>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" disabled={updatePlan.isPending} className="min-w-[110px] gap-1.5">
+                <span className={cn(
+                  'size-1.5 rounded-full shrink-0',
+                  plan.status === 'RELEASED' ? 'bg-green-500'
+                  : plan.status === 'ARCHIVED' ? 'bg-amber-400'
+                  : 'bg-gray-400'
+                )} />
+                {statusLabel}
+                <ChevronDown className="size-3.5 ml-auto" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {plan.status !== 'RELEASED' && (
+                <DropdownMenuItem onClick={() => handleStatusChange('RELEASED')}>Freigeben</DropdownMenuItem>
+              )}
+              {plan.status !== 'ARCHIVED' && (
+                <DropdownMenuItem onClick={() => handleStatusChange('ARCHIVED')}>Archivieren</DropdownMenuItem>
+              )}
+              {plan.status !== 'DRAFT' && (
+                <DropdownMenuItem onClick={() => handleStatusChange('DRAFT')}>Zurück zu Entwurf</DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowDeleteDialog(true)}
+            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+            aria-label="Plan löschen"
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+      )}
+      {plan && (
+        <PlanKpiBar
+          shifts={shifts}
+          planFrom={plan.valid_from}
+          planTo={plan.valid_to}
+          openCount={openCount}
+          conflictCount={conflictCount}
+        />
+      )}
 
       {/* DnD-Bars: Dienste + Abwesenheiten */}
       <div className="px-6 pb-2 flex items-stretch gap-3">
