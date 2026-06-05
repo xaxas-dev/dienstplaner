@@ -295,8 +295,8 @@ export function UnifiedPlanGrid({
         }}
       >
         {/* Kopfzeile */}
-        <div className="sticky top-0 left-0 z-20 bg-card border-b border-r border-line px-2 py-1 flex items-end">
-          <span className="text-[10px] text-muted-foreground">Bereich / Arzt</span>
+        <div className="sticky top-0 left-0 z-20 bg-[#FAF5E9] border-b border-r border-line px-3 py-2.5 flex items-end">
+          <span className="text-[11px] text-ink-3 uppercase tracking-[0.06em] font-medium">Arzt</span>
         </div>
         {days.map((day, i) => {
           const we = isWeekend(day)
@@ -307,13 +307,19 @@ export function UnifiedPlanGrid({
               key={dk}
               onMouseEnter={() => { setHoverDay(dk); setHoverRow(null) }}
               className={cn(
-                'sticky top-0 z-10 border-b border-r border-line text-center py-1 px-0.5 transition-colors',
-                we ? 'text-muted-foreground' : 'text-ink',
-                tod ? 'bg-accent/10 font-bold' : effectiveHoverDay === dk ? 'bg-paper/80' : 'bg-card',
+                'sticky top-0 z-10 border-b border-r border-line text-center py-[7px] px-0.5 transition-colors',
+                tod ? 'bg-warn-bg' : we ? 'bg-weekend' : effectiveHoverDay === dk ? 'bg-paper/80' : 'bg-[#FAF5E9]',
               )}
             >
-              <div className="text-[9px] leading-none">{WEEKDAY_ABBR[day.getDay() === 0 ? 6 : day.getDay() - 1]}</div>
-              <div className="text-[11px] leading-none mt-0.5">{day.getDate()}</div>
+              <div className="text-[10px] leading-none text-ink-3">
+                {WEEKDAY_ABBR[day.getDay() === 0 ? 6 : day.getDay() - 1]}
+              </div>
+              <div className={cn(
+                'font-serif text-[16px] leading-[1.1] tabular-nums mt-0.5',
+                tod ? 'text-warn-ink' : 'text-ink',
+              )}>
+                {day.getDate()}
+              </div>
               {holidayDates?.has(dk) && (
                 <span className="block text-[9px] font-medium leading-none mt-0.5 text-orange-500">
                   FT
