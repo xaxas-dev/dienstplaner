@@ -41,6 +41,8 @@ const base = {
   solverEnabled: false,
   isSolving: false,
   onSolve: vi.fn(),
+  onNachtwocheClick: vi.fn(),
+  onSettingsClick: vi.fn(),
 }
 
 beforeEach(() => vi.clearAllMocks())
@@ -67,41 +69,83 @@ describe('Segmented Switch', () => {
   })
 })
 
-describe('CTA Besetzungs-Modus', () => {
-  test('zeigt "Weiter zu INA planen"', () => {
+describe('Redundante CTA-Buttons entfernt', () => {
+  test('kein "Weiter zu INA planen" Button', () => {
     render(<PlanModeBar {...base} mode="besetzung" />)
-    expect(screen.getByText('Weiter zu INA planen')).toBeInTheDocument()
+    expect(screen.queryByText('Weiter zu INA planen')).not.toBeInTheDocument()
   })
 
-  test('Klick auf CTA ruft onModeChange("ina") auf', async () => {
-    const user = userEvent.setup()
-    render(<PlanModeBar {...base} mode="besetzung" />)
-    await user.click(screen.getByText('Weiter zu INA planen'))
-    expect(base.onModeChange).toHaveBeenCalledWith('ina')
+  test('kein "Besetzung" Zurück-Button', () => {
+    render(<PlanModeBar {...base} mode="ina" />)
+    const backBtn = screen.queryByRole('button', { name: /^Besetzung$/ })
+    expect(backBtn).not.toBeInTheDocument()
   })
 })
 
-describe('CTA INA-Modus', () => {
-  test('zeigt Zurück-Button', () => {
-    render(<PlanModeBar {...base} mode="ina" />)
-    expect(screen.getByText('Besetzung')).toBeInTheDocument()
+describe('Nachtwoche-Button', () => {
+  test('sichtbar im Besetzungs-Modus', () => {
+    render(<PlanModeBar {...base} mode="besetzung" />)
+    expect(screen.getByText('Nachtwoche')).toBeInTheDocument()
   })
 
-  test('zeigt keinen Solver-CTA wenn solverEnabled false', () => {
-    render(<PlanModeBar {...base} mode="ina" solverEnabled={false} />)
+  test('nicht sichtbar im INA-Modus', () => {
+    render(<PlanModeBar {...base} mode="ina" />)
+    expect(screen.queryByText('Nachtwoche')).not.toBeInTheDocument()
+  })
+
+  test('Klick ruft onNachtwocheClick auf', async () => {
+    const user = userEvent.setup()
+    render(<PlanModeBar {...base} mode="besetzung" />)
+    await user.click(screen.getByText('Nachtwoche'))
+    expect(base.onNachtwocheClick).toHaveBeenCalledOnce()
+  })
+})
+
+describe('Plan-Einstellungen Button', () => {
+  test('Settings-Icon vorhanden', () => {
+    render(<PlanModeBar {...base} />)
+    expect(screen.getByLabelText('Plan-Einstellungen')).toBeInTheDocument()
+  })
+
+  test('Settings-Icon im INA-Modus vorhanden', () => {
+    render(<PlanModeBar {...base} mode="ina" />)
+    expect(screen.getByLabelText('Plan-Einstellungen')).toBeInTheDocument()
+  })
+
+  test('Klick ruft onSettingsClick auf', async () => {
+    const user = userEvent.setup()
+    render(<PlanModeBar {...base} />)
+    await user.click(screen.getByLabelText('Plan-Einstellungen'))
+    expect(base.onSettingsClick).toHaveBeenCalledOnce()
+  })
+})
+
+describe('Plan generieren — beide Modi', () => {
+  test('nicht sichtbar wenn solverEnabled false', () => {
+    render(<PlanModeBar {...base} mode="besetzung" solverEnabled={false} />)
     expect(screen.queryByText('Plan generieren')).not.toBeInTheDocument()
   })
 
-  test('zeigt Solver-CTA wenn solverEnabled true', () => {
+  test('sichtbar im Besetzungs-Modus wenn solverEnabled', () => {
+    render(<PlanModeBar {...base} mode="besetzung" solverEnabled={true} />)
+    expect(screen.getByText('Plan generieren')).toBeInTheDocument()
+  })
+
+  test('sichtbar im INA-Modus wenn solverEnabled', () => {
     render(<PlanModeBar {...base} mode="ina" solverEnabled={true} />)
     expect(screen.getByText('Plan generieren')).toBeInTheDocument()
   })
 
-  test('Solver-CTA ruft onSolve auf', async () => {
+  test('Klick ruft onSolve auf', async () => {
     const user = userEvent.setup()
-    render(<PlanModeBar {...base} mode="ina" solverEnabled={true} />)
+    render(<PlanModeBar {...base} mode="besetzung" solverEnabled={true} />)
     await user.click(screen.getByText('Plan generieren'))
     expect(base.onSolve).toHaveBeenCalledOnce()
+  })
+
+  test('disabled während isSolving', () => {
+    render(<PlanModeBar {...base} mode="besetzung" solverEnabled={true} isSolving={true} />)
+    expect(screen.getByRole('button', { name: /Berechne/ })).toBeDisabled()
   })
 })
 
@@ -124,28 +168,12 @@ describe('Draggable Chips', () => {
     expect(screen.getByText('K')).toBeInTheDocument()
     expect(screen.getByText('DIV')).toBeInTheDocument()
   })
-
-  test('keine Wünsche/Fairness-Buttons in PlanModeBar', () => {
-    render(<PlanModeBar {...base} mode="ina" />)
-    expect(screen.queryByText('Wünsche')).not.toBeInTheDocument()
-    expect(screen.queryByText('Fairness')).not.toBeInTheDocument()
-  })
-
-  test('kein Konflikte-Badge in PlanModeBar', () => {
-    render(<PlanModeBar {...base} />)
-    expect(screen.queryByText(/Konflikte/)).not.toBeInTheDocument()
-  })
 })
 
 describe('Fokus-Filter', () => {
   test('"Alle"-Button sichtbar wenn filter_group vorhanden', () => {
     render(<PlanModeBar {...base} />)
     expect(screen.getByText('Alle')).toBeInTheDocument()
-  })
-
-  test('Gruppen-Buttons aus ShiftType.filter_group', () => {
-    render(<PlanModeBar {...base} />)
-    expect(screen.getByText('INA')).toBeInTheDocument()
   })
 
   test('Klick Alle → onFilterGroupClear', async () => {

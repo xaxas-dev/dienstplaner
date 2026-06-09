@@ -776,6 +776,8 @@ export function PlanPage() {
           solverEnabled={solverEnabled}
           isSolving={solvePlan.isPending}
           onSolve={handleSolve}
+          onNachtwocheClick={() => {}}
+          onSettingsClick={() => {}}
         />
       )}
       {/* Mehrfach-Auswahl-Indikator */}
