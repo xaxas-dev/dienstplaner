@@ -35,7 +35,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { PlanCommandBar } from './components/PlanCommandBar'
-import { PlanKpiBar } from './components/PlanKpiBar'
 import { PlanModeBar } from './components/PlanModeBar'
 import { useCommandPalette } from '@/features/command-palette/useCommandPalette'
 import { usePlan, usePlans } from './usePlans'
@@ -65,18 +64,17 @@ import { useDoctors } from '@/features/doctors/useDoctors'
 import { useDepartments } from '@/features/departments/useDepartments'
 import { useShiftTypes } from '@/features/shift-types/useShiftTypes'
 import { UnifiedPlanGrid } from './components/UnifiedPlanGrid'
-import { ShiftTypeDragBar, parseShiftTypeDragId } from './components/ShiftTypeDragBar'
-import { ContextPanel } from './components/ContextPanel'
+import { parseShiftTypeDragId, parseAbsenceDragId } from './components/PlanModeBar'
+import { PlanSidebar } from './components/PlanSidebar'
+import type { SidebarTab } from './components/PlanSidebar'
 import { DoctorAssignPopover } from './components/DoctorAssignPopover'
 import { ShiftBlockPopover } from './components/ShiftBlockPopover'
-import { AbsenceTypeDragBar, parseAbsenceDragId } from './components/AbsenceTypeDragBar'
 import { AbsenceAssignPopover } from './components/AbsenceAssignPopover'
 import { useDeleteAbsence } from './useDeleteAbsence'
 import type { AbsenceType } from '@/lib/types'
 import { DoctorDragSource, DoctorDragOverlayToken, parseDoctorDragId } from './components/DoctorDragSource'
 import { RotationAssignPopover } from './components/RotationAssignPopover'
 import { WishFormDialog } from '@/features/doctors/WishFormDialog'
-import { FairnessSidebar } from './components/FairnessSidebar'
 import { buildFairnessStats } from './fairnessUtils'
 import { parseBereichHeaderDropId, parsePlaceholderDropId, parseRotationMemberDropId } from './components/BereichHeaderRow'
 import { useAppSettings } from '@/stores/useAppSettings'
@@ -157,7 +155,7 @@ export function PlanPage() {
     to: string
   } | null>(null)
   const [showWishes, setShowWishes] = useState(true)
-  const [showFairness, setShowFairness] = useState(false)
+  const [sidebarTab, setSidebarTab] = useState<SidebarTab>('details')
   const [mode, setMode] = useState<'besetzung' | 'ina'>('besetzung')
   const [wishCreateTarget, setWishCreateTarget] = useState<{ doctorId: number; date: string } | null>(null)
 
@@ -370,6 +368,18 @@ export function PlanPage() {
     }, 2000)
   }, [conflicts])
 
+  const scrollToShift = useCallback((shiftId: number) => {
+    const el = document.querySelector(`[data-shift-id="${shiftId}"]`)
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el.classList.add('dp-highlight-pulse')
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current)
+    highlightTimerRef.current = setTimeout(() => {
+      el.classList.remove('dp-highlight-pulse')
+      highlightTimerRef.current = null
+    }, 2000)
+  }, [])
+
   useEffect(() => {
     const highlight = searchParams.get('highlight')
     if (!highlight) return
@@ -380,6 +390,13 @@ export function PlanPage() {
     }, 200)
     return () => clearTimeout(t)
   }, [searchParams, scrollToFirstMatch, setSearchParams])
+
+  useEffect(() => {
+    const validBesetzung: SidebarTab[] = ['details', 'konflikte']
+    if (mode === 'besetzung' && !validBesetzung.includes(sidebarTab)) {
+      setSidebarTab('details')
+    }
+  }, [mode])
 
   const { open: openCommandPalette } = useCommandPalette()
 
@@ -755,43 +772,15 @@ export function PlanPage() {
         <PlanModeBar
           mode={mode}
           onModeChange={setMode}
-          conflictCount={conflictCount}
-          onScrollToConflict={() => scrollToFirstMatch('conflict')}
           shiftTypes={shiftTypes}
           activeFilterGroups={activeFilterGroups}
           onFilterGroupToggle={toggleFilterGroup}
           onFilterGroupClear={clearFilterGroups}
-          showWishes={showWishes}
-          onToggleWishes={() => setShowWishes((v) => !v)}
-          wishCount={wishes.length}
-          showFairness={showFairness}
-          onToggleFairness={() => setShowFairness((v) => !v)}
           solverEnabled={solverEnabled}
           isSolving={solvePlan.isPending}
           onSolve={handleSolve}
         />
       )}
-      {plan && (
-        <PlanKpiBar
-          shifts={shifts}
-          planFrom={plan.valid_from}
-          planTo={plan.valid_to}
-          openCount={openCount}
-          conflictCount={conflictCount}
-        />
-      )}
-
-      {/* DnD-Bars: unterhalb KpiBar, volle Breite */}
-      <div className="px-6 pt-2 pb-1 flex flex-col gap-1.5 shrink-0">
-        <ShiftTypeDragBar
-          shiftTypes={shiftTypes}
-          activeFilterGroups={activeFilterGroups}
-          onFilterGroupToggle={toggleFilterGroup}
-          onFilterGroupClear={clearFilterGroups}
-        />
-        <AbsenceTypeDragBar />
-      </div>
-
       {/* Mehrfach-Auswahl-Indikator */}
       {selectedCells.length > 0 && (
         <div className="px-6 pb-2 flex items-center gap-2">
@@ -814,13 +803,15 @@ export function PlanPage() {
       )}
 
       <div className="flex flex-1 overflow-hidden gap-4 px-6 pb-6">
-        <DoctorDragSource
-          doctors={doctors}
-          rotationDoctorIds={assignedDoctorIds}
-          highlightedDoctorId={highlightedDoctorId}
-          onHighlightDoctor={setHighlightedDoctorId}
-          locked={plan?.besetzung_locked ?? false}
-        />
+        {mode === 'besetzung' && (
+          <DoctorDragSource
+            doctors={doctors}
+            rotationDoctorIds={assignedDoctorIds}
+            highlightedDoctorId={highlightedDoctorId}
+            onHighlightDoctor={setHighlightedDoctorId}
+            locked={plan?.besetzung_locked ?? false}
+          />
+        )}
         <div className="flex flex-1 min-w-0 overflow-hidden">
           {plan && (
             <UnifiedPlanGrid
@@ -873,31 +864,44 @@ export function PlanPage() {
             />
           )}
         </div>
-        {showFairness && (
-          <FairnessSidebar
-            stats={fairnessStats}
-            groups={fairnessGroups}
-            onClose={() => setShowFairness(false)}
+        {plan && (
+          <PlanSidebar
+            shifts={shifts}
+            planFrom={plan.valid_from}
+            planTo={plan.valid_to}
+            openCount={openCount}
+            conflictCount={conflictCount}
+            onConflictBadgeClick={() => setSidebarTab('konflikte')}
+            mode={mode}
+            activeTab={sidebarTab}
+            onTabChange={setSidebarTab}
+            shift={contextShift ?? undefined}
+            onCloseShift={contextShift ? () => setContextShift(null) : undefined}
+            tarifWarnings={contextShift ? tarifWarningsByShift[contextShift.id] : undefined}
+            shiftOverrides={
+              contextShift
+                ? constraintOverrides.filter((o) => o.level === 'C' && o.shift_id === contextShift.id)
+                : []
+            }
+            onCreateOverride={
+              contextShift
+                ? (constraintId, reason) => handleCreateCOverride(contextShift.id, constraintId, reason)
+                : undefined
+            }
+            onDeleteOverride={handleDeleteOverride}
+            selectedDoctorId={selectedDoctorId}
+            doctors={doctors}
+            shiftTypes={shiftTypes}
+            wishes={wishes}
+            planMonth={planMonth}
+            showWishes={showWishes}
+            onToggleWishes={() => setShowWishes((v) => !v)}
+            fairnessStats={fairnessStats}
+            fairnessGroups={fairnessGroups}
+            conflicts={conflicts ?? null}
+            onScrollToShift={scrollToShift}
           />
         )}
-        <ContextPanel
-          shift={contextShift ?? undefined}
-          onClose={contextShift ? () => setContextShift(null) : undefined}
-          tarifWarnings={contextShift ? tarifWarningsByShift[contextShift.id] : undefined}
-          shiftOverrides={contextShift
-            ? constraintOverrides.filter((o) => o.level === 'C' && o.shift_id === contextShift.id)
-            : []}
-          onCreateOverride={contextShift
-            ? (constraintId, reason) => handleCreateCOverride(contextShift.id, constraintId, reason)
-            : undefined}
-          onDeleteOverride={handleDeleteOverride}
-          selectedDoctorId={selectedDoctorId}
-          doctors={doctors}
-          shifts={shifts}
-          shiftTypes={shiftTypes}
-          wishes={wishes}
-          planMonth={planMonth}
-        />
       </div>
 
       {activeCell && (
