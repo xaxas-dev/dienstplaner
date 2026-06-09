@@ -1,55 +1,49 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { vi, test, expect, describe } from 'vitest'
-import { PlanModeBar } from '../PlanModeBar'
+import { vi, test, expect, describe, beforeEach } from 'vitest'
+import { PlanModeBar, makeShiftTypeDragId, parseShiftTypeDragId, makeAbsenceDragId, parseAbsenceDragId } from '../PlanModeBar'
+
+vi.mock('@dnd-kit/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@dnd-kit/core')>()
+  return {
+    ...actual,
+    useDraggable: () => ({
+      attributes: { role: 'button', 'aria-roledescription': 'draggable' },
+      listeners: {},
+      setNodeRef: vi.fn(),
+      isDragging: false,
+    }),
+  }
+})
 
 const mockShiftTypes = [
   {
-    id: 1,
-    name: 'Vortagsdienst',
-    short_name: 'V',
-    display_order: 0,
-    active: true,
-    applies_on_weekdays: true,
-    applies_on_weekend: false,
-    is_bereitschaftsdienst: false,
-    filter_group: 'INA',
-    created_at: '2026-01-01T00:00:00',
-    updated_at: '2026-01-01T00:00:00',
+    id: 1, name: 'Vortagsdienst', short_name: 'V', display_order: 0,
+    active: true, applies_on_weekdays: true, applies_on_weekend: false,
+    is_bereitschaftsdienst: false, filter_group: 'INA',
+    created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00',
   },
   {
-    id: 2,
-    name: 'Nachtdienst',
-    short_name: 'N',
-    display_order: 1,
-    active: true,
-    applies_on_weekdays: true,
-    applies_on_weekend: true,
-    is_bereitschaftsdienst: false,
-    filter_group: 'INA',
-    created_at: '2026-01-01T00:00:00',
-    updated_at: '2026-01-01T00:00:00',
+    id: 2, name: 'Nachtdienst', short_name: 'N', display_order: 1,
+    active: true, applies_on_weekdays: true, applies_on_weekend: true,
+    is_bereitschaftsdienst: false, filter_group: 'INA',
+    created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00',
   },
 ]
 
 const base = {
   mode: 'besetzung' as const,
   onModeChange: vi.fn(),
-  conflictCount: 0,
-  onScrollToConflict: vi.fn(),
   shiftTypes: mockShiftTypes,
   activeFilterGroups: new Set<string>(),
   onFilterGroupToggle: vi.fn(),
   onFilterGroupClear: vi.fn(),
-  showWishes: false,
-  onToggleWishes: vi.fn(),
-  wishCount: 0,
-  showFairness: false,
-  onToggleFairness: vi.fn(),
   solverEnabled: false,
   isSolving: false,
   onSolve: vi.fn(),
 }
+
+beforeEach(() => vi.clearAllMocks())
 
 describe('Segmented Switch', () => {
   test('rendert beide Segmente', () => {
@@ -111,37 +105,78 @@ describe('CTA INA-Modus', () => {
   })
 })
 
-describe('INA-Modus Toggles', () => {
-  test('Wünsche-Toggle klickbar → onToggleWishes aufgerufen', async () => {
-    const user = userEvent.setup()
-    render(<PlanModeBar {...base} mode="ina" />)
-    await user.click(screen.getByText('Wünsche'))
-    expect(base.onToggleWishes).toHaveBeenCalledOnce()
+describe('Draggable Chips', () => {
+  test('ShiftType-Chips werden gerendert (beide Modi)', () => {
+    render(<PlanModeBar {...base} mode="besetzung" />)
+    expect(screen.getByText('V')).toBeInTheDocument()
+    expect(screen.getByText('N')).toBeInTheDocument()
   })
 
-  test('Fairness-Toggle klickbar → onToggleFairness aufgerufen', async () => {
-    const user = userEvent.setup()
+  test('ShiftType-Chips auch im INA-Modus sichtbar', () => {
     render(<PlanModeBar {...base} mode="ina" />)
-    await user.click(screen.getByText('Fairness'))
-    expect(base.onToggleFairness).toHaveBeenCalledOnce()
+    expect(screen.getByText('V')).toBeInTheDocument()
+    expect(screen.getByText('N')).toBeInTheDocument()
+  })
+
+  test('Abwesenheits-Chips werden gerendert', () => {
+    render(<PlanModeBar {...base} />)
+    expect(screen.getByText('U')).toBeInTheDocument()
+    expect(screen.getByText('K')).toBeInTheDocument()
+    expect(screen.getByText('DIV')).toBeInTheDocument()
+  })
+
+  test('keine Wünsche/Fairness-Buttons in PlanModeBar', () => {
+    render(<PlanModeBar {...base} mode="ina" />)
+    expect(screen.queryByText('Wünsche')).not.toBeInTheDocument()
+    expect(screen.queryByText('Fairness')).not.toBeInTheDocument()
+  })
+
+  test('kein Konflikte-Badge in PlanModeBar', () => {
+    render(<PlanModeBar {...base} />)
+    expect(screen.queryByText(/Konflikte/)).not.toBeInTheDocument()
   })
 })
 
-describe('Konflikte-Badge', () => {
-  test('bei conflictCount > 0 sichtbar', () => {
-    render(<PlanModeBar {...base} conflictCount={3} />)
-    expect(screen.getByText('3 Konflikte')).toBeInTheDocument()
+describe('Fokus-Filter', () => {
+  test('"Alle"-Button sichtbar wenn filter_group vorhanden', () => {
+    render(<PlanModeBar {...base} />)
+    expect(screen.getByText('Alle')).toBeInTheDocument()
   })
 
-  test('bei conflictCount = 0 nicht sichtbar', () => {
-    render(<PlanModeBar {...base} conflictCount={0} />)
-    expect(screen.queryByText(/Konflikte/)).not.toBeInTheDocument()
+  test('Gruppen-Buttons aus ShiftType.filter_group', () => {
+    render(<PlanModeBar {...base} />)
+    expect(screen.getByText('INA')).toBeInTheDocument()
   })
 
-  test('Klick auf Badge ruft onScrollToConflict auf', async () => {
+  test('Klick Alle → onFilterGroupClear', async () => {
     const user = userEvent.setup()
-    render(<PlanModeBar {...base} conflictCount={2} />)
-    await user.click(screen.getByText('2 Konflikte'))
-    expect(base.onScrollToConflict).toHaveBeenCalledOnce()
+    render(<PlanModeBar {...base} />)
+    await user.click(screen.getByText('Alle'))
+    expect(base.onFilterGroupClear).toHaveBeenCalledOnce()
+  })
+
+  test('Klick Gruppe → onFilterGroupToggle("INA")', async () => {
+    const user = userEvent.setup()
+    render(<PlanModeBar {...base} />)
+    await user.click(screen.getByText('INA'))
+    expect(base.onFilterGroupToggle).toHaveBeenCalledWith('INA')
+  })
+})
+
+describe('Helper-Funktionen', () => {
+  test('makeShiftTypeDragId/parseShiftTypeDragId round-trip', () => {
+    expect(parseShiftTypeDragId(makeShiftTypeDragId(42))).toBe(42)
+  })
+
+  test('parseShiftTypeDragId liefert null für fremde ID', () => {
+    expect(parseShiftTypeDragId('absence-URLAUB')).toBeNull()
+  })
+
+  test('makeAbsenceDragId/parseAbsenceDragId round-trip', () => {
+    expect(parseAbsenceDragId(makeAbsenceDragId('URLAUB'))).toBe('URLAUB')
+  })
+
+  test('parseAbsenceDragId liefert null für fremde ID', () => {
+    expect(parseAbsenceDragId('shift-1')).toBeNull()
   })
 })
