@@ -32,9 +32,10 @@ export function parseRotationMemberDropId(id: string): number | null {
 interface BereichHeaderRowProps {
   department: Department
   rotationCount?: number
+  onDepartmentClick?: (departmentId: number) => void
 }
 
-export function BereichHeaderRow({ department, rotationCount }: BereichHeaderRowProps) {
+export function BereichHeaderRow({ department, rotationCount, onDepartmentClick }: BereichHeaderRowProps) {
   const color = getDepartmentColor(department)
   const { setNodeRef, isOver } = useDroppable({
     id: makeBereichHeaderDropId(department.id),
@@ -49,9 +50,11 @@ export function BereichHeaderRow({ department, rotationCount }: BereichHeaderRow
       <div
         ref={setNodeRef}
         className="sticky left-0 z-10 flex items-center gap-2 px-3 py-1.5 border-b border-line"
+        onClick={() => onDepartmentClick?.(department.id)}
         style={{
           borderLeft: `4px solid ${color}`,
           backgroundColor: bg,
+          cursor: onDepartmentClick ? 'pointer' : undefined,
         }}
       >
         <span className="text-xs font-semibold text-ink truncate leading-none flex-1">
