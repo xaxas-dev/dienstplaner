@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { eachDayOfInterval, format, parseISO } from 'date-fns'
 import { Star, ShieldCheck, ShieldOff, Plus } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -91,6 +91,19 @@ export function PlanSidebar({
   const [pendingReason, setPendingReason] = useState<Record<string, string>>({})
   const [wishPickerOpen, setWishPickerOpen] = useState(false)
   const [wishPickerDoctorId, setWishPickerDoctorId] = useState<string>('')
+  const wishPickerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!wishPickerOpen) return
+    function handleOutside(e: MouseEvent) {
+      if (wishPickerRef.current && !wishPickerRef.current.contains(e.target as Node)) {
+        setWishPickerOpen(false)
+        setWishPickerDoctorId('')
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [wishPickerOpen])
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
@@ -550,12 +563,16 @@ export function PlanSidebar({
           <div className="p-4 space-y-4">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] text-ink-3 uppercase tracking-[0.08em] font-medium">Wünsche im Plan</span>
-              <div className="relative">
+              <div className="relative" ref={wishPickerRef}>
                 <button
                   type="button"
                   onClick={() => {
-                    setWishPickerOpen((o) => !o)
-                    if (wishPickerOpen) setWishPickerDoctorId('')
+                    if (wishPickerOpen) {
+                      setWishPickerOpen(false)
+                      setWishPickerDoctorId('')
+                    } else {
+                      setWishPickerOpen(true)
+                    }
                   }}
                   className="inline-flex items-center gap-1 text-[11px] text-ink-2 border border-line rounded-lg px-2 py-1 hover:bg-line/30 transition-colors"
                 >
