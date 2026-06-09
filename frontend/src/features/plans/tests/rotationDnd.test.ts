@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { makeDoctorDragId, parseDoctorDragId } from '../components/DoctorDragSource'
 import { makeBereichHeaderDropId, parseBereichHeaderDropId } from '../components/BereichHeaderRow'
-import { makeShiftTypeDragId, parseShiftTypeDragId } from '../components/ShiftTypeDragBar'
+import { makeShiftTypeDragId, parseShiftTypeDragId } from '../components/PlanModeBar'
 
 describe('makeDoctorDragId / parseDoctorDragId', () => {
   it('roundtrip ergibt ursprüngliche ID', () => {
