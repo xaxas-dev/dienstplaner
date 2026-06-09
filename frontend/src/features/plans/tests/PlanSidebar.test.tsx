@@ -48,6 +48,7 @@ const baseProps = {
   fairnessGroups: [],
   conflicts: null,
   onScrollToShift: vi.fn(),
+  onNewWishClick: vi.fn(),
 }
 
 beforeEach(() => vi.clearAllMocks())
@@ -155,7 +156,94 @@ describe('Fairness Tab (INA)', () => {
     const stats = [{ doctorId: 1, doctorName: 'Müller, Anna', shortName: 'AM', total: 5, byGroup: { INA: 3 } }]
     render(<PlanSidebar {...baseProps} mode="ina" activeTab="fairness"
       fairnessStats={stats} fairnessGroups={['INA']} />)
-    expect(screen.getByText('AM')).toBeInTheDocument()
+    expect(screen.getByText('Müller, Anna')).toBeInTheDocument()
     expect(screen.getByText('5')).toBeInTheDocument()
+  })
+})
+
+describe('Fairness-Tab — volle Namen', () => {
+  const fairnessProps = {
+    ...baseProps,
+    mode: 'ina' as const,
+    activeTab: 'fairness' as const,
+    fairnessStats: [
+      { doctorId: 1, doctorName: 'Dr. Anna Müller', shortName: 'AMü', total: 5, byGroup: { INA: 5 } },
+    ],
+    fairnessGroups: ['INA'],
+  }
+
+  it('zeigt vollen Namen statt Abkürzung', () => {
+    render(<PlanSidebar {...fairnessProps} />)
+    expect(screen.getByText('Dr. Anna Müller')).toBeInTheDocument()
+    expect(screen.queryByText('AMü')).not.toBeInTheDocument()
+  })
+})
+
+describe('Wünsche-Tab — Wunsch erfassen Button', () => {
+  const wuenscheProps = {
+    ...baseProps,
+    mode: 'ina' as const,
+    activeTab: 'wuensche' as const,
+    doctors: [
+      { id: 1, name: 'Dr. Anna Müller', short_name: 'AMü', active: true,
+        doctor_type: 'INTERNAL' as const, is_facharzt: false, weiterbildungsjahr: null,
+        employment_periods: [], qualifications: [], created_at: '', updated_at: '' },
+    ],
+  }
+
+  it('zeigt "Neu"-Button im Wünsche-Tab', () => {
+    render(<PlanSidebar {...wuenscheProps} />)
+    expect(screen.getByText('Neu')).toBeInTheDocument()
+  })
+
+  it('öffnet Arzt-Picker nach Klick auf "Neu"', async () => {
+    const user = userEvent.setup()
+    render(<PlanSidebar {...wuenscheProps} />)
+    await user.click(screen.getByText('Neu'))
+    expect(screen.getByText('Wunsch für Arzt:')).toBeInTheDocument()
+  })
+})
+
+describe('Details-Tab — Department-Details', () => {
+  const dept = {
+    id: 10, name: 'Neurologie', short_name: 'NEU', display_order: 1,
+    color: null, max_headcount: null, blocks_ina_weekdays: false, blocks_ina_weekends: false,
+    is_external: false, is_shift_relevant: true, active: true, requires_full_time: false,
+    created_at: '', updated_at: '',
+  }
+  const rotation = {
+    id: 100, plan_id: 1, doctor_id: 1, department_id: 10,
+    valid_from: '2026-05-01', valid_to: '2026-05-31', is_einarbeitung: false,
+    doctor: null, department: dept, created_at: '', updated_at: '',
+  }
+  const doctor = {
+    id: 1, name: 'Dr. Anna Müller', short_name: 'AMü', active: true,
+    doctor_type: 'INTERNAL' as const, is_facharzt: false, weiterbildungsjahr: null,
+    employment_periods: [{ id: 1, doctor_id: 1, employment_percentage: 75, valid_from: '2026-01-01', valid_to: null, created_at: '', updated_at: '' }],
+    qualifications: [], created_at: '', updated_at: '',
+  }
+
+  const deptProps = {
+    ...baseProps,
+    selectedDepartmentId: 10,
+    departments: [dept],
+    rotations: [rotation],
+    doctors: [doctor],
+    onDepartmentDeselect: vi.fn(),
+  }
+
+  it('zeigt Stationsnamen', () => {
+    render(<PlanSidebar {...deptProps} />)
+    expect(screen.getByText('Neurologie')).toBeInTheDocument()
+  })
+
+  it('zeigt zugewiesenen Arzt', () => {
+    render(<PlanSidebar {...deptProps} />)
+    expect(screen.getByText('Dr. Anna Müller')).toBeInTheDocument()
+  })
+
+  it('zeigt FTE des Arztes', () => {
+    render(<PlanSidebar {...deptProps} />)
+    expect(screen.getByText(/75%/)).toBeInTheDocument()
   })
 })

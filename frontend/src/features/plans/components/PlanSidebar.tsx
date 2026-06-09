@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react'
 import { eachDayOfInterval, format, parseISO } from 'date-fns'
-import { Star, ShieldCheck, ShieldOff } from 'lucide-react'
+import { Star, ShieldCheck, ShieldOff, Plus } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ConflictCard } from './ConflictCard'
 import { REGULATORISCH_HART_IDS } from '@/lib/types'
 import type { components } from '@/lib/api-types'
-import type { TarifWarning, ConstraintOverride, Doctor, ShiftType, Wish } from '@/lib/types'
+import type { TarifWarning, ConstraintOverride, Doctor, ShiftType, Wish, Department, RotationAssignmentWithDetails } from '@/lib/types'
+import { getDepartmentColor } from '@/lib/bereichColors'
 import type { FairnessStat } from '../fairnessUtils'
 
 type ShiftWithDetails = components['schemas']['ShiftWithDetails']
@@ -67,6 +68,13 @@ export interface PlanSidebarProps {
   // Konflikte
   conflicts?: PlanConflictSummary | null
   onScrollToShift: (shiftId: number) => void
+  // Department-Details
+  selectedDepartmentId?: number | null
+  departments?: Department[]
+  rotations?: RotationAssignmentWithDetails[]
+  onDepartmentDeselect?: () => void
+  // Wunsch erstellen
+  onNewWishClick: (doctorId: number) => void
 }
 
 export function PlanSidebar({
@@ -77,8 +85,12 @@ export function PlanSidebar({
   showWishes, onToggleWishes,
   fairnessStats, fairnessGroups,
   conflicts, onScrollToShift,
+  selectedDepartmentId, departments, rotations, onDepartmentDeselect,
+  onNewWishClick,
 }: PlanSidebarProps) {
   const [pendingReason, setPendingReason] = useState<Record<string, string>>({})
+  const [wishPickerOpen, setWishPickerOpen] = useState(false)
+  const [wishPickerDoctorId, setWishPickerDoctorId] = useState<string>('')
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
@@ -118,6 +130,18 @@ export function PlanSidebar({
     .filter(({ count }) => count > 0)
 
   const doctorWishes = wishes.filter((w) => w.doctor_id === selectedDoctorId)
+
+  const selectedDepartment = (departments ?? []).find(d => d.id === selectedDepartmentId) ?? null
+  const deptRotations = useMemo(
+    () => (rotations ?? []).filter(r => r.department_id === selectedDepartmentId),
+    [rotations, selectedDepartmentId],
+  )
+  const deptDoctors = useMemo(
+    () => deptRotations
+      .map(r => doctors.find(d => d.id === r.doctor_id))
+      .filter((d): d is Doctor => d != null),
+    [deptRotations, doctors],
+  )
 
   const tabs = mode === 'besetzung' ? TABS_BESETZUNG : TABS_INA
   const fairnessColTemplate = `1fr ${fairnessGroups.map(() => '2.25rem').join(' ')} 2.25rem`
@@ -188,6 +212,62 @@ export function PlanSidebar({
         {/* ── Details ── */}
         {activeTab === 'details' && (
           <div className="p-4 space-y-4">
+            {/* Station ausgewählt */}
+            {selectedDepartment && !shift && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] text-ink-3 uppercase tracking-[0.08em] font-medium">Station</p>
+                  {onDepartmentDeselect && (
+                    <button
+                      type="button"
+                      onClick={onDepartmentDeselect}
+                      className="text-[11px] text-ink-3 hover:text-ink transition"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-3 h-10 rounded-sm shrink-0"
+                    style={{ background: getDepartmentColor(selectedDepartment) }}
+                  />
+                  <div>
+                    <p className="font-serif text-[19px] leading-[1.15] text-ink">{selectedDepartment.name}</p>
+                    <p className="text-[12px] text-ink-3">{deptDoctors.length} {deptDoctors.length === 1 ? 'Arzt' : 'Ärzte'}</p>
+                  </div>
+                </div>
+                {deptDoctors.length > 0 ? (
+                  <div className="mt-3 space-y-1.5">
+                    <p className="text-[10px] text-ink-3 uppercase tracking-[0.08em] font-medium mb-1">Besetzung</p>
+                    {deptDoctors.map((doc) => {
+                      const ep = doc.employment_periods?.find(
+                        (ep) => ep.valid_to == null || ep.valid_to >= today,
+                      )
+                      const fte = ep?.employment_percentage ?? null
+                      const shiftCount = shifts.filter((s) => s.doctor_id === doc.id).length
+                      return (
+                        <div key={doc.id} className="flex items-center gap-2 text-[12px]">
+                          <div
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0"
+                            style={{ background: '#E8DCC4', color: '#26221C' }}
+                          >
+                            {doc.short_name ?? doc.name.slice(0, 2).toUpperCase()}
+                          </div>
+                          <span className="flex-1 text-ink truncate">{doc.name}</span>
+                          <span className="text-ink-3 tabular-nums text-[11px] shrink-0">
+                            {fte != null ? `${fte}%` : ''}{fte != null && shiftCount > 0 ? ' · ' : ''}{shiftCount > 0 ? `${shiftCount} D` : ''}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-[12px] text-ink-3 mt-2">Keine Ärzte zugewiesen</p>
+                )}
+              </div>
+            )}
+
             {/* Ausgewählt */}
             <div>
               <p className="text-[10px] text-ink-3 uppercase tracking-[0.08em] font-medium mb-2">Ausgewählt</p>
@@ -468,6 +548,50 @@ export function PlanSidebar({
         {/* ── Wünsche (INA only) ── */}
         {activeTab === 'wuensche' && (
           <div className="p-4 space-y-4">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-ink-3 uppercase tracking-[0.08em] font-medium">Wünsche im Plan</span>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWishPickerOpen((o) => !o)
+                    if (wishPickerOpen) setWishPickerDoctorId('')
+                  }}
+                  className="inline-flex items-center gap-1 text-[11px] text-ink-2 border border-line rounded-lg px-2 py-1 hover:bg-line/30 transition-colors"
+                >
+                  <Plus className="size-3" /> Neu
+                </button>
+                {wishPickerOpen && (
+                  <div className="absolute right-0 top-full mt-1 w-[220px] bg-card border border-line rounded-lg shadow-md p-3 space-y-2 z-10">
+                    <p className="text-[11px] font-medium text-ink-3">Wunsch für Arzt:</p>
+                    <select
+                      className="w-full h-8 text-xs border border-line rounded-md px-2 bg-paper text-ink"
+                      value={wishPickerDoctorId}
+                      onChange={(e) => setWishPickerDoctorId(e.target.value)}
+                    >
+                      <option value="">Arzt auswählen…</option>
+                      {doctors.map((d) => (
+                        <option key={d.id} value={String(d.id)}>{d.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      disabled={!wishPickerDoctorId}
+                      onClick={() => {
+                        if (wishPickerDoctorId) {
+                          onNewWishClick(Number(wishPickerDoctorId))
+                          setWishPickerOpen(false)
+                          setWishPickerDoctorId('')
+                        }
+                      }}
+                      className="w-full px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-medium disabled:opacity-40 transition-opacity"
+                    >
+                      Weiter
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
             <button
               type="button"
               onClick={onToggleWishes}
@@ -547,7 +671,7 @@ export function PlanSidebar({
                       className="px-2 py-1.5 truncate text-ink"
                       title={stat.doctorName}
                     >
-                      {stat.shortName ?? stat.doctorName}
+                      {stat.doctorName}
                     </div>
                     {fairnessGroups.map((g) => (
                       <div

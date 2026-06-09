@@ -899,6 +899,7 @@ export function PlanPage() {
             fairnessGroups={fairnessGroups}
             conflicts={conflicts ?? null}
             onScrollToShift={scrollToShift}
+            onNewWishClick={() => { /* TODO: open WishFormDialog for doctor */ }}
           />
         )}
       </div>
