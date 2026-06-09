@@ -755,14 +755,11 @@ export function PlanPage() {
         planYear={planYearLabel}
         kwRange={kwRange}
         planName={undefined}
-        mode={mode}
         prevPlan={prevPlan}
         nextPlan={nextPlan}
         plan={plan}
         onNavigatePrev={() => prevPlan && navigate(`/plans/${planToSlug(prevPlan)}`)}
         onNavigateNext={() => nextPlan && navigate(`/plans/${planToSlug(nextPlan)}`)}
-        onNachtwocheClick={() => setLockedWeekDialogOpen(true)}
-        onSettingsClick={() => setSettingsOpen(true)}
         onStatusChange={handleStatusChange}
         isUpdatingStatus={updatePlan.isPending}
         onExport={() => !isNaN(id) && window.location.assign(`/api/plans/${id}/export`)}
