@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Settings, MoonStar, ChevronDown } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   DropdownMenu,
@@ -12,14 +12,11 @@ export interface PlanCommandBarProps {
   planYear: string
   kwRange: string
   planName?: string
-  mode: 'besetzung' | 'ina'
   prevPlan: { id: number; valid_from: string } | null
   nextPlan: { id: number; valid_from: string } | null
   plan: { status: 'DRAFT' | 'RELEASED' | 'ARCHIVED' } | undefined
   onNavigatePrev: () => void
   onNavigateNext: () => void
-  onNachtwocheClick: () => void
-  onSettingsClick: () => void
   onStatusChange: (s: 'DRAFT' | 'RELEASED' | 'ARCHIVED') => void
   isUpdatingStatus: boolean
   onExport: () => void
@@ -31,14 +28,11 @@ export function PlanCommandBar({
   planYear,
   kwRange,
   planName,
-  mode,
   prevPlan,
   nextPlan,
   plan,
   onNavigatePrev,
   onNavigateNext,
-  onNachtwocheClick,
-  onSettingsClick,
   onStatusChange,
   isUpdatingStatus,
   onExport,
@@ -91,28 +85,6 @@ export function PlanCommandBar({
       </span>
 
       <div className="flex-1" />
-
-      {/* Settings */}
-      <button
-        type="button"
-        onClick={onSettingsClick}
-        aria-label="Einstellungen"
-        className="w-7 h-7 rounded-[8px] bg-card border border-line text-ink-2 flex items-center justify-center hover:bg-paper transition-colors"
-      >
-        <Settings className="size-3.5" />
-      </button>
-
-      {/* Nachtwoche (nur Besetzungs-Modus) */}
-      {mode === 'besetzung' && (
-        <button
-          type="button"
-          onClick={onNachtwocheClick}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] border border-line-2 bg-card text-[12.5px] text-ink-2 hover:bg-paper transition-colors"
-        >
-          <MoonStar className="size-3.5" />
-          Nachtwoche
-        </button>
-      )}
 
       {/* Status-Badge mit Dropdown */}
       {plan && (

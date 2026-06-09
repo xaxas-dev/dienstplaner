@@ -1,11 +1,11 @@
 import React from 'react'
-import { ChevronRight, ChevronLeft, Zap } from 'lucide-react'
+import { ChevronRight, MoonStar, Settings, Zap } from 'lucide-react'
 import { useDraggable } from '@dnd-kit/core'
 import { cn } from '@/lib/utils'
 import { colorForShiftType } from '@/lib/design/shift-palette'
 import type { ShiftType, AbsenceType } from '@/lib/types'
 
-// ─── DnD Helpers (migrated from ShiftTypeDragBar + AbsenceTypeDragBar) ─────────
+// ─── DnD Helpers ──────────────────────────────────────────────────────────────
 export const SHIFT_TYPE_DRAG_ID_PREFIX = 'shift-'
 
 export function makeShiftTypeDragId(shiftTypeId: number): string {
@@ -59,12 +59,15 @@ export interface PlanModeBarProps {
   solverEnabled: boolean
   isSolving: boolean
   onSolve: () => void
+  onNachtwocheClick: () => void
+  onSettingsClick: () => void
 }
 
 export function PlanModeBar({
   mode, onModeChange, shiftTypes,
   activeFilterGroups, onFilterGroupToggle, onFilterGroupClear,
   solverEnabled, isSolving, onSolve,
+  onNachtwocheClick, onSettingsClick,
 }: PlanModeBarProps) {
   const sortedShiftTypes = [...shiftTypes].sort((a, b) => a.display_order - b.display_order)
   const filterGroups = [
@@ -110,7 +113,7 @@ export function PlanModeBar({
 
       <div className="w-px h-[22px] bg-line mx-1 shrink-0" />
 
-      {/* Draggable Chips — both modes identical */}
+      {/* Chips + Nachtwoche */}
       <div className="flex items-center gap-1.5 flex-wrap">
         {sortedShiftTypes.map((st) => (
           <ShiftTypeDraggableChip
@@ -127,10 +130,25 @@ export function PlanModeBar({
           <AbsenceDraggableChip key={type} absenceType={type} />
         ))}
 
+        {mode === 'besetzung' && (
+          <>
+            <span className="text-line-2 mx-0.5">|</span>
+            <button
+              type="button"
+              onClick={onNachtwocheClick}
+              className="inline-flex items-center gap-1.5 px-2.5 py-[3px] rounded-full text-[11px] font-medium bg-card border border-line text-ink-2 hover:bg-line/20 transition-colors"
+            >
+              <MoonStar className="size-3" />
+              Nachtwoche
+            </button>
+          </>
+        )}
+
         {filterGroups.length > 0 && (
           <>
             <span className="text-line-2 mx-0.5">|</span>
             <button
+              type="button"
               onClick={onFilterGroupClear}
               className={cn(
                 'px-3 py-1 rounded-lg text-xs font-medium border transition',
@@ -143,6 +161,7 @@ export function PlanModeBar({
             </button>
             {filterGroups.map((group) => (
               <button
+                type="button"
                 key={group}
                 onClick={() => onFilterGroupToggle(group)}
                 className={cn(
@@ -161,39 +180,28 @@ export function PlanModeBar({
 
       <div className="flex-1" />
 
-      {/* CTA */}
-      {mode === 'besetzung' ? (
+      {/* Rechts: Settings + Plan generieren */}
+      <div className="flex items-center gap-2">
         <button
           type="button"
-          onClick={() => onModeChange('ina')}
-          className="inline-flex items-center gap-1.5 px-3.5 py-[7px] rounded-[10px] bg-ink text-[#FBF6E8] text-[12.5px] font-semibold hover:opacity-90 transition-opacity"
+          onClick={onSettingsClick}
+          aria-label="Plan-Einstellungen"
+          className="w-[30px] h-[30px] rounded-[8px] border border-line bg-card text-ink-2 flex items-center justify-center hover:bg-paper transition-colors"
         >
-          Weiter zu INA planen
-          <ChevronRight className="size-3.5" />
+          <Settings className="size-3.5" />
         </button>
-      ) : (
-        <div className="flex items-center gap-2">
+        {solverEnabled && (
           <button
             type="button"
-            onClick={() => onModeChange('besetzung')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[9px] border border-line-2 bg-paper text-ink-2 text-[12px] hover:bg-line/30 transition-colors"
+            onClick={onSolve}
+            disabled={isSolving}
+            className="inline-flex items-center gap-1.5 px-3.5 py-[7px] rounded-[10px] bg-dp-accent text-[#FFF8EF] text-[12.5px] font-semibold hover:bg-dp-accent-hover disabled:opacity-60 transition-colors"
           >
-            <ChevronLeft className="size-3.5" />
-            Besetzung
+            <Zap className="size-3.5" />
+            {isSolving ? 'Berechne…' : 'Plan generieren'}
           </button>
-          {solverEnabled && (
-            <button
-              type="button"
-              onClick={onSolve}
-              disabled={isSolving}
-              className="inline-flex items-center gap-1.5 px-3.5 py-[7px] rounded-[10px] bg-dp-accent text-[#FFF8EF] text-[12.5px] font-semibold hover:bg-dp-accent-hover disabled:opacity-60 transition-colors"
-            >
-              <Zap className="size-3.5" />
-              {isSolving ? 'Berechne…' : 'Plan generieren'}
-            </button>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

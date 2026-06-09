@@ -38,6 +38,7 @@ interface UnifiedPlanGridProps {
   onConflictDotClick?: (shiftId: number) => void
   onTarifDotClick?: (shiftId: number) => void
   onAddRotation?: (departmentId: number) => void
+  onDepartmentClick?: (departmentId: number) => void
   wishes?: Wish[]
   showWishes?: boolean
   onWishCreate?: (doctorId: number, date: string) => void
@@ -183,6 +184,7 @@ export function UnifiedPlanGrid({
   onConflictDotClick,
   onTarifDotClick,
   onAddRotation,
+  onDepartmentClick,
   wishes,
   showWishes,
   onWishCreate,
@@ -340,6 +342,7 @@ export function UnifiedPlanGrid({
                 key={row.rowKey}
                 department={row.department}
                 rotationCount={rotationCount}
+                onDepartmentClick={onDepartmentClick}
               />,
             ]
           }

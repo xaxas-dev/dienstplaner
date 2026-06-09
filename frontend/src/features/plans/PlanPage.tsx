@@ -4,6 +4,7 @@ import { useQueries } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { eachDayOfInterval, format, parseISO, isWeekend } from 'date-fns'
 import { de } from 'date-fns/locale'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   DndContext,
   DragOverlay,
@@ -158,6 +159,9 @@ export function PlanPage() {
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('details')
   const [mode, setMode] = useState<'besetzung' | 'ina'>('besetzung')
   const [wishCreateTarget, setWishCreateTarget] = useState<{ doctorId: number; date: string } | null>(null)
+  const [leftOpen, setLeftOpen] = useState(true)
+  const [rightOpen, setRightOpen] = useState(true)
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<number | null>(null)
 
   const deleteAbsence = useDeleteAbsence(id)
 
@@ -447,8 +451,17 @@ export function PlanPage() {
     }
 
     setContextShift(null)
+    setSelectedDepartmentId(null)
     setActiveCell({ rotationId, doctorId, day, shiftId })
     setSelectedDoctorId(doctorId)
+    setSidebarTab('details')
+  }
+
+  function handleDepartmentClick(departmentId: number) {
+    setSelectedDepartmentId(departmentId)
+    setSelectedDoctorId(null)
+    setContextShift(null)
+    setSidebarTab('details')
   }
 
   function handleMultiAssign(shiftTypeId: number) {
@@ -755,14 +768,11 @@ export function PlanPage() {
         planYear={planYearLabel}
         kwRange={kwRange}
         planName={undefined}
-        mode={mode}
         prevPlan={prevPlan}
         nextPlan={nextPlan}
         plan={plan}
         onNavigatePrev={() => prevPlan && navigate(`/plans/${planToSlug(prevPlan)}`)}
         onNavigateNext={() => nextPlan && navigate(`/plans/${planToSlug(nextPlan)}`)}
-        onNachtwocheClick={() => setLockedWeekDialogOpen(true)}
-        onSettingsClick={() => setSettingsOpen(true)}
         onStatusChange={handleStatusChange}
         isUpdatingStatus={updatePlan.isPending}
         onExport={() => !isNaN(id) && window.location.assign(`/api/plans/${id}/export`)}
@@ -779,6 +789,8 @@ export function PlanPage() {
           solverEnabled={solverEnabled}
           isSolving={solvePlan.isPending}
           onSolve={handleSolve}
+          onNachtwocheClick={() => setLockedWeekDialogOpen(true)}
+          onSettingsClick={() => setSettingsOpen(true)}
         />
       )}
       {/* Mehrfach-Auswahl-Indikator */}
@@ -804,13 +816,28 @@ export function PlanPage() {
 
       <div className="flex flex-1 overflow-hidden gap-4 px-6 pb-6">
         {mode === 'besetzung' && (
-          <DoctorDragSource
-            doctors={doctors}
-            rotationDoctorIds={assignedDoctorIds}
-            highlightedDoctorId={highlightedDoctorId}
-            onHighlightDoctor={setHighlightedDoctorId}
-            locked={plan?.besetzung_locked ?? false}
-          />
+          <div className="flex shrink-0">
+            {leftOpen && (
+              <DoctorDragSource
+                doctors={doctors}
+                rotationDoctorIds={assignedDoctorIds}
+                highlightedDoctorId={highlightedDoctorId}
+                onHighlightDoctor={setHighlightedDoctorId}
+                locked={plan?.besetzung_locked ?? false}
+              />
+            )}
+            <button
+              type="button"
+              onClick={() => setLeftOpen((v) => !v)}
+              className="w-5 flex items-center justify-center self-stretch hover:bg-line/30 transition-colors border-r border-line shrink-0"
+              aria-label={leftOpen ? 'Arzt-Sidebar einklappen' : 'Arzt-Sidebar ausklappen'}
+            >
+              {leftOpen
+                ? <ChevronLeft className="size-3 text-ink-3" />
+                : <ChevronRight className="size-3 text-ink-3" />
+              }
+            </button>
+          </div>
         )}
         <div className="flex flex-1 min-w-0 overflow-hidden">
           {plan && (
@@ -861,46 +888,67 @@ export function PlanPage() {
               wishes={wishes}
               showWishes={showWishes}
               onWishCreate={(doctorId, date) => setWishCreateTarget({ doctorId, date })}
+              onDepartmentClick={handleDepartmentClick}
             />
           )}
         </div>
         {plan && (
-          <PlanSidebar
-            shifts={shifts}
-            planFrom={plan.valid_from}
-            planTo={plan.valid_to}
-            openCount={openCount}
-            conflictCount={conflictCount}
-            onConflictBadgeClick={() => setSidebarTab('konflikte')}
-            mode={mode}
-            activeTab={sidebarTab}
-            onTabChange={setSidebarTab}
-            shift={contextShift ?? undefined}
-            onCloseShift={contextShift ? () => setContextShift(null) : undefined}
-            tarifWarnings={contextShift ? tarifWarningsByShift[contextShift.id] : undefined}
-            shiftOverrides={
-              contextShift
-                ? constraintOverrides.filter((o) => o.level === 'C' && o.shift_id === contextShift.id)
-                : []
-            }
-            onCreateOverride={
-              contextShift
-                ? (constraintId, reason) => handleCreateCOverride(contextShift.id, constraintId, reason)
-                : undefined
-            }
-            onDeleteOverride={handleDeleteOverride}
-            selectedDoctorId={selectedDoctorId}
-            doctors={doctors}
-            shiftTypes={shiftTypes}
-            wishes={wishes}
-            planMonth={planMonth}
-            showWishes={showWishes}
-            onToggleWishes={() => setShowWishes((v) => !v)}
-            fairnessStats={fairnessStats}
-            fairnessGroups={fairnessGroups}
-            conflicts={conflicts ?? null}
-            onScrollToShift={scrollToShift}
-          />
+          <div className="flex shrink-0">
+            <button
+              type="button"
+              onClick={() => setRightOpen((v) => !v)}
+              className="w-5 flex items-center justify-center self-stretch hover:bg-line/30 transition-colors border-l border-line shrink-0"
+              aria-label={rightOpen ? 'Detail-Sidebar einklappen' : 'Detail-Sidebar ausklappen'}
+            >
+              {rightOpen
+                ? <ChevronRight className="size-3 text-ink-3" />
+                : <ChevronLeft className="size-3 text-ink-3" />
+              }
+            </button>
+            {rightOpen && (
+              <PlanSidebar
+                shifts={shifts}
+                planFrom={plan.valid_from}
+                planTo={plan.valid_to}
+                openCount={openCount}
+                conflictCount={conflictCount}
+                onConflictBadgeClick={() => setSidebarTab('konflikte')}
+                mode={mode}
+                activeTab={sidebarTab}
+                onTabChange={setSidebarTab}
+                shift={contextShift ?? undefined}
+                onCloseShift={contextShift ? () => setContextShift(null) : undefined}
+                tarifWarnings={contextShift ? tarifWarningsByShift[contextShift.id] : undefined}
+                shiftOverrides={
+                  contextShift
+                    ? constraintOverrides.filter((o) => o.level === 'C' && o.shift_id === contextShift.id)
+                    : []
+                }
+                onCreateOverride={
+                  contextShift
+                    ? (constraintId, reason) => handleCreateCOverride(contextShift.id, constraintId, reason)
+                    : undefined
+                }
+                onDeleteOverride={handleDeleteOverride}
+                selectedDoctorId={selectedDoctorId}
+                doctors={doctors}
+                shiftTypes={shiftTypes}
+                wishes={wishes}
+                planMonth={planMonth}
+                showWishes={showWishes}
+                onToggleWishes={() => setShowWishes((v) => !v)}
+                fairnessStats={fairnessStats}
+                fairnessGroups={fairnessGroups}
+                conflicts={conflicts ?? null}
+                onScrollToShift={scrollToShift}
+                selectedDepartmentId={selectedDepartmentId}
+                departments={departments}
+                rotations={rotations}
+                onDepartmentDeselect={() => setSelectedDepartmentId(null)}
+                onNewWishClick={(doctorId) => setWishCreateTarget({ doctorId, date: format(new Date(), 'yyyy-MM-dd') })}
+              />
+            )}
+          </div>
         )}
       </div>
 

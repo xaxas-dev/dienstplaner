@@ -23,14 +23,11 @@ const base = {
   planYear: '2026',
   kwRange: '19–20',
   planName: undefined,
-  mode: 'besetzung' as const,
   prevPlan: null,
   nextPlan: null,
   plan: mockPlan,
   onNavigatePrev: vi.fn(),
   onNavigateNext: vi.fn(),
-  onNachtwocheClick: vi.fn(),
-  onSettingsClick: vi.fn(),
   onStatusChange: vi.fn(),
   isUpdatingStatus: false,
   onExport: vi.fn(),
@@ -48,18 +45,13 @@ test('renders KW subtitle', () => {
   expect(screen.getByText(/KW 19–20/)).toBeInTheDocument()
 })
 
-test('Einstellungen-Icon vorhanden und klickbar', async () => {
-  const user = userEvent.setup()
+test('kein Einstellungen-Button in CommandBar', () => {
   render(<PlanCommandBar {...base} />)
-  const btn = screen.getByLabelText('Einstellungen')
-  await user.click(btn)
-  expect(base.onSettingsClick).toHaveBeenCalledOnce()
+  expect(screen.queryByLabelText('Einstellungen')).not.toBeInTheDocument()
 })
 
-test('Nachtwoche-Button nur im Besetzungs-Modus sichtbar', () => {
-  const { rerender } = render(<PlanCommandBar {...base} mode="besetzung" />)
-  expect(screen.getByText('Nachtwoche')).toBeInTheDocument()
-  rerender(<PlanCommandBar {...base} mode="ina" />)
+test('kein Nachtwoche-Button in CommandBar', () => {
+  render(<PlanCommandBar {...base} />)
   expect(screen.queryByText('Nachtwoche')).not.toBeInTheDocument()
 })
 
