@@ -148,6 +148,7 @@ export function PlanModeBar({
           <>
             <span className="text-line-2 mx-0.5">|</span>
             <button
+              type="button"
               onClick={onFilterGroupClear}
               className={cn(
                 'px-3 py-1 rounded-lg text-xs font-medium border transition',
@@ -160,6 +161,7 @@ export function PlanModeBar({
             </button>
             {filterGroups.map((group) => (
               <button
+                type="button"
                 key={group}
                 onClick={() => onFilterGroupToggle(group)}
                 className={cn(
