@@ -31,7 +31,3 @@ test('shows offen count', () => {
   expect(screen.getByText('offen')).toBeInTheDocument()
 })
 
-test('shows Plan tab as active', () => {
-  render(<PlanKpiBar shifts={noShifts} planFrom="2026-05-04" planTo="2026-05-31" openCount={0} conflictCount={0} />)
-  expect(screen.getByText('Plan')).toBeInTheDocument()
-})

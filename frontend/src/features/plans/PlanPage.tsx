@@ -24,9 +24,6 @@ const avatarTopModifier: Modifier = ({ activatorEvent, draggingNodeRect, transfo
   const offsetY = activatorEvent.clientY - draggingNodeRect.top
   return { ...transform, x: transform.x + offsetX - 14, y: transform.y + offsetY }
 }
-import { Trash2, ChevronDown, Zap, Settings, MoonStar, Star, BarChart2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,14 +34,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { PlanCommandBar } from './components/PlanCommandBar'
 import { PlanKpiBar } from './components/PlanKpiBar'
+import { PlanModeBar } from './components/PlanModeBar'
 import { useCommandPalette } from '@/features/command-palette/useCommandPalette'
 import { usePlan, usePlans } from './usePlans'
 import { planToSlug } from './planSlug'
@@ -166,6 +158,7 @@ export function PlanPage() {
   } | null>(null)
   const [showWishes, setShowWishes] = useState(true)
   const [showFairness, setShowFairness] = useState(false)
+  const [mode, setMode] = useState<'besetzung' | 'ina'>('besetzung')
   const [wishCreateTarget, setWishCreateTarget] = useState<{ doctorId: number; date: string } | null>(null)
 
   const deleteAbsence = useDeleteAbsence(id)
@@ -265,11 +258,6 @@ export function PlanPage() {
     if (!plan) return
     updatePlan.mutate({ status: newStatus })
   }
-
-  const statusLabel =
-    plan?.status === 'RELEASED' ? 'Freigegeben'
-    : plan?.status === 'ARCHIVED' ? 'Archiviert'
-    : 'Entwurf'
 
   const tarifWarningsByShift: Record<number, TarifWarning[]> = {}
   for (const w of tarifWarningsData?.warnings ?? []) {
@@ -749,75 +737,39 @@ export function PlanPage() {
         planMonth={planMonth}
         planYear={planYearLabel}
         kwRange={kwRange}
-        rotationCount={rotations.length}
-        conflictCount={conflictCount}
+        planName={undefined}
+        mode={mode}
         prevPlan={prevPlan}
         nextPlan={nextPlan}
-        solverEnabled={solverEnabled}
-        isSolving={solvePlan.isPending}
+        plan={plan}
         onNavigatePrev={() => prevPlan && navigate(`/plans/${planToSlug(prevPlan)}`)}
         onNavigateNext={() => nextPlan && navigate(`/plans/${planToSlug(nextPlan)}`)}
-        onSolve={handleSolve}
+        onNachtwocheClick={() => setLockedWeekDialogOpen(true)}
+        onSettingsClick={() => setSettingsOpen(true)}
+        onStatusChange={handleStatusChange}
+        isUpdatingStatus={updatePlan.isPending}
         onExport={() => !isNaN(id) && window.location.assign(`/api/plans/${id}/export`)}
-        onScrollToConflict={() => scrollToFirstMatch('conflict')}
         onOpenCommandPalette={openCommandPalette}
       />
       {plan && (
-        <div className="flex items-center gap-2 px-6 py-1.5 border-b border-line bg-paper shrink-0">
-          <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
-            <Settings size={14} className="mr-1.5" />
-            Einstellungen
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setLockedWeekDialogOpen(true)} className="shrink-0">
-            <MoonStar className="size-4 mr-1.5" />
-            Nachtwoche
-          </Button>
-          {solverEnabled && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSolve}
-              disabled={solvePlan.isPending || isNaN(id)}
-            >
-              <Zap className="size-3.5 mr-1.5" />
-              {solvePlan.isPending ? 'Berechne…' : 'Solver'}
-            </Button>
-          )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" disabled={updatePlan.isPending} className="min-w-[110px] gap-1.5">
-                <span className={cn(
-                  'size-1.5 rounded-full shrink-0',
-                  plan.status === 'RELEASED' ? 'bg-green-500'
-                  : plan.status === 'ARCHIVED' ? 'bg-amber-400'
-                  : 'bg-gray-400'
-                )} />
-                {statusLabel}
-                <ChevronDown className="size-3.5 ml-auto" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {plan.status !== 'RELEASED' && (
-                <DropdownMenuItem onClick={() => handleStatusChange('RELEASED')}>Freigeben</DropdownMenuItem>
-              )}
-              {plan.status !== 'ARCHIVED' && (
-                <DropdownMenuItem onClick={() => handleStatusChange('ARCHIVED')}>Archivieren</DropdownMenuItem>
-              )}
-              {plan.status !== 'DRAFT' && (
-                <DropdownMenuItem onClick={() => handleStatusChange('DRAFT')}>Zurück zu Entwurf</DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowDeleteDialog(true)}
-            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-            aria-label="Plan löschen"
-          >
-            <Trash2 className="size-4" />
-          </Button>
-        </div>
+        <PlanModeBar
+          mode={mode}
+          onModeChange={setMode}
+          conflictCount={conflictCount}
+          onScrollToConflict={() => scrollToFirstMatch('conflict')}
+          shiftTypes={shiftTypes}
+          activeFilterGroups={activeFilterGroups}
+          onFilterGroupToggle={toggleFilterGroup}
+          onFilterGroupClear={clearFilterGroups}
+          showWishes={showWishes}
+          onToggleWishes={() => setShowWishes((v) => !v)}
+          wishCount={wishes.length}
+          showFairness={showFairness}
+          onToggleFairness={() => setShowFairness((v) => !v)}
+          solverEnabled={solverEnabled}
+          isSolving={solvePlan.isPending}
+          onSolve={handleSolve}
+        />
       )}
       {plan && (
         <PlanKpiBar
@@ -829,53 +781,15 @@ export function PlanPage() {
         />
       )}
 
-      {/* DnD-Bars: Dienste + Abwesenheiten */}
-      <div className="px-6 pb-2 flex items-stretch gap-3">
-        <div className="flex-1 min-w-0">
-          <ShiftTypeDragBar
-            shiftTypes={shiftTypes}
-            activeFilterGroups={activeFilterGroups}
-            onFilterGroupToggle={toggleFilterGroup}
-            onFilterGroupClear={clearFilterGroups}
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          <AbsenceTypeDragBar />
-        </div>
-      </div>
-
-      {/* Wunsch-Toggle */}
-      <div className="px-6 pb-1 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setShowWishes((v) => !v)}
-          className={cn(
-            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors',
-            showWishes
-              ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
-              : 'bg-paper border-line text-ink-3 hover:bg-line',
-          )}
-          aria-pressed={showWishes}
-          title="Wünsche im Grid anzeigen / ausblenden"
-        >
-          <Star className="size-3" />
-          Wünsche
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowFairness((v) => !v)}
-          className={cn(
-            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors',
-            showFairness
-              ? 'bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100'
-              : 'bg-paper border-line text-ink-3 hover:bg-line',
-          )}
-          aria-pressed={showFairness}
-          title="Fairness-Zähler ein-/ausblenden"
-        >
-          <BarChart2 className="size-3" />
-          Fairness
-        </button>
+      {/* DnD-Bars: unterhalb KpiBar, volle Breite */}
+      <div className="px-6 pt-2 pb-1 flex flex-col gap-1.5 shrink-0">
+        <ShiftTypeDragBar
+          shiftTypes={shiftTypes}
+          activeFilterGroups={activeFilterGroups}
+          onFilterGroupToggle={toggleFilterGroup}
+          onFilterGroupClear={clearFilterGroups}
+        />
+        <AbsenceTypeDragBar />
       </div>
 
       {/* Mehrfach-Auswahl-Indikator */}

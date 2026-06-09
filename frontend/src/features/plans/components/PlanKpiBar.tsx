@@ -31,11 +31,8 @@ export function PlanKpiBar({ shifts, planFrom, planTo, openCount, conflictCount 
     }
   }, [shifts, planFrom, planTo])
 
-  const today = format(new Date(), 'yyyy-MM-dd')
-  const shiftsToday = shifts.filter((s) => s.shift_date === today && s.doctor_id != null).length
-
   return (
-    <div className="flex items-center gap-6 px-6 py-2.5 border-b border-line bg-card text-[12px] text-ink-2 shrink-0 flex-wrap">
+    <div className="flex items-center gap-6 px-6 py-1.5 border-b border-line bg-card text-[12px] text-ink-2 shrink-0 flex-wrap">
       {/* Abdeckung + Sparkline */}
       <div className="flex items-center gap-3">
         <div className="flex items-baseline gap-1.5">
@@ -66,29 +63,6 @@ export function PlanKpiBar({ shifts, planFrom, planTo, openCount, conflictCount 
           {conflictCount}
         </span>
         <span>Konflikte</span>
-      </div>
-      <div className="flex items-baseline gap-1.5">
-        <span className="font-serif text-[18px] text-ink tabular-nums leading-none">{shiftsToday}</span>
-        <span>heute im Dienst</span>
-      </div>
-
-      <div className="flex-1" />
-
-      {/* View-Tabs (dekorativ) */}
-      <div className="flex items-center gap-0.5">
-        {(['Plan', 'Wunsch', 'Konflikte', 'Bilanz'] as const).map((tab) => (
-          <span
-            key={tab}
-            className={cn(
-              'px-3 py-[5px] rounded-full text-[12px] select-none',
-              tab === 'Plan'
-                ? 'bg-warn-bg text-warn-ink border border-warn-line font-medium'
-                : 'text-ink-3',
-            )}
-          >
-            {tab}
-          </span>
-        ))}
       </div>
     </div>
   )
