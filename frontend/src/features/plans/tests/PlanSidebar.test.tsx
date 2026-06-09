@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { PlanSidebar } from '../components/PlanSidebar'
@@ -50,6 +50,8 @@ const baseProps = {
   onScrollToShift: vi.fn(),
 }
 
+beforeEach(() => vi.clearAllMocks())
+
 describe('KPI-Strip', () => {
   it('zeigt Abdeckungs-Prozent', () => {
     render(<PlanSidebar {...baseProps} />)
@@ -58,7 +60,9 @@ describe('KPI-Strip', () => {
 
   it('zeigt openCount', () => {
     render(<PlanSidebar {...baseProps} />)
-    expect(screen.getByText('1')).toBeInTheDocument()
+    // openCount=1 is the only '1' in the KPI strip (conflictCount=0, coverage=50%)
+    const strip = screen.getByText('offen').closest('div')!
+    expect(strip).toHaveTextContent('1')
   })
 
   it('Klick auf Konflikte-Badge ruft onConflictBadgeClick auf', async () => {

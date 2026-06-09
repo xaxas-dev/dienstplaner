@@ -80,6 +80,8 @@ export function PlanSidebar({
 }: PlanSidebarProps) {
   const [pendingReason, setPendingReason] = useState<Record<string, string>>({})
 
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), [])
+
   const overrideMap = new Map(shiftOverrides.map((o) => [o.constraint_id, o]))
   const isOverridable = (ruleId: string) =>
     (REGULATORISCH_HART_IDS as readonly string[]).includes(ruleId)
@@ -107,7 +109,7 @@ export function PlanSidebar({
   const doctorShifts = shifts.filter((s) => s.doctor_id === selectedDoctorId)
   const employmentPct = selectedDoctor
     ? (selectedDoctor.employment_periods?.find(
-        (ep) => ep.valid_to == null || ep.valid_to >= new Date().toISOString().slice(0, 10),
+        (ep) => ep.valid_to == null || ep.valid_to >= today,
       )?.employment_percentage ?? null)
     : null
 
@@ -219,7 +221,7 @@ export function PlanSidebar({
                       {shift.conflicts.length === 1 ? 'Regelkonflikt' : `${shift.conflicts.length} Konflikte`}
                       {shift.shift_date ? ` · ${shift.shift_date}` : ''}
                     </div>
-                    {shift.conflicts.map((c, i) => <ConflictCard key={i} conflict={c} />)}
+                    {shift.conflicts.map((c, i) => <ConflictCard key={c.shift_id ?? i} conflict={c} />)}
                   </div>
                 )}
                 {tarifWarnings && tarifWarnings.length > 0 && (
@@ -229,7 +231,7 @@ export function PlanSidebar({
                       const override = overrideMap.get(w.rule_id)
                       const canOverride = isOverridable(w.rule_id)
                       return (
-                        <div key={i} className="rounded-lg border border-line bg-paper p-2 space-y-1">
+                        <div key={w.rule_id ?? i} className="rounded-lg border border-line bg-paper p-2 space-y-1">
                           <div className="flex items-center gap-2">
                             <span className={cn(
                               'rounded-full px-2 py-0.5 text-[10px] font-semibold',
@@ -407,7 +409,7 @@ export function PlanSidebar({
                   Konflikte
                 </p>
                 <div className="space-y-1">
-                  {conflicts!.conflicts.map((c) => {
+                  {conflicts?.conflicts.map((c) => {
                     const s = shifts.find((sh) => sh.id === c.shift_id)
                     return (
                       <button
@@ -434,7 +436,7 @@ export function PlanSidebar({
                   Offene Dienste
                 </p>
                 <div className="space-y-1">
-                  {conflicts!.open_shifts.map((c) => {
+                  {conflicts?.open_shifts.map((c) => {
                     const s = shifts.find((sh) => sh.id === c.shift_id)
                     return (
                       <button
