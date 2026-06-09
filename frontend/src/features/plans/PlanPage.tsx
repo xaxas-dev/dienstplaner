@@ -396,7 +396,7 @@ export function PlanPage() {
     if (mode === 'besetzung' && !validBesetzung.includes(sidebarTab)) {
       setSidebarTab('details')
     }
-  }, [mode])
+  }, [mode, sidebarTab])
 
   const { open: openCommandPalette } = useCommandPalette()
 
