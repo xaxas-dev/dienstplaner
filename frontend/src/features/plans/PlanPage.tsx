@@ -814,7 +814,7 @@ export function PlanPage() {
         </div>
       )}
 
-      <div className="flex flex-1 overflow-hidden gap-4 px-6 pb-6">
+      <div className="flex flex-1 overflow-hidden gap-0 px-6 pb-6">
         {mode === 'besetzung' && (
           <div className="flex shrink-0">
             {leftOpen && (

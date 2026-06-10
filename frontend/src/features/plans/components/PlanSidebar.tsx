@@ -660,6 +660,9 @@ export function PlanSidebar({
         {/* ── Fairness (INA only) ── */}
         {activeTab === 'fairness' && (
           <div className="flex flex-col overflow-hidden h-full">
+            <p className="px-4 pt-3 pb-1 text-[11px] text-ink-3 leading-relaxed shrink-0">
+              INA-Dienste je Arzt im Plan-Zeitraum, aufgeteilt nach Dienstgruppe. Nur Ärzte mit aktiver Rotation werden gezählt.
+            </p>
             <div
               className="grid border-b border-line text-[10px] text-ink-3 font-medium bg-paper/40 shrink-0"
               style={{ gridTemplateColumns: fairnessColTemplate }}

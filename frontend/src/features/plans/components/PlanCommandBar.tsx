@@ -81,7 +81,7 @@ export function PlanCommandBar({
 
       {/* Subtitle */}
       <span className="text-[13px] text-ink-3">
-        · KW {kwRange}{planName ? ` · ${planName}` : ''}
+        KW {kwRange}{planName ? ` · ${planName}` : ''}
       </span>
 
       <div className="flex-1" />

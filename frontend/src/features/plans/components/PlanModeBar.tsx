@@ -180,16 +180,8 @@ export function PlanModeBar({
 
       <div className="flex-1" />
 
-      {/* Rechts: Settings + Plan generieren */}
+      {/* Rechts: Plan generieren + Settings */}
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onSettingsClick}
-          aria-label="Plan-Einstellungen"
-          className="w-[30px] h-[30px] rounded-[8px] border border-line bg-card text-ink-2 flex items-center justify-center hover:bg-paper transition-colors"
-        >
-          <Settings className="size-3.5" />
-        </button>
         {solverEnabled && (
           <button
             type="button"
@@ -201,6 +193,14 @@ export function PlanModeBar({
             {isSolving ? 'Berechne…' : 'Plan generieren'}
           </button>
         )}
+        <button
+          type="button"
+          onClick={onSettingsClick}
+          aria-label="Plan-Einstellungen"
+          className="w-[30px] h-[30px] rounded-[8px] bg-dp-accent text-[#FFF8EF] flex items-center justify-center hover:bg-dp-accent-hover transition-colors"
+        >
+          <Settings className="size-3.5" />
+        </button>
       </div>
     </div>
   )
