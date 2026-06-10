@@ -181,7 +181,7 @@ export function PlanModeBar({
       <div className="flex-1" />
 
       {/* Rechts: Plan generieren + Settings */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-px">
         {solverEnabled && (
           <button
             type="button"

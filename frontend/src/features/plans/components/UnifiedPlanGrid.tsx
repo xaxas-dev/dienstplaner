@@ -117,7 +117,7 @@ function RotationLabelCell({
       ref={setNodeRef}
       onMouseEnter={onMouseEnter}
       className={cn(
-        'sticky left-0 z-10 flex items-center gap-1 pr-1 pl-8 py-1 border-b border-line min-w-0 transition-colors relative overflow-hidden',
+        'sticky left-0 z-10 flex items-center gap-1 pr-1 pl-8 py-1 border-b border-line min-w-0 transition-colors overflow-hidden',
         isOver ? '' : isHighlighted ? 'bg-accent/8' : isHovered ? 'bg-paper' : 'bg-card',
       )}
       style={{
@@ -126,45 +126,42 @@ function RotationLabelCell({
       }}
     >
       <span
-        className={cn(
-          'flex-1 text-[11px] font-medium truncate cursor-pointer hover:text-accent transition-colors',
-          isHighlighted ? 'text-ink' : 'text-ink',
-        )}
+        className="flex-1 text-[11px] font-medium truncate cursor-pointer text-ink min-w-0"
         onClick={(e) => { e.stopPropagation(); onDoctorClick?.(row.doctor.id) }}
         title="Arzt-Details anzeigen"
       >
         {row.doctor.name}
       </span>
       {isHovered && (
-        <div className="absolute right-0 top-0 h-full flex items-center gap-0.5 pr-1 bg-gradient-to-l from-card via-card to-transparent pl-4">
+        <>
           {employmentPct != null && (
             <span className="text-[10px] text-ink-3 shrink-0 tabular-nums">{employmentPct}%</span>
           )}
-        <button
-          className="p-0.5 rounded hover:bg-paper text-ink-3 hover:text-ink-2 transition-colors"
-          title="Arzt-Profil öffnen"
-          onClick={(e) => { e.stopPropagation(); navigate(`/doctors/${row.doctor.id}`) }}
-          aria-label="Arzt-Profil öffnen"
-        >
-          <ExternalLink className="size-3" />
-        </button>
-        <button
-          className="p-0.5 rounded hover:bg-blue-50 text-ink-3 hover:text-blue-600 transition-colors"
-          title="Zeitraum bearbeiten"
-          onClick={(e) => { e.stopPropagation(); onEdit?.() }}
-          aria-label="Rotationszeitraum bearbeiten"
-        >
-          <Pencil className="size-3" />
-        </button>
-        <button
-          className="p-0.5 rounded hover:bg-red-50 text-ink-3 hover:text-red-600 transition-colors"
-          title="Arzt aus Bereich entfernen"
-          onClick={(e) => { e.stopPropagation(); onDelete?.() }}
-          aria-label="Rotation löschen"
-        >
-          <X className="size-3" />
-        </button>
-        </div>
+          <button
+            className="p-0.5 rounded hover:bg-line/40 text-ink-3 hover:text-ink-2 transition-colors shrink-0"
+            title="Arzt-Profil öffnen"
+            onClick={(e) => { e.stopPropagation(); navigate(`/doctors/${row.doctor.id}`) }}
+            aria-label="Arzt-Profil öffnen"
+          >
+            <ExternalLink className="size-3" />
+          </button>
+          <button
+            className="p-0.5 rounded hover:bg-blue-50 text-ink-3 hover:text-blue-600 transition-colors shrink-0"
+            title="Zeitraum bearbeiten"
+            onClick={(e) => { e.stopPropagation(); onEdit?.() }}
+            aria-label="Rotationszeitraum bearbeiten"
+          >
+            <Pencil className="size-3" />
+          </button>
+          <button
+            className="p-0.5 rounded hover:bg-red-50 text-ink-3 hover:text-red-600 transition-colors shrink-0"
+            title="Arzt aus Bereich entfernen"
+            onClick={(e) => { e.stopPropagation(); onDelete?.() }}
+            aria-label="Rotation löschen"
+          >
+            <X className="size-3" />
+          </button>
+        </>
       )}
     </div>
   )
