@@ -54,3 +54,4 @@ desktop.ini
 
 # Exports (werden on-demand generiert)
 exports/
+.worktrees/
