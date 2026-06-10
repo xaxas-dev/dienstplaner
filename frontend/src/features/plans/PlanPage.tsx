@@ -372,6 +372,18 @@ export function PlanPage() {
     }, 2000)
   }, [conflicts])
 
+  const scrollToDate = useCallback((date: string) => {
+    const el = document.querySelector(`[data-date="${date}"]`)
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    el.classList.add('dp-highlight-pulse')
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current)
+    highlightTimerRef.current = setTimeout(() => {
+      el.classList.remove('dp-highlight-pulse')
+      highlightTimerRef.current = null
+    }, 2000)
+  }, [])
+
   const scrollToShift = useCallback((shiftId: number) => {
     const el = document.querySelector(`[data-shift-id="${shiftId}"]`)
     if (!el) return
@@ -948,6 +960,7 @@ export function PlanPage() {
                 fairnessGroups={fairnessGroups}
                 conflicts={conflicts ?? null}
                 onScrollToShift={scrollToShift}
+                onScrollToDate={scrollToDate}
                 selectedDepartmentId={selectedDepartmentId}
                 departments={departments}
                 rotations={rotations}

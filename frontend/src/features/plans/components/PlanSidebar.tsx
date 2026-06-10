@@ -68,6 +68,7 @@ export interface PlanSidebarProps {
   // Konflikte
   conflicts?: PlanConflictSummary | null
   onScrollToShift: (shiftId: number) => void
+  onScrollToDate?: (date: string) => void
   // Department-Details
   selectedDepartmentId?: number | null
   departments?: Department[]
@@ -84,7 +85,7 @@ export function PlanSidebar({
   selectedDoctorId, doctors = [], shiftTypes = [], wishes = [], planMonth,
   showWishes, onToggleWishes,
   fairnessStats, fairnessGroups,
-  conflicts, onScrollToShift,
+  conflicts, onScrollToShift, onScrollToDate,
   selectedDepartmentId, departments, rotations, onDepartmentDeselect,
   onNewWishClick,
 }: PlanSidebarProps) {
@@ -636,27 +637,44 @@ export function PlanSidebar({
                   Wünsche ({wishes.length})
                 </p>
                 <div className="space-y-1">
-                  {wishes.map((w) => (
-                    <div
-                      key={w.id}
-                      className="px-3 py-1.5 rounded-lg border border-line bg-paper text-[12px] text-ink-2"
-                    >
-                      {w.wish_date ? (
-                        <span>
-                          {w.wish_date} →{' '}
-                          <strong>
-                            {w.wish_type === 'AVOID_DAY'
-                              ? 'frei'
-                              : w.wish_type === 'REQUIRE_SHIFT'
-                                ? 'Dienst'
-                                : 'kein Dienst'}
-                          </strong>
-                        </span>
-                      ) : (
-                        <span className="text-ink-3">{w.wish_type}</span>
-                      )}
-                    </div>
-                  ))}
+                  {wishes.map((w) => {
+                    const doc = doctors.find((d) => d.id === w.doctor_id)
+                    const canNavigate = !!w.wish_date
+                    const content = (
+                      <>
+                        {doc && (
+                          <span className="font-medium text-ink">{doc.name}</span>
+                        )}
+                        {w.wish_date ? (
+                          <span className="text-ink-2">
+                            {' '}· {w.wish_date} →{' '}
+                            <strong>
+                              {w.wish_type === 'AVOID_DAY' ? 'frei' : w.wish_type === 'REQUIRE_SHIFT' ? 'Dienst' : 'kein Dienst'}
+                            </strong>
+                          </span>
+                        ) : (
+                          <span className="text-ink-3"> · {w.wish_type}</span>
+                        )}
+                      </>
+                    )
+                    if (canNavigate) {
+                      return (
+                        <button
+                          key={w.id}
+                          type="button"
+                          onClick={() => onScrollToDate?.(w.wish_date!)}
+                          className="w-full text-left px-3 py-1.5 rounded-lg border border-line bg-paper text-[12px] hover:bg-line/30 transition-colors"
+                        >
+                          {content}
+                        </button>
+                      )
+                    }
+                    return (
+                      <div key={w.id} className="px-3 py-1.5 rounded-lg border border-line bg-paper text-[12px] text-ink-2">
+                        {content}
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             ) : (

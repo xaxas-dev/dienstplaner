@@ -336,6 +336,7 @@ export function UnifiedPlanGrid({
           return (
             <div
               key={dk}
+              data-date={dk}
               onMouseEnter={() => { setHoverDay(dk); setHoverRow(null) }}
               className={cn(
                 'sticky top-0 z-10 border-b border-r border-line text-center py-[7px] px-0.5 transition-colors',
