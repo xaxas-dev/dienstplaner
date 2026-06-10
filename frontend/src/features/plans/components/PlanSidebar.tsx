@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { eachDayOfInterval, format, parseISO } from 'date-fns'
 import { Star, ShieldCheck, ShieldOff, Plus } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -75,7 +75,7 @@ export interface PlanSidebarProps {
   rotations?: RotationAssignmentWithDetails[]
   onDepartmentDeselect?: () => void
   // Wunsch erstellen
-  onNewWishClick: (doctorId: number) => void
+  onNewWishClick: (doctorId: number | null) => void
 }
 
 export function PlanSidebar({
@@ -90,22 +90,6 @@ export function PlanSidebar({
   onNewWishClick,
 }: PlanSidebarProps) {
   const [pendingReason, setPendingReason] = useState<Record<string, string>>({})
-  const [wishPickerOpen, setWishPickerOpen] = useState(false)
-  const [wishPickerDoctorId, setWishPickerDoctorId] = useState<string>('')
-  const wishPickerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!wishPickerOpen) return
-    function handleOutside(e: MouseEvent) {
-      if (wishPickerRef.current && !wishPickerRef.current.contains(e.target as Node)) {
-        setWishPickerOpen(false)
-        setWishPickerDoctorId('')
-      }
-    }
-    document.addEventListener('mousedown', handleOutside)
-    return () => document.removeEventListener('mousedown', handleOutside)
-  }, [wishPickerOpen])
-
   const today = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
   const overrideMap = new Map(shiftOverrides.map((o) => [o.constraint_id, o]))
@@ -572,51 +556,13 @@ export function PlanSidebar({
           <div className="p-4 space-y-4">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] text-ink-3 uppercase tracking-[0.08em] font-medium">Wünsche im Plan</span>
-              <div className="relative" ref={wishPickerRef}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (wishPickerOpen) {
-                      setWishPickerOpen(false)
-                      setWishPickerDoctorId('')
-                    } else {
-                      setWishPickerOpen(true)
-                    }
-                  }}
-                  className="inline-flex items-center gap-1 text-[11px] text-ink-2 border border-line rounded-lg px-2 py-1 hover:bg-line/30 transition-colors"
-                >
-                  <Plus className="size-3" /> Neu
-                </button>
-                {wishPickerOpen && (
-                  <div className="absolute right-0 top-full mt-1 w-[220px] bg-card border border-line rounded-lg shadow-md p-3 space-y-2 z-10">
-                    <p className="text-[11px] font-medium text-ink-3">Wunsch für Arzt:</p>
-                    <select
-                      className="w-full h-8 text-xs border border-line rounded-md px-2 bg-paper text-ink"
-                      value={wishPickerDoctorId}
-                      onChange={(e) => setWishPickerDoctorId(e.target.value)}
-                    >
-                      <option value="">Arzt auswählen…</option>
-                      {doctors.map((d) => (
-                        <option key={d.id} value={String(d.id)}>{d.name}</option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      disabled={!wishPickerDoctorId}
-                      onClick={() => {
-                        if (wishPickerDoctorId) {
-                          onNewWishClick(Number(wishPickerDoctorId))
-                          setWishPickerOpen(false)
-                          setWishPickerDoctorId('')
-                        }
-                      }}
-                      className="w-full px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-medium disabled:opacity-40 transition-opacity"
-                    >
-                      Weiter
-                    </button>
-                  </div>
-                )}
-              </div>
+              <button
+                type="button"
+                onClick={() => onNewWishClick(null)}
+                className="inline-flex items-center gap-1 text-[11px] text-ink-2 border border-line rounded-lg px-2 py-1 hover:bg-line/30 transition-colors"
+              >
+                <Plus className="size-3" /> Neu
+              </button>
             </div>
             <button
               type="button"

@@ -158,7 +158,7 @@ export function PlanPage() {
   const [showWishes, setShowWishes] = useState(true)
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('details')
   const [mode, setMode] = useState<'besetzung' | 'ina'>('besetzung')
-  const [wishCreateTarget, setWishCreateTarget] = useState<{ doctorId: number; date: string } | null>(null)
+  const [wishCreateTarget, setWishCreateTarget] = useState<{ doctorId: number | null; date: string } | null>(null)
   const [leftOpen, setLeftOpen] = useState(true)
   const [rightOpen, setRightOpen] = useState(true)
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<number | null>(null)
@@ -1164,6 +1164,7 @@ export function PlanPage() {
         open={true}
         onOpenChange={(open) => { if (!open) setWishCreateTarget(null) }}
         prefilledDate={wishCreateTarget.date}
+        doctors={doctors}
       />
     )}
 

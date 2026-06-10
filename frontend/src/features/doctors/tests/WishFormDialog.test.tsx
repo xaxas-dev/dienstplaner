@@ -1,11 +1,22 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { WishFormDialog } from '../WishFormDialog'
 
+const createMutate = vi.fn()
+const updateMutate = vi.fn()
+const createDoctorIds: number[] = []
+const updateDoctorIds: number[] = []
+
 vi.mock('../useWishes', () => ({
-  useCreateWish: () => ({ mutate: vi.fn(), isPending: false }),
-  useUpdateWish: () => ({ mutate: vi.fn(), isPending: false }),
+  useCreateWish: (doctorId: number) => {
+    createDoctorIds.push(doctorId)
+    return { mutate: createMutate, isPending: false }
+  },
+  useUpdateWish: (doctorId: number) => {
+    updateDoctorIds.push(doctorId)
+    return { mutate: updateMutate, isPending: false }
+  },
 }))
 vi.mock('@/features/shift-types/useShiftTypes', () => ({
   useShiftTypes: () => ({ data: [{ id: 1, name: 'Nachtdienst', short_name: 'N' }] }),
@@ -15,6 +26,21 @@ vi.mock('@/features/command-palette/useCommandPalette', () => ({
 }))
 
 const defaultProps = { open: true, onOpenChange: vi.fn(), doctorId: 1 }
+const doctors = [
+  { id: 1, name: 'Dr. Anna Müller', short_name: 'AMü', active: true,
+    doctor_type: 'INTERNAL' as const, is_facharzt: false, weiterbildungsjahr: null,
+    employment_periods: [], qualifications: [], created_at: '', updated_at: '' },
+  { id: 2, name: 'Dr. Bernd Keller', short_name: 'BK', active: true,
+    doctor_type: 'INTERNAL' as const, is_facharzt: false, weiterbildungsjahr: null,
+    employment_periods: [], qualifications: [], created_at: '', updated_at: '' },
+]
+
+beforeEach(() => {
+  createMutate.mockClear()
+  updateMutate.mockClear()
+  createDoctorIds.length = 0
+  updateDoctorIds.length = 0
+})
 
 describe('WishFormDialog', () => {
   it('shows date input by default (Konkretes Datum)', () => {
@@ -56,5 +82,22 @@ describe('WishFormDialog', () => {
     expect(dateInput.value).toBe('2026-03-15')
     expect(screen.queryByLabelText(/wochentag/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText(/allgemein/i)).not.toBeInTheDocument()
+  })
+
+  it('starts with fuzzy doctor search when no doctor is preselected', async () => {
+    const user = userEvent.setup()
+    render(<WishFormDialog {...defaultProps} doctorId={null} doctors={doctors} />)
+
+    expect(screen.getByText('Arzt auswählen')).toBeInTheDocument()
+    expect(screen.queryByLabelText(/datum/i)).not.toBeInTheDocument()
+
+    await user.type(screen.getByLabelText(/arzt suchen/i), 'bk')
+    expect(screen.getByText('Dr. Bernd Keller')).toBeInTheDocument()
+    expect(screen.queryByText('Dr. Anna Müller')).not.toBeInTheDocument()
+
+    await user.click(screen.getByText('Dr. Bernd Keller'))
+    expect(screen.getByText('Neuer Wunsch')).toBeInTheDocument()
+    expect(screen.getByLabelText(/datum/i)).toBeInTheDocument()
+    expect(createDoctorIds).toContain(2)
   })
 })
