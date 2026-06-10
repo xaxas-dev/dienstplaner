@@ -84,6 +84,8 @@ function isFuzzyMatch(query: string, value: string) {
 export function WishFormDialog({ open, onOpenChange, doctorId, doctors, wish, prefilledDate }: WishFormDialogProps) {
   const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(doctorId)
   const [doctorSearch, setDoctorSearch] = useState('')
+  // Hooks require a numeric doctorId; 0 is a safe placeholder because
+  // onSubmit guards against selectedDoctorId == null before calling mutate.
   const createMutation = useCreateWish(selectedDoctorId ?? 0)
   const updateMutation = useUpdateWish(selectedDoctorId ?? 0)
   const { data: shiftTypes = [] } = useShiftTypes()

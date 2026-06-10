@@ -313,6 +313,7 @@ export function UnifiedPlanGrid({
           <div
             className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-accent/40 transition-colors"
             onMouseDown={(e) => {
+              // Listeners cleaned up on mouseup; rapid re-click not possible while dragging
               e.preventDefault()
               const startX = e.clientX
               const startW = doctorColWidth
