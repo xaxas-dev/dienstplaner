@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -18,7 +18,7 @@ import {
 import { ApiError } from '@/lib/api'
 import { useCreateWish, useUpdateWish } from './useWishes'
 import { useShiftTypes } from '@/features/shift-types/useShiftTypes'
-import type { Wish, WishType } from '@/lib/types'
+import type { Doctor, Wish, WishType } from '@/lib/types'
 
 type SubType = 'date' | 'weekday' | 'general'
 
@@ -54,14 +54,40 @@ type FormValues = z.infer<typeof schema>
 interface WishFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  doctorId: number
+  doctorId: number | null
+  doctors?: Doctor[]
   wish?: Wish
   prefilledDate?: string
 }
 
-export function WishFormDialog({ open, onOpenChange, doctorId, wish, prefilledDate }: WishFormDialogProps) {
-  const createMutation = useCreateWish(doctorId)
-  const updateMutation = useUpdateWish(doctorId)
+function normalizeSearch(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+}
+
+function isFuzzyMatch(query: string, value: string) {
+  const normalizedQuery = normalizeSearch(query).replace(/\s+/g, '')
+  const normalizedValue = normalizeSearch(value)
+  if (!normalizedQuery) return true
+  if (normalizedValue.includes(normalizedQuery)) return true
+
+  let queryIndex = 0
+  for (const char of normalizedValue) {
+    if (char === normalizedQuery[queryIndex]) queryIndex += 1
+    if (queryIndex === normalizedQuery.length) return true
+  }
+  return false
+}
+
+export function WishFormDialog({ open, onOpenChange, doctorId, doctors, wish, prefilledDate }: WishFormDialogProps) {
+  const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(doctorId)
+  const [doctorSearch, setDoctorSearch] = useState('')
+  // Hooks require a numeric doctorId; 0 is a safe placeholder because
+  // onSubmit guards against selectedDoctorId == null before calling mutate.
+  const createMutation = useCreateWish(selectedDoctorId ?? 0)
+  const updateMutation = useUpdateWish(selectedDoctorId ?? 0)
   const { data: shiftTypes = [] } = useShiftTypes()
 
   const defaultSubType = (): SubType => {
@@ -88,9 +114,20 @@ export function WishFormDialog({ open, onOpenChange, doctorId, wish, prefilledDa
   const subType = form.watch('subType')
   const wishType = form.watch('wish_type')
   const needsShiftType = wishType === 'AVOID_SHIFT' || wishType === 'REQUIRE_SHIFT'
+  const showDoctorPicker = selectedDoctorId == null && doctors != null
+  const filteredDoctors = useMemo(() => {
+    if (!doctors) return []
+    const query = doctorSearch.trim()
+    return doctors.filter((doctor) => {
+      const searchValue = `${doctor.name} ${doctor.short_name ?? ''}`
+      return isFuzzyMatch(query, searchValue)
+    })
+  }, [doctors, doctorSearch])
 
   useEffect(() => {
     if (open) {
+      setSelectedDoctorId(doctorId)
+      setDoctorSearch('')
       form.reset({
         subType: defaultSubType(),
         wish_date: wish?.wish_date ?? prefilledDate ?? '',
@@ -104,6 +141,7 @@ export function WishFormDialog({ open, onOpenChange, doctorId, wish, prefilledDa
   }, [open, wish, prefilledDate]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const onSubmit = (values: FormValues) => {
+    if (selectedDoctorId == null) return
     const payload = {
       wish_date: values.subType === 'date' ? (values.wish_date || null) : null,
       day_of_week: values.subType === 'weekday' ? values.day_of_week : null,
@@ -133,8 +171,43 @@ export function WishFormDialog({ open, onOpenChange, doctorId, wish, prefilledDa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{wish ? 'Wunsch bearbeiten' : 'Neuer Wunsch'}</DialogTitle>
+          <DialogTitle>
+            {selectedDoctorId == null ? 'Arzt auswählen' : wish ? 'Wunsch bearbeiten' : 'Neuer Wunsch'}
+          </DialogTitle>
         </DialogHeader>
+        {showDoctorPicker ? (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="wish-doctor-search">Arzt suchen</label>
+              <Input
+                id="wish-doctor-search"
+                value={doctorSearch}
+                onChange={(e) => setDoctorSearch(e.target.value)}
+                placeholder="Name oder Kürzel"
+                autoFocus
+              />
+            </div>
+            <div className="max-h-72 overflow-y-auto rounded-md border border-line">
+              {filteredDoctors.length > 0 ? (
+                filteredDoctors.map((doctor) => (
+                  <button
+                    key={doctor.id}
+                    type="button"
+                    className="flex w-full items-center justify-between border-b border-line px-3 py-2 text-left text-sm last:border-b-0 hover:bg-line/30"
+                    onClick={() => setSelectedDoctorId(doctor.id)}
+                  >
+                    <span className="text-ink">{doctor.name}</span>
+                    {doctor.short_name && (
+                      <span className="text-xs text-ink-3">{doctor.short_name}</span>
+                    )}
+                  </button>
+                ))
+              ) : (
+                <p className="px-3 py-6 text-center text-sm text-ink-3">Keine Ärzte gefunden</p>
+              )}
+            </div>
+          </div>
+        ) : (
         <Form {...form}>
           <form onSubmit={(e) => void form.handleSubmit(onSubmit)(e)} className="space-y-4" noValidate>
 
@@ -348,6 +421,7 @@ export function WishFormDialog({ open, onOpenChange, doctorId, wish, prefilledDa
             </DialogFooter>
           </form>
         </Form>
+        )}
       </DialogContent>
     </Dialog>
   )

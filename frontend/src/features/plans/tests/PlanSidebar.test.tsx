@@ -196,21 +196,13 @@ describe('Wünsche-Tab — Wunsch erfassen Button', () => {
     expect(screen.getByText('Neu')).toBeInTheDocument()
   })
 
-  it('öffnet Arzt-Picker nach Klick auf "Neu"', async () => {
-    const user = userEvent.setup()
-    render(<PlanSidebar {...wuenscheProps} />)
-    await user.click(screen.getByText('Neu'))
-    expect(screen.getByText('Wunsch für Arzt:')).toBeInTheDocument()
-  })
-
-  it('"Weiter" ruft onNewWishClick mit doctorId auf', async () => {
+  it('"Neu" ruft onNewWishClick ohne vorausgewählten Arzt auf', async () => {
     const user = userEvent.setup()
     const onNewWishClick = vi.fn()
     render(<PlanSidebar {...wuenscheProps} onNewWishClick={onNewWishClick} />)
     await user.click(screen.getByText('Neu'))
-    await user.selectOptions(screen.getByRole('combobox'), '1')
-    await user.click(screen.getByText('Weiter'))
-    expect(onNewWishClick).toHaveBeenCalledWith(1)
+    expect(onNewWishClick).toHaveBeenCalledWith(null)
+    expect(screen.queryByText('Wunsch für Arzt:')).not.toBeInTheDocument()
   })
 })
 

@@ -158,7 +158,7 @@ export function PlanPage() {
   const [showWishes, setShowWishes] = useState(true)
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('details')
   const [mode, setMode] = useState<'besetzung' | 'ina'>('besetzung')
-  const [wishCreateTarget, setWishCreateTarget] = useState<{ doctorId: number; date: string } | null>(null)
+  const [wishCreateTarget, setWishCreateTarget] = useState<{ doctorId: number | null; date: string } | null>(null)
   const [leftOpen, setLeftOpen] = useState(true)
   const [rightOpen, setRightOpen] = useState(true)
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<number | null>(null)
@@ -371,6 +371,18 @@ export function PlanPage() {
       highlightTimerRef.current = null
     }, 2000)
   }, [conflicts])
+
+  const scrollToDate = useCallback((date: string) => {
+    const el = document.querySelector(`[data-date="${date}"]`)
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    el.classList.add('dp-highlight-pulse')
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current)
+    highlightTimerRef.current = setTimeout(() => {
+      el.classList.remove('dp-highlight-pulse')
+      highlightTimerRef.current = null
+    }, 2000)
+  }, [])
 
   const scrollToShift = useCallback((shiftId: number) => {
     const el = document.querySelector(`[data-shift-id="${shiftId}"]`)
@@ -814,7 +826,7 @@ export function PlanPage() {
         </div>
       )}
 
-      <div className="flex flex-1 overflow-hidden gap-4 px-6 pb-6">
+      <div className="flex flex-1 overflow-hidden gap-0 px-6 pb-6">
         {mode === 'besetzung' && (
           <div className="flex shrink-0">
             {leftOpen && (
@@ -889,6 +901,13 @@ export function PlanPage() {
               showWishes={showWishes}
               onWishCreate={(doctorId, date) => setWishCreateTarget({ doctorId, date })}
               onDepartmentClick={handleDepartmentClick}
+              onDoctorClick={(doctorId) => {
+                setSelectedDoctorId(doctorId)
+                setContextShift(null)
+                setSelectedDepartmentId(null)
+                setSidebarTab('details')
+                if (!rightOpen) setRightOpen(true)
+              }}
             />
           )}
         </div>
@@ -941,6 +960,7 @@ export function PlanPage() {
                 fairnessGroups={fairnessGroups}
                 conflicts={conflicts ?? null}
                 onScrollToShift={scrollToShift}
+                onScrollToDate={scrollToDate}
                 selectedDepartmentId={selectedDepartmentId}
                 departments={departments}
                 rotations={rotations}
@@ -1144,6 +1164,7 @@ export function PlanPage() {
         open={true}
         onOpenChange={(open) => { if (!open) setWishCreateTarget(null) }}
         prefilledDate={wishCreateTarget.date}
+        doctors={doctors}
       />
     )}
 

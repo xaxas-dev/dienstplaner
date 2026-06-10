@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { eachDayOfInterval, format, parseISO } from 'date-fns'
 import { Star, ShieldCheck, ShieldOff, Plus } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -68,13 +68,14 @@ export interface PlanSidebarProps {
   // Konflikte
   conflicts?: PlanConflictSummary | null
   onScrollToShift: (shiftId: number) => void
+  onScrollToDate?: (date: string) => void
   // Department-Details
   selectedDepartmentId?: number | null
   departments?: Department[]
   rotations?: RotationAssignmentWithDetails[]
   onDepartmentDeselect?: () => void
   // Wunsch erstellen
-  onNewWishClick: (doctorId: number) => void
+  onNewWishClick: (doctorId: number | null) => void
 }
 
 export function PlanSidebar({
@@ -84,27 +85,11 @@ export function PlanSidebar({
   selectedDoctorId, doctors = [], shiftTypes = [], wishes = [], planMonth,
   showWishes, onToggleWishes,
   fairnessStats, fairnessGroups,
-  conflicts, onScrollToShift,
+  conflicts, onScrollToShift, onScrollToDate,
   selectedDepartmentId, departments, rotations, onDepartmentDeselect,
   onNewWishClick,
 }: PlanSidebarProps) {
   const [pendingReason, setPendingReason] = useState<Record<string, string>>({})
-  const [wishPickerOpen, setWishPickerOpen] = useState(false)
-  const [wishPickerDoctorId, setWishPickerDoctorId] = useState<string>('')
-  const wishPickerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!wishPickerOpen) return
-    function handleOutside(e: MouseEvent) {
-      if (wishPickerRef.current && !wishPickerRef.current.contains(e.target as Node)) {
-        setWishPickerOpen(false)
-        setWishPickerDoctorId('')
-      }
-    }
-    document.addEventListener('mousedown', handleOutside)
-    return () => document.removeEventListener('mousedown', handleOutside)
-  }, [wishPickerOpen])
-
   const today = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
   const overrideMap = new Map(shiftOverrides.map((o) => [o.constraint_id, o]))
@@ -516,6 +501,10 @@ export function PlanSidebar({
                         {s?.shift_type && (
                           <span className="ml-2 font-semibold">{s.shift_type.short_name}</span>
                         )}
+                        {(() => {
+                          const doc = doctors.find((d) => d.id === s?.doctor_id)
+                          return doc ? <span className="ml-2 text-ink-3">{doc.name}</span> : null
+                        })()}
                       </button>
                     )
                   })}
@@ -543,6 +532,10 @@ export function PlanSidebar({
                         {s?.shift_type && (
                           <span className="ml-2 font-semibold">{s.shift_type.short_name}</span>
                         )}
+                        {(() => {
+                          const doc = doctors.find((d) => d.id === s?.doctor_id)
+                          return doc ? <span className="ml-2 text-ink-3">{doc.name}</span> : null
+                        })()}
                       </button>
                     )
                   })}
@@ -563,51 +556,13 @@ export function PlanSidebar({
           <div className="p-4 space-y-4">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] text-ink-3 uppercase tracking-[0.08em] font-medium">Wünsche im Plan</span>
-              <div className="relative" ref={wishPickerRef}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (wishPickerOpen) {
-                      setWishPickerOpen(false)
-                      setWishPickerDoctorId('')
-                    } else {
-                      setWishPickerOpen(true)
-                    }
-                  }}
-                  className="inline-flex items-center gap-1 text-[11px] text-ink-2 border border-line rounded-lg px-2 py-1 hover:bg-line/30 transition-colors"
-                >
-                  <Plus className="size-3" /> Neu
-                </button>
-                {wishPickerOpen && (
-                  <div className="absolute right-0 top-full mt-1 w-[220px] bg-card border border-line rounded-lg shadow-md p-3 space-y-2 z-10">
-                    <p className="text-[11px] font-medium text-ink-3">Wunsch für Arzt:</p>
-                    <select
-                      className="w-full h-8 text-xs border border-line rounded-md px-2 bg-paper text-ink"
-                      value={wishPickerDoctorId}
-                      onChange={(e) => setWishPickerDoctorId(e.target.value)}
-                    >
-                      <option value="">Arzt auswählen…</option>
-                      {doctors.map((d) => (
-                        <option key={d.id} value={String(d.id)}>{d.name}</option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      disabled={!wishPickerDoctorId}
-                      onClick={() => {
-                        if (wishPickerDoctorId) {
-                          onNewWishClick(Number(wishPickerDoctorId))
-                          setWishPickerOpen(false)
-                          setWishPickerDoctorId('')
-                        }
-                      }}
-                      className="w-full px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-medium disabled:opacity-40 transition-opacity"
-                    >
-                      Weiter
-                    </button>
-                  </div>
-                )}
-              </div>
+              <button
+                type="button"
+                onClick={() => onNewWishClick(null)}
+                className="inline-flex items-center gap-1 text-[11px] text-ink-2 border border-line rounded-lg px-2 py-1 hover:bg-line/30 transition-colors"
+              >
+                <Plus className="size-3" /> Neu
+              </button>
             </div>
             <button
               type="button"
@@ -628,27 +583,44 @@ export function PlanSidebar({
                   Wünsche ({wishes.length})
                 </p>
                 <div className="space-y-1">
-                  {wishes.map((w) => (
-                    <div
-                      key={w.id}
-                      className="px-3 py-1.5 rounded-lg border border-line bg-paper text-[12px] text-ink-2"
-                    >
-                      {w.wish_date ? (
-                        <span>
-                          {w.wish_date} →{' '}
-                          <strong>
-                            {w.wish_type === 'AVOID_DAY'
-                              ? 'frei'
-                              : w.wish_type === 'REQUIRE_SHIFT'
-                                ? 'Dienst'
-                                : 'kein Dienst'}
-                          </strong>
-                        </span>
-                      ) : (
-                        <span className="text-ink-3">{w.wish_type}</span>
-                      )}
-                    </div>
-                  ))}
+                  {wishes.map((w) => {
+                    const doc = doctors.find((d) => d.id === w.doctor_id)
+                    const canNavigate = !!w.wish_date
+                    const content = (
+                      <>
+                        {doc && (
+                          <span className="font-medium text-ink">{doc.name}</span>
+                        )}
+                        {w.wish_date ? (
+                          <span className="text-ink-2">
+                            {' '}· {w.wish_date} →{' '}
+                            <strong>
+                              {w.wish_type === 'AVOID_DAY' ? 'frei' : w.wish_type === 'REQUIRE_SHIFT' ? 'Dienst' : 'kein Dienst'}
+                            </strong>
+                          </span>
+                        ) : (
+                          <span className="text-ink-3"> · {w.wish_type}</span>
+                        )}
+                      </>
+                    )
+                    if (canNavigate) {
+                      return (
+                        <button
+                          key={w.id}
+                          type="button"
+                          onClick={() => onScrollToDate?.(w.wish_date!)}
+                          className="w-full text-left px-3 py-1.5 rounded-lg border border-line bg-paper text-[12px] hover:bg-line/30 transition-colors"
+                        >
+                          {content}
+                        </button>
+                      )
+                    }
+                    return (
+                      <div key={w.id} className="px-3 py-1.5 rounded-lg border border-line bg-paper text-[12px] text-ink-2">
+                        {content}
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             ) : (
@@ -660,6 +632,9 @@ export function PlanSidebar({
         {/* ── Fairness (INA only) ── */}
         {activeTab === 'fairness' && (
           <div className="flex flex-col overflow-hidden h-full">
+            <p className="px-4 pt-3 pb-1 text-[11px] text-ink-3 leading-relaxed shrink-0">
+              INA-Dienste je Arzt im Plan-Zeitraum, aufgeteilt nach Dienstgruppe. Nur Ärzte mit aktiver Rotation werden gezählt.
+            </p>
             <div
               className="grid border-b border-line text-[10px] text-ink-3 font-medium bg-paper/40 shrink-0"
               style={{ gridTemplateColumns: fairnessColTemplate }}
