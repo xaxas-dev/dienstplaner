@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { eachDayOfInterval, format, parseISO } from 'date-fns'
-import { Star, ShieldCheck, ShieldOff, Plus } from 'lucide-react'
+import { Star, ShieldCheck, ShieldOff, Plus, Check } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -76,6 +76,30 @@ export interface PlanSidebarProps {
   onDepartmentDeselect?: () => void
   // Wunsch erstellen
   onNewWishClick: (doctorId: number | null) => void
+}
+
+const DAY_ABBR = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
+
+function wishLabel(w: Wish, shiftTypes: ShiftType[]): string {
+  if (w.wish_type === 'AVOID_DAY') return 'kein Dienst'
+  const st = w.shift_type_id ? shiftTypes.find((s) => s.id === w.shift_type_id) : null
+  const short = st?.short_name ?? 'Dienst'
+  return w.wish_type === 'AVOID_SHIFT' ? `kein ${short}` : `bitte ${short}`
+}
+
+function isWishFulfilled(wish: Wish, shifts: ShiftWithDetails[]): boolean {
+  if (!wish.wish_date) return false
+  const onDate = shifts.filter(
+    (s) => s.doctor_id === wish.doctor_id && s.shift_date === wish.wish_date,
+  )
+  if (wish.wish_type === 'REQUIRE_SHIFT') {
+    return onDate.some((s) => s.shift_type_id === wish.shift_type_id)
+  }
+  if (wish.wish_type === 'AVOID_DAY') {
+    return onDate.length === 0
+  }
+  // AVOID_SHIFT: kein Dienst dieses Typs an dem Tag
+  return !onDate.some((s) => s.shift_type_id === wish.shift_type_id)
 }
 
 export function PlanSidebar({
@@ -443,24 +467,20 @@ export function PlanSidebar({
                   Wünsche
                 </p>
                 <div className="bg-card border border-line rounded-[10px] p-[10px_12px] text-[12px] text-ink-2 space-y-1">
-                  {doctorWishes.slice(0, 5).map((w) => (
-                    <div key={w.id}>
-                      {w.wish_date ? (
-                        <span>
-                          {w.wish_date} →{' '}
-                          <strong>
-                            {w.wish_type === 'AVOID_DAY'
-                              ? 'frei'
-                              : w.wish_type === 'REQUIRE_SHIFT'
-                                ? 'Dienst'
-                                : 'kein N'}
-                          </strong>
-                        </span>
-                      ) : (
-                        <span className="text-ink-3">{w.wish_type}</span>
-                      )}
-                    </div>
-                  ))}
+                  {doctorWishes.slice(0, 5).map((w) => {
+                    const label = wishLabel(w, shiftTypes)
+                    return (
+                      <div key={w.id}>
+                        {w.wish_date ? (
+                          <span>{format(parseISO(w.wish_date), 'dd.MM.yyyy')} → <strong>{label}</strong></span>
+                        ) : w.day_of_week != null ? (
+                          <span className="text-ink-3">{DAY_ABBR[w.day_of_week]} → {label}</span>
+                        ) : (
+                          <span className="text-ink-3">allgemein → {label}</span>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -586,22 +606,27 @@ export function PlanSidebar({
                   {wishes.map((w) => {
                     const doc = doctors.find((d) => d.id === w.doctor_id)
                     const canNavigate = !!w.wish_date
-                    const content = (
-                      <>
+                    const fulfilled = isWishFulfilled(w, shifts)
+                    const label = wishLabel(w, shiftTypes)
+                    const tileContent = (
+                      <div className="min-w-0 truncate">
                         {doc && (
                           <span className="font-medium text-ink">{doc.name}</span>
                         )}
                         {w.wish_date ? (
                           <span className="text-ink-2">
-                            {' '}· {w.wish_date} →{' '}
-                            <strong>
-                              {w.wish_type === 'AVOID_DAY' ? 'frei' : w.wish_type === 'REQUIRE_SHIFT' ? 'Dienst' : 'kein Dienst'}
-                            </strong>
+                            {' '}· {format(parseISO(w.wish_date), 'dd.MM.yyyy')} →{' '}
+                            <strong>{label}</strong>
                           </span>
+                        ) : w.day_of_week != null ? (
+                          <span className="text-ink-3"> · {DAY_ABBR[w.day_of_week]} → {label}</span>
                         ) : (
-                          <span className="text-ink-3"> · {w.wish_type}</span>
+                          <span className="text-ink-3"> · allgemein → {label}</span>
                         )}
-                      </>
+                      </div>
+                    )
+                    const checkmark = fulfilled && (
+                      <Check className="absolute top-1 right-1 size-3 text-green-600 pointer-events-none" />
                     )
                     if (canNavigate) {
                       return (
@@ -609,15 +634,30 @@ export function PlanSidebar({
                           key={w.id}
                           type="button"
                           onClick={() => onScrollToDate?.(w.wish_date!)}
-                          className="w-full text-left px-3 py-1.5 rounded-lg border border-line bg-paper text-[12px] hover:bg-line/30 transition-colors"
+                          className={cn(
+                            'relative w-full text-left px-3 py-1.5 rounded-lg border text-[12px] transition-colors',
+                            fulfilled
+                              ? 'bg-green-50 border-green-300 hover:bg-green-100/60'
+                              : 'bg-paper border-line hover:bg-line/30',
+                          )}
                         >
-                          {content}
+                          {tileContent}
+                          {checkmark}
                         </button>
                       )
                     }
                     return (
-                      <div key={w.id} className="px-3 py-1.5 rounded-lg border border-line bg-paper text-[12px] text-ink-2">
-                        {content}
+                      <div
+                        key={w.id}
+                        className={cn(
+                          'relative px-3 py-1.5 rounded-lg border text-[12px] text-ink-2',
+                          fulfilled
+                            ? 'bg-green-50 border-green-300'
+                            : 'bg-paper border-line',
+                        )}
+                      >
+                        {tileContent}
+                        {checkmark}
                       </div>
                     )
                   })}

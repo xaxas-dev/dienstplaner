@@ -157,13 +157,22 @@ export function PlanPage() {
     to: string
   } | null>(null)
   const [showWishes, setShowWishes] = useState(true)
-  const [sidebarTab, setSidebarTab] = useState<SidebarTab>('details')
   const rawMode = searchParams.get('mode')
   const mode: 'besetzung' | 'ina' = rawMode === 'ina' ? 'ina' : 'besetzung'
   function setMode(newMode: 'besetzung' | 'ina') {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev)
       next.set('mode', newMode)
+      return next
+    }, { replace: true })
+  }
+  const VALID_TABS: SidebarTab[] = ['details', 'wuensche', 'fairness', 'konflikte']
+  const rawTab = searchParams.get('tab')
+  const sidebarTab: SidebarTab = VALID_TABS.includes(rawTab as SidebarTab) ? (rawTab as SidebarTab) : 'details'
+  function setSidebarTab(tab: SidebarTab) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.set('tab', tab)
       return next
     }, { replace: true })
   }
@@ -795,8 +804,8 @@ export function PlanPage() {
         prevPlan={prevPlan}
         nextPlan={nextPlan}
         plan={plan}
-        onNavigatePrev={() => prevPlan && navigate(`/plans/${planToSlug(prevPlan)}`)}
-        onNavigateNext={() => nextPlan && navigate(`/plans/${planToSlug(nextPlan)}`)}
+        onNavigatePrev={() => prevPlan && navigate(`/plans/${planToSlug(prevPlan)}?mode=${mode}&tab=${sidebarTab}`)}
+        onNavigateNext={() => nextPlan && navigate(`/plans/${planToSlug(nextPlan)}?mode=${mode}&tab=${sidebarTab}`)}
         onStatusChange={handleStatusChange}
         isUpdatingStatus={updatePlan.isPending}
         onExport={() => !isNaN(id) && window.location.assign(`/api/plans/${id}/export`)}
@@ -911,6 +920,7 @@ export function PlanPage() {
               }
               wishes={wishes}
               showWishes={showWishes}
+              shiftTypes={shiftTypes}
               onWishCreate={(doctorId, date) => setWishCreateTarget({ doctorId, date })}
               onDepartmentClick={handleDepartmentClick}
               onDoctorClick={(doctorId) => {

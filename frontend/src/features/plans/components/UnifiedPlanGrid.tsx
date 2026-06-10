@@ -8,10 +8,10 @@ import { getDepartmentColor } from '@/lib/bereichColors'
 import { getCurrentEmploymentPeriod } from '@/features/doctors/doctorHelpers'
 import { buildUnifiedRows, resolveCell } from '../unifiedGridUtils'
 import type { RotationRow } from '../unifiedGridUtils'
-import { getWishHint } from '../wishGridUtils'
+import { getWishHint, getWishBadge } from '../wishGridUtils'
 import { BereichHeaderRow, makePlaceholderDropId, makeRotationMemberDropId } from './BereichHeaderRow'
 import { UnifiedShiftCell } from './UnifiedShiftCell'
-import type { Department, Doctor, RotationAssignmentWithDetails, ShiftWithDetails, Absence, TarifWarning, Wish } from '@/lib/types'
+import type { Department, Doctor, RotationAssignmentWithDetails, ShiftWithDetails, Absence, TarifWarning, Wish, ShiftType } from '@/lib/types'
 
 const WEEKDAY_ABBR = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 
@@ -41,6 +41,7 @@ interface UnifiedPlanGridProps {
   onDepartmentClick?: (departmentId: number) => void
   wishes?: Wish[]
   showWishes?: boolean
+  shiftTypes?: ShiftType[]
   onWishCreate?: (doctorId: number, date: string) => void
   onDoctorClick?: (doctorId: number) => void
 }
@@ -193,6 +194,7 @@ export function UnifiedPlanGrid({
   onDepartmentClick,
   wishes,
   showWishes,
+  shiftTypes,
   onWishCreate,
   onDoctorClick,
 }: UnifiedPlanGridProps) {
@@ -502,6 +504,9 @@ export function UnifiedPlanGrid({
                     wishHint={showWishes && row.kind === 'rotation'
                       ? getWishHint(wishes ?? [], row.doctor.id, dk)
                       : null}
+                    wishBadge={showWishes && row.kind === 'rotation'
+                      ? getWishBadge(wishes ?? [], row.doctor.id, dk, shiftTypes ?? [])
+                      : undefined}
                     doctorId={row.doctor.id}
                     onWishCreate={onWishCreate}
                   />

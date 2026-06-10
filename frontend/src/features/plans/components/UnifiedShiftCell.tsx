@@ -40,6 +40,7 @@ interface UnifiedShiftCellProps {
   onConflictDotClick?: () => void
   onTarifDotClick?: () => void
   wishHint?: 'avoid' | 'require' | null
+  wishBadge?: string | null
   doctorId?: number
   onWishCreate?: (doctorId: number, date: string) => void
 }
@@ -74,6 +75,7 @@ export function UnifiedShiftCell({
   onConflictDotClick,
   onTarifDotClick,
   wishHint,
+  wishBadge,
   doctorId,
   onWishCreate,
 }: UnifiedShiftCellProps) {
@@ -228,6 +230,20 @@ export function UnifiedShiftCell({
               : (wishHint === 'avoid' ? 'bg-amber-50/60' : 'bg-green-50/60'),
           )}
         />
+      )}
+
+      {/* Wish-Typ-Badge (links unten, zeigt konkreten Wunschtyp) */}
+      {wishHint && !isLocked && wishBadge && (
+        <span
+          className={cn(
+            'absolute bottom-0.5 left-0.5 text-[7px] font-semibold leading-none px-0.5 rounded-sm pointer-events-none z-[1]',
+            wishHint === 'avoid'
+              ? 'text-amber-800 bg-amber-100/90'
+              : 'text-green-800 bg-green-100/90',
+          )}
+        >
+          {wishBadge}
+        </span>
       )}
 
       {/* Wish Schnellerfassung */}

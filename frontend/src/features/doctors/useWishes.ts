@@ -20,6 +20,7 @@ export function useCreateWish(doctorId: number) {
       apiPost<Wish>(`/api/doctors/${doctorId}/wishes`, data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: wishKeys.byDoctor(doctorId) })
+      void qc.invalidateQueries({ queryKey: ['plan-wishes'] })
     },
   })
 }
@@ -31,6 +32,7 @@ export function useUpdateWish(doctorId: number) {
       apiPatch<Wish>(`/api/wishes/${id}`, data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: wishKeys.byDoctor(doctorId) })
+      void qc.invalidateQueries({ queryKey: ['plan-wishes'] })
     },
   })
 }
@@ -41,6 +43,7 @@ export function useDeleteWish(doctorId: number) {
     mutationFn: (id: number) => apiDelete(`/api/wishes/${id}`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: wishKeys.byDoctor(doctorId) })
+      void qc.invalidateQueries({ queryKey: ['plan-wishes'] })
     },
   })
 }
