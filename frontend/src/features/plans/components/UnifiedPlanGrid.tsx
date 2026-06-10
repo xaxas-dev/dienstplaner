@@ -117,7 +117,7 @@ function RotationLabelCell({
       ref={setNodeRef}
       onMouseEnter={onMouseEnter}
       className={cn(
-        'sticky left-0 z-10 flex items-center gap-1 pr-1 pl-8 py-1 border-b border-line min-w-0 transition-colors',
+        'sticky left-0 z-10 flex items-center gap-1 pr-1 pl-8 py-1 border-b border-line min-w-0 transition-colors relative overflow-hidden',
         isOver ? '' : isHighlighted ? 'bg-accent/8' : isHovered ? 'bg-paper' : 'bg-card',
       )}
       style={{
@@ -135,10 +135,11 @@ function RotationLabelCell({
       >
         {row.doctor.name}
       </span>
-      {isHovered && employmentPct != null && (
-        <span className="text-[10px] text-ink-3 shrink-0 tabular-nums">{employmentPct}%</span>
-      )}
-      <div className={cn('flex items-center gap-0.5 shrink-0', !isHovered && 'invisible')}>
+      {isHovered && (
+        <div className="absolute right-0 top-0 h-full flex items-center gap-0.5 pr-1 bg-gradient-to-l from-card via-card to-transparent pl-4">
+          {employmentPct != null && (
+            <span className="text-[10px] text-ink-3 shrink-0 tabular-nums">{employmentPct}%</span>
+          )}
         <button
           className="p-0.5 rounded hover:bg-paper text-ink-3 hover:text-ink-2 transition-colors"
           title="Arzt-Profil öffnen"
@@ -163,7 +164,8 @@ function RotationLabelCell({
         >
           <X className="size-3" />
         </button>
-      </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -199,6 +201,7 @@ export function UnifiedPlanGrid({
 }: UnifiedPlanGridProps) {
   const [hoverRow, setHoverRow] = useState<string | null>(null)
   const [hoverDay, setHoverDay] = useState<string | null>(null)
+  const [doctorColWidth, setDoctorColWidth] = useState(180)
   const [mouseSelectState, setMouseSelectState] = useState<{
     rotationId: number
     doctorId: number
@@ -301,12 +304,30 @@ export function UnifiedPlanGrid({
       <div
         className="grid text-xs"
         style={{
-          gridTemplateColumns: `minmax(140px, 200px) repeat(${colCount}, minmax(36px, 1fr))`,
+          gridTemplateColumns: `${doctorColWidth}px repeat(${colCount}, minmax(36px, 1fr))`,
         }}
       >
         {/* Kopfzeile */}
-        <div className="sticky top-0 left-0 z-20 bg-[#FAF5E9] border-b border-r border-line px-3 py-2.5 flex items-end">
+        <div className="sticky top-0 left-0 z-20 bg-[#FAF5E9] border-b border-r border-line px-3 py-2.5 flex items-end relative">
           <span className="text-[11px] text-ink-3 uppercase tracking-[0.06em] font-medium">Arzt</span>
+          <div
+            className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-accent/40 transition-colors"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              const startX = e.clientX
+              const startW = doctorColWidth
+              function onMove(ev: MouseEvent) {
+                const newW = Math.max(120, Math.min(320, startW + ev.clientX - startX))
+                setDoctorColWidth(newW)
+              }
+              function onUp() {
+                document.removeEventListener('mousemove', onMove)
+                document.removeEventListener('mouseup', onUp)
+              }
+              document.addEventListener('mousemove', onMove)
+              document.addEventListener('mouseup', onUp)
+            }}
+          />
         </div>
         {days.map((day, i) => {
           const we = isWeekend(day)
