@@ -889,6 +889,13 @@ export function PlanPage() {
               showWishes={showWishes}
               onWishCreate={(doctorId, date) => setWishCreateTarget({ doctorId, date })}
               onDepartmentClick={handleDepartmentClick}
+              onDoctorClick={(doctorId) => {
+                setSelectedDoctorId(doctorId)
+                setContextShift(null)
+                setSelectedDepartmentId(null)
+                setSidebarTab('details')
+                if (!rightOpen) setRightOpen(true)
+              }}
             />
           )}
         </div>

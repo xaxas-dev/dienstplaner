@@ -42,6 +42,7 @@ interface UnifiedPlanGridProps {
   wishes?: Wish[]
   showWishes?: boolean
   onWishCreate?: (doctorId: number, date: string) => void
+  onDoctorClick?: (doctorId: number) => void
 }
 
 function AddRotationRow({ onAdd }: { onAdd: () => void }) {
@@ -94,6 +95,7 @@ function RotationLabelCell({
   onMouseEnter,
   onDelete,
   onEdit,
+  onDoctorClick,
 }: {
   row: RotationRow
   isHovered: boolean
@@ -102,6 +104,7 @@ function RotationLabelCell({
   onMouseEnter: () => void
   onDelete?: () => void
   onEdit?: () => void
+  onDoctorClick?: (doctorId: number) => void
 }) {
   const navigate = useNavigate()
   const color = getDepartmentColor(row.department)
@@ -122,10 +125,14 @@ function RotationLabelCell({
         ...(isOver && { backgroundColor: `${color}20` }),
       }}
     >
-      <span className={cn(
-        'flex-1 text-[11px] font-medium truncate',
-        isHighlighted ? 'text-ink' : 'text-ink',
-      )}>
+      <span
+        className={cn(
+          'flex-1 text-[11px] font-medium truncate cursor-pointer hover:text-accent transition-colors',
+          isHighlighted ? 'text-ink' : 'text-ink',
+        )}
+        onClick={(e) => { e.stopPropagation(); onDoctorClick?.(row.doctor.id) }}
+        title="Arzt-Details anzeigen"
+      >
         {row.doctor.name}
       </span>
       {isHovered && employmentPct != null && (
@@ -188,6 +195,7 @@ export function UnifiedPlanGrid({
   wishes,
   showWishes,
   onWishCreate,
+  onDoctorClick,
 }: UnifiedPlanGridProps) {
   const [hoverRow, setHoverRow] = useState<string | null>(null)
   const [hoverDay, setHoverDay] = useState<string | null>(null)
@@ -392,6 +400,7 @@ export function UnifiedPlanGrid({
                 onMouseEnter={() => { setHoverRow(row.rowKey); setHoverDay(null) }}
                 onDelete={() => onDeleteRotation?.(row.rotation.id)}
                 onEdit={() => onEditRotation?.(row.rotation)}
+                onDoctorClick={onDoctorClick}
               />
 
               {dayKeys.map((dk) => {
