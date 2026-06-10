@@ -98,6 +98,7 @@ interface SelectedCell {
 export function PlanPage() {
   const { planId: planSlug } = useParams<{ planId: string }>()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { data: allPlans = [] } = usePlans()
 
   // Slug (z. B. "mai2026") oder numerische ID akzeptieren
@@ -157,8 +158,16 @@ export function PlanPage() {
   } | null>(null)
   const [showWishes, setShowWishes] = useState(true)
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>('details')
-  const [mode, setMode] = useState<'besetzung' | 'ina'>('besetzung')
-  const [wishCreateTarget, setWishCreateTarget] = useState<{ doctorId: number | null; date: string } | null>(null)
+  const rawMode = searchParams.get('mode')
+  const mode: 'besetzung' | 'ina' = rawMode === 'ina' ? 'ina' : 'besetzung'
+  function setMode(newMode: 'besetzung' | 'ina') {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.set('mode', newMode)
+      return next
+    }, { replace: true })
+  }
+  const [wishCreateTarget, setWishCreateTarget] = useState<{ doctorId: number | null; date?: string } | null>(null)
   const [leftOpen, setLeftOpen] = useState(true)
   const [rightOpen, setRightOpen] = useState(true)
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<number | null>(null)
@@ -207,7 +216,6 @@ export function PlanPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [lockedWeekDialogOpen, setLockedWeekDialogOpen] = useState(false)
   const [pendingDeleteRotation, setPendingDeleteRotation] = useState<RotationAssignmentWithDetails | null>(null)
-  const [searchParams, setSearchParams] = useSearchParams()
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cycleIdxRef = useRef({ open: 0, conflict: 0 })
 
@@ -402,7 +410,11 @@ export function PlanPage() {
     if (highlight !== 'open' && highlight !== 'conflict') return
     const t = setTimeout(() => {
       scrollToFirstMatch(highlight as 'open' | 'conflict')
-      setSearchParams({}, { replace: true })
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('highlight')
+        return next
+      }, { replace: true })
     }, 200)
     return () => clearTimeout(t)
   }, [searchParams, scrollToFirstMatch, setSearchParams])
@@ -826,7 +838,7 @@ export function PlanPage() {
         </div>
       )}
 
-      <div className="flex flex-1 overflow-hidden gap-0 px-6 pb-6">
+      <div className="flex flex-1 overflow-hidden gap-0 pb-6">
         {mode === 'besetzung' && (
           <div className="flex shrink-0">
             {leftOpen && (
@@ -965,7 +977,7 @@ export function PlanPage() {
                 departments={departments}
                 rotations={rotations}
                 onDepartmentDeselect={() => setSelectedDepartmentId(null)}
-                onNewWishClick={(doctorId) => setWishCreateTarget({ doctorId, date: format(new Date(), 'yyyy-MM-dd') })}
+                onNewWishClick={(doctorId) => setWishCreateTarget({ doctorId })}
               />
             )}
           </div>

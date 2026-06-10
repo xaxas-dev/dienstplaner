@@ -84,6 +84,7 @@ function isFuzzyMatch(query: string, value: string) {
 export function WishFormDialog({ open, onOpenChange, doctorId, doctors, wish, prefilledDate }: WishFormDialogProps) {
   const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(doctorId)
   const [doctorSearch, setDoctorSearch] = useState('')
+  const [focusedIndex, setFocusedIndex] = useState(0)
   // Hooks require a numeric doctorId; 0 is a safe placeholder because
   // onSubmit guards against selectedDoctorId == null before calling mutate.
   const createMutation = useCreateWish(selectedDoctorId ?? 0)
@@ -123,6 +124,10 @@ export function WishFormDialog({ open, onOpenChange, doctorId, doctors, wish, pr
       return isFuzzyMatch(query, searchValue)
     })
   }, [doctors, doctorSearch])
+
+  useEffect(() => {
+    setFocusedIndex(0)
+  }, [doctorSearch])
 
   useEffect(() => {
     if (open) {
@@ -174,6 +179,12 @@ export function WishFormDialog({ open, onOpenChange, doctorId, doctors, wish, pr
           <DialogTitle>
             {selectedDoctorId == null ? 'Arzt auswählen' : wish ? 'Wunsch bearbeiten' : 'Neuer Wunsch'}
           </DialogTitle>
+          {selectedDoctorId != null && doctors != null && (() => {
+            const doctor = doctors.find((d) => d.id === selectedDoctorId)
+            return doctor ? (
+              <p className="text-sm text-ink-3">{doctor.name}</p>
+            ) : null
+          })()}
         </DialogHeader>
         {showDoctorPicker ? (
           <div className="space-y-3">
@@ -185,15 +196,28 @@ export function WishFormDialog({ open, onOpenChange, doctorId, doctors, wish, pr
                 onChange={(e) => setDoctorSearch(e.target.value)}
                 placeholder="Name oder Kürzel"
                 autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault()
+                    setFocusedIndex((i) => Math.min(i + 1, filteredDoctors.length - 1))
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault()
+                    setFocusedIndex((i) => Math.max(i - 1, 0))
+                  } else if (e.key === 'Enter') {
+                    e.preventDefault()
+                    const doctor = filteredDoctors[focusedIndex]
+                    if (doctor) setSelectedDoctorId(doctor.id)
+                  }
+                }}
               />
             </div>
             <div className="max-h-72 overflow-y-auto rounded-md border border-line">
               {filteredDoctors.length > 0 ? (
-                filteredDoctors.map((doctor) => (
+                filteredDoctors.map((doctor, index) => (
                   <button
                     key={doctor.id}
                     type="button"
-                    className="flex w-full items-center justify-between border-b border-line px-3 py-2 text-left text-sm last:border-b-0 hover:bg-line/30"
+                    className={`flex w-full items-center justify-between border-b border-line px-3 py-2 text-left text-sm last:border-b-0 hover:bg-line/30 ${index === focusedIndex ? 'bg-line/50' : ''}`}
                     onClick={() => setSelectedDoctorId(doctor.id)}
                   >
                     <span className="text-ink">{doctor.name}</span>
