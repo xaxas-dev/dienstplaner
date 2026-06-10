@@ -516,6 +516,10 @@ export function PlanSidebar({
                         {s?.shift_type && (
                           <span className="ml-2 font-semibold">{s.shift_type.short_name}</span>
                         )}
+                        {(() => {
+                          const doc = doctors.find((d) => d.id === s?.doctor_id)
+                          return doc ? <span className="ml-2 text-ink-3">{doc.name}</span> : null
+                        })()}
                       </button>
                     )
                   })}
@@ -543,6 +547,10 @@ export function PlanSidebar({
                         {s?.shift_type && (
                           <span className="ml-2 font-semibold">{s.shift_type.short_name}</span>
                         )}
+                        {(() => {
+                          const doc = doctors.find((d) => d.id === s?.doctor_id)
+                          return doc ? <span className="ml-2 text-ink-3">{doc.name}</span> : null
+                        })()}
                       </button>
                     )
                   })}
