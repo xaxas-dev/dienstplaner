@@ -181,13 +181,13 @@ export function PlanModeBar({
       <div className="flex-1" />
 
       {/* Rechts: Plan generieren + Settings */}
-      <div className="flex items-center gap-px">
+      <div className="flex items-center">
         {solverEnabled && (
           <button
             type="button"
             onClick={onSolve}
             disabled={isSolving}
-            className="inline-flex items-center gap-1.5 px-3.5 py-[7px] rounded-[10px] bg-dp-accent text-[#FFF8EF] text-[12.5px] font-semibold hover:bg-dp-accent-hover disabled:opacity-60 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-[7px] rounded-l-[10px] rounded-r-none bg-dp-accent text-[#FFF8EF] text-[12.5px] font-semibold hover:bg-dp-accent-hover disabled:opacity-60 transition-colors"
           >
             <Zap className="size-3.5" />
             {isSolving ? 'Berechne…' : 'Plan generieren'}
@@ -197,7 +197,12 @@ export function PlanModeBar({
           type="button"
           onClick={onSettingsClick}
           aria-label="Plan-Einstellungen"
-          className="w-[30px] h-[30px] rounded-[8px] bg-dp-accent text-[#FFF8EF] flex items-center justify-center hover:bg-dp-accent-hover transition-colors"
+          className={cn(
+            'inline-flex items-center justify-center px-2.5 py-[7px] bg-dp-accent text-[#FFF8EF] hover:bg-dp-accent-hover transition-colors',
+            solverEnabled
+              ? 'rounded-l-none rounded-r-[10px] border-l border-[#FFF8EF]/20'
+              : 'rounded-[10px]',
+          )}
         >
           <Settings className="size-3.5" />
         </button>
