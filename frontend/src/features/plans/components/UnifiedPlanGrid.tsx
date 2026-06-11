@@ -46,25 +46,6 @@ interface UnifiedPlanGridProps {
   onDoctorClick?: (doctorId: number) => void
 }
 
-function AddRotationRow({ onAdd }: { onAdd: () => void }) {
-  return (
-    <div className="contents">
-      <button
-        type="button"
-        onClick={onAdd}
-        className="sticky left-0 z-10 flex items-center px-3 py-1 border-b border-line bg-card hover:bg-paper transition-colors group text-left w-full"
-      >
-        <span className="text-[10px] italic text-ink-3 group-hover:text-ink transition-colors">
-          + Arzt hinzufügen
-        </span>
-      </button>
-      <div
-        className="border-b border-line bg-card"
-        style={{ gridColumn: '2 / -1' }}
-      />
-    </div>
-  )
-}
 
 function PlaceholderLabelCell({ department }: { department: Department }) {
   const color = getDepartmentColor(department)
@@ -362,7 +343,7 @@ export function UnifiedPlanGrid({
         })}
 
         {/* Daten-Zeilen */}
-        {rows.flatMap((row, rowIndex) => {
+        {rows.flatMap((row) => {
           if (row.kind === 'header') {
             const rotationCount = rows.filter(
               (r) => r.kind === 'rotation' && r.department.id === row.department.id,
@@ -373,19 +354,12 @@ export function UnifiedPlanGrid({
                 department={row.department}
                 rotationCount={rotationCount}
                 onDepartmentClick={onDepartmentClick}
+                onAddRotation={onAddRotation ? () => onAddRotation(row.department.id) : undefined}
               />,
             ]
           }
 
           if (row.kind === 'placeholder') {
-            if (onAddRotation) {
-              return [
-                <AddRotationRow
-                  key={`add-placeholder-${row.department.id}`}
-                  onAdd={() => onAddRotation(row.department.id)}
-                />,
-              ]
-            }
             const color = getDepartmentColor(row.department)
             return [
               <div key={row.rowKey} className="contents">
@@ -515,23 +489,7 @@ export function UnifiedPlanGrid({
             </div>
           )
 
-          const nextRow = rows[rowIndex + 1]
-          const isLastInDept =
-            !nextRow ||
-            nextRow.kind !== 'rotation' ||
-            nextRow.department.id !== row.department.id
-
-          return [
-            rotationEl,
-            ...(onAddRotation && isLastInDept
-              ? [
-                  <AddRotationRow
-                    key={`add-dept-${row.department.id}`}
-                    onAdd={() => onAddRotation(row.department.id)}
-                  />,
-                ]
-              : []),
-          ]
+          return [rotationEl]
         })}
       </div>
     </div>

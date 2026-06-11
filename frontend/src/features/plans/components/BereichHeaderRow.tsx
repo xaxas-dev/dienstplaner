@@ -1,4 +1,5 @@
 import { useDroppable } from '@dnd-kit/core'
+import { Plus } from 'lucide-react'
 import { getDepartmentColor } from '@/lib/bereichColors'
 import type { Department } from '@/lib/types'
 
@@ -33,9 +34,10 @@ interface BereichHeaderRowProps {
   department: Department
   rotationCount?: number
   onDepartmentClick?: (departmentId: number) => void
+  onAddRotation?: () => void
 }
 
-export function BereichHeaderRow({ department, rotationCount, onDepartmentClick }: BereichHeaderRowProps) {
+export function BereichHeaderRow({ department, rotationCount, onDepartmentClick, onAddRotation }: BereichHeaderRowProps) {
   const color = getDepartmentColor(department)
   const { setNodeRef, isOver } = useDroppable({
     id: makeBereichHeaderDropId(department.id),
@@ -46,10 +48,10 @@ export function BereichHeaderRow({ department, rotationCount, onDepartmentClick 
 
   return (
     <div className="contents">
-      {/* Label-Cell: sticky, Drop-Target */}
+      {/* Label-Cell: sticky, Drop-Target, group für Hover-Button */}
       <div
         ref={setNodeRef}
-        className="sticky left-0 z-10 flex items-center gap-2 px-3 py-1.5 border-b border-line"
+        className="group sticky left-0 z-10 flex items-center gap-2 px-3 py-1.5 border-b border-line"
         onClick={() => onDepartmentClick?.(department.id)}
         style={{
           borderLeft: `4px solid ${color}`,
@@ -64,6 +66,17 @@ export function BereichHeaderRow({ department, rotationCount, onDepartmentClick 
           <span className="text-[10px] text-ink-3 shrink-0 tabular-nums leading-none">
             {rotationCount}/{department.max_headcount}
           </span>
+        )}
+        {onAddRotation && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onAddRotation() }}
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-black/10 shrink-0"
+            aria-label="Arzt hinzufügen"
+            title="Arzt hinzufügen"
+          >
+            <Plus className="size-3 text-ink" />
+          </button>
         )}
       </div>
       {/* Spanning cell: füllt alle Tag-Spalten ohne interne Trennlinien */}
