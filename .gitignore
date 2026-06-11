@@ -15,6 +15,9 @@ build/
 htmlcov/
 .coverage
 
+# Graphify
+graphify-out/*
+
 # uv
 .python-version
 

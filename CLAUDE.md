@@ -457,12 +457,30 @@ Punkte nennt.
 - **`Department.color`:** Nullable Hex-String (`VARCHAR(9)`). Frontend: `<input type="color">` + Reset-Button in `DepartmentFormDialog`. Backend: in `DepartmentBase`, `DepartmentUpdate`, `DepartmentRead` als `color: str | None`.
 
 ## Entwicklungs-Workflow
-- **Implementierung immer via `superpowers:subagent-driven-development`:** Für alle
-  Implementierungsaufgaben mit Implementierungsplan (aus `superpowers:writing-plans`)
-  stets den Subagent-Driven-Weg wählen. Kein Inline-Coding im Haupt-Thread.
-  Frischer Subagent pro Task + Spec-Review + Code-Quality-Review nach jedem Task.
 - **Brainstorming vor Implementierung:** `superpowers:brainstorming` → Plan →
   `superpowers:subagent-driven-development`. Diese Reihenfolge nie überspringen.
+- Nie den Companion anbieten. Bei visuellen Fragen oder UI-Problemen direkt nachfragen.
+
+## Codex-Routing (automatisch bei jeder Implementierungsaufgabe)
+
+Vor Implementierungsstart Routing-Entscheidung treffen und kurz begründen:
+
+**→ Codex (`codex:rescue` Skill):**
+- Boilerplate nach bestehendem Muster (neuer Router, neues Schema, neue Alembic-Migration)
+- Test-Suites für pure Funktionen (z.B. `buildUnifiedRows`, `buildFairnessStats`, `planGridUtils`)
+- Mechanische Renames/Refactors mit klar definiertem Scope
+- Kein Projekt-Kontext nötig (CLAUDE.md-Konventionen nicht relevant)
+- Erfolg automatisch prüfbar per `tsc` / `pytest` / `vitest`
+
+**→ Claude Code (behalten):**
+- Bugfixes (brauchen Konversationskontext)
+- Features mit Domänen-Wissen (INA-Logik, Solver-Pattern, Conflict-Engine, Wünsche)
+- Architektur-Entscheidungen und ADRs
+- Verifikation von Codex-Output
+
+## Ausführungs-Pflicht
+- Nach jedem Plan (writing-plans) **automatisch** `superpowers:subagent-driven-development` starten.
+- NIE "Welcher Ansatz?" fragen. Option 2 (Inline) existiert für dieses Projekt nicht.
 
 ## Was Claude Code NICHT tun soll
 - Keine neuen Bibliotheken ohne explizite Rückfrage einführen
