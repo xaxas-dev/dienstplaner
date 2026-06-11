@@ -13,11 +13,12 @@ interface Props {
   day: string
   currentShift: ShiftWithDetails | null
   openShiftsForDay: ShiftWithDetails[]
+  anchorPosition?: { x: number; y: number }
   onClose: () => void
 }
 
 export function DoctorAssignPopover({
-  planId, doctorId, day, currentShift, openShiftsForDay, onClose,
+  planId, doctorId, day, currentShift, openShiftsForDay, anchorPosition, onClose,
 }: Props) {
   const { mutate, isPending } = useAssignShift(planId)
   const { data: doctors = [] } = useDoctors()
@@ -69,93 +70,113 @@ export function DoctorAssignPopover({
     (d) => d.active && d.name.toLowerCase().includes(search.toLowerCase()),
   )
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-    >
+  const cardContent = (
+    <>
+      {/* Offene Schichten */}
+      {openShiftsForDay.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-xs text-ink-3 font-medium">Schicht auswählen</p>
+          <div className="flex flex-wrap gap-1.5">
+            {openShiftsForDay.map((s, idx) => (
+              <button
+                key={s.id}
+                disabled={isPending}
+                onClick={() => assign(s.id, doctorId)}
+                title={idx < 9 ? `Taste ${idx + 1}` : undefined}
+                className="relative px-2.5 py-1 rounded-full text-xs font-bold bg-paper border border-line hover:border-accent transition"
+              >
+                {idx < 9 && (
+                  <span className="absolute -top-1.5 -right-1 text-[8px] font-normal text-ink-3 leading-none bg-card border border-line rounded px-0.5">
+                    {idx + 1}
+                  </span>
+                )}
+                {s.shift_type?.short_name ?? s.shift_type_id}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Anderen Arzt zuweisen (nur bei besetzter Zelle) */}
+      {currentShift && (
+        <div className="space-y-1.5">
+          <p className="text-xs text-ink-3 font-medium">Anderen Arzt zuweisen</p>
+          <Input
+            placeholder="Suchen…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-7 text-xs"
+          />
+          <ul className="max-h-40 overflow-y-auto space-y-0.5">
+            {filteredDoctors.map((d) => {
+              const avail = availabilityMap[d.id]
+              const unavailable = avail !== undefined && !avail.available
+              const tooltip = unavailable ? avail.reasons.join(', ') : undefined
+              return (
+                <li key={d.id}>
+                  <button
+                    disabled={isPending}
+                    onClick={() => assign(currentShift.id, d.id)}
+                    title={tooltip}
+                    className="w-full text-left px-2 py-1 rounded-md text-xs hover:bg-paper transition flex items-center gap-1.5"
+                  >
+                    {unavailable && (
+                      <span
+                        aria-label="Nicht INA-verfügbar"
+                        className="inline-block w-2 h-2 rounded-full bg-amber-400 flex-shrink-0"
+                      />
+                    )}
+                    <span>{d.name}</span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
+
+      {/* Zuweisung entfernen */}
+      {currentShift && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full text-warn-ink hover:bg-warn-bg text-xs"
+          disabled={isPending}
+          onClick={() => assign(currentShift.id, null)}
+        >
+          Zuweisung entfernen
+        </Button>
+      )}
+
+      {openShiftsForDay.length === 0 && !currentShift && (
+        <p className="text-xs text-ink-3">Keine offenen Schichten an diesem Tag.</p>
+      )}
+    </>
+  )
+
+  const cardClass = 'bg-card border border-line rounded-2xl shadow-lg w-72 p-4 space-y-3'
+  const POPOVER_WIDTH = 296 // w-72 = 288px + border tolerance
+  const POPOVER_MAX_HEIGHT = 320
+
+  if (anchorPosition) {
+    return (
       <div
         ref={cardRef}
-        className="bg-card border border-line rounded-2xl shadow-lg w-72 p-4 space-y-3"
+        className={`fixed z-50 ${cardClass}`}
+        style={{
+          left: Math.max(8, Math.min(anchorPosition.x, window.innerWidth - POPOVER_WIDTH)),
+          top: Math.min(anchorPosition.y + 8, window.innerHeight - POPOVER_MAX_HEIGHT),
+        }}
       >
-        {/* Offene Schichten */}
-        {openShiftsForDay.length > 0 && (
-          <div className="space-y-1.5">
-            <p className="text-xs text-ink-3 font-medium">Schicht auswählen</p>
-            <div className="flex flex-wrap gap-1.5">
-              {openShiftsForDay.map((s, idx) => (
-                <button
-                  key={s.id}
-                  disabled={isPending}
-                  onClick={() => assign(s.id, doctorId)}
-                  title={idx < 9 ? `Taste ${idx + 1}` : undefined}
-                  className="relative px-2.5 py-1 rounded-full text-xs font-bold bg-paper border border-line hover:border-accent transition"
-                >
-                  {idx < 9 && (
-                    <span className="absolute -top-1.5 -right-1 text-[8px] font-normal text-ink-3 leading-none bg-card border border-line rounded px-0.5">
-                      {idx + 1}
-                    </span>
-                  )}
-                  {s.shift_type?.short_name ?? s.shift_type_id}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {cardContent}
+      </div>
+    )
+  }
 
-        {/* Anderen Arzt zuweisen (nur bei besetzter Zelle) */}
-        {currentShift && (
-          <div className="space-y-1.5">
-            <p className="text-xs text-ink-3 font-medium">Anderen Arzt zuweisen</p>
-            <Input
-              placeholder="Suchen…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-7 text-xs"
-            />
-            <ul className="max-h-40 overflow-y-auto space-y-0.5">
-              {filteredDoctors.map((d) => {
-                const avail = availabilityMap[d.id]
-                const unavailable = avail !== undefined && !avail.available
-                const tooltip = unavailable ? avail.reasons.join(', ') : undefined
-                return (
-                  <li key={d.id}>
-                    <button
-                      disabled={isPending}
-                      onClick={() => assign(currentShift.id, d.id)}
-                      title={tooltip}
-                      className="w-full text-left px-2 py-1 rounded-md text-xs hover:bg-paper transition flex items-center gap-1.5"
-                    >
-                      {unavailable && (
-                        <span
-                          aria-label="Nicht INA-verfügbar"
-                          className="inline-block w-2 h-2 rounded-full bg-amber-400 flex-shrink-0"
-                        />
-                      )}
-                      <span>{d.name}</span>
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        )}
-
-        {/* Zuweisung entfernen */}
-        {currentShift && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full text-warn-ink hover:bg-warn-bg text-xs"
-            disabled={isPending}
-            onClick={() => assign(currentShift.id, null)}
-          >
-            Zuweisung entfernen
-          </Button>
-        )}
-
-        {openShiftsForDay.length === 0 && !currentShift && (
-          <p className="text-xs text-ink-3">Keine offenen Schichten an diesem Tag.</p>
-        )}
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div ref={cardRef} className={cardClass}>
+        {cardContent}
       </div>
     </div>
   )

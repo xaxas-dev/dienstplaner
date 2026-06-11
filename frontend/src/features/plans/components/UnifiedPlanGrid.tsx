@@ -30,7 +30,7 @@ interface UnifiedPlanGridProps {
   dragDimDays?: Set<string>
   selectedCellKeys?: Set<string>
   highlightedDoctorId?: number | null
-  onCellClick?: (rotationId: number, doctorId: number, dayKey: string, shiftId: number | null, shiftKey: boolean) => void
+  onCellClick?: (rotationId: number, doctorId: number, dayKey: string, shiftId: number | null, shiftKey: boolean, clickPos: { x: number; y: number }) => void
   onDoubleClickRemove?: (shiftId: number) => void
   onDoubleClickRemoveAbsence?: (absenceId: number) => void
   onDeleteRotation?: (rotationId: number) => void
@@ -464,12 +464,12 @@ export function UnifiedPlanGrid({
                         setMouseSelectState((prev) => prev ? { ...prev, currentDayKey: dk } : null)
                       }
                     }}
-                    onClick={(shiftKey) => {
+                    onClick={(shiftKey, clickPos) => {
                       if (dragSelectFiredRef.current) {
                         dragSelectFiredRef.current = false
                         return
                       }
-                      onCellClick?.(row.rotation.id, row.doctor.id, dk, shift?.id ?? null, shiftKey)
+                      onCellClick?.(row.rotation.id, row.doctor.id, dk, shift?.id ?? null, shiftKey, clickPos)
                     }}
                     absenceId={cell.absenceId ?? undefined}
                     onDoubleClickRemove={

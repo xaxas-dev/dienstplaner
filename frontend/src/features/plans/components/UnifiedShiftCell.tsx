@@ -37,7 +37,7 @@ interface UnifiedShiftCellProps {
   onDoubleClickRemoveAbsence?: (absenceId: number) => void
   onMouseEnter?: () => void
   onMouseDown?: () => void
-  onClick?: (shiftKey: boolean) => void
+  onClick?: (shiftKey: boolean, clickPos: { x: number; y: number }) => void
   onDoubleClickRemove?: () => void
   onConflictDotClick?: () => void
   onTarifDotClick?: () => void
@@ -93,6 +93,7 @@ export function UnifiedShiftCell({
   function handleClick(e: React.MouseEvent) {
     if (isLocked) return
     const { shiftKey } = e
+    const clickPos = { x: e.clientX, y: e.clientY }
     const needsDoubleClickDelay =
       (onDoubleClickRemove && shiftAssigned) ||
       (onDoubleClickRemoveAbsence && absenceId !== undefined)
@@ -102,9 +103,9 @@ export function UnifiedShiftCell({
         clearTimeout(clickTimerRef.current)
         clickTimerRef.current = null
       }
-      clickTimerRef.current = setTimeout(() => { onClick?.(shiftKey) }, 300)
+      clickTimerRef.current = setTimeout(() => { onClick?.(shiftKey, clickPos) }, 300)
     } else {
-      onClick?.(shiftKey)
+      onClick?.(shiftKey, clickPos)
     }
   }
 

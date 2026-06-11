@@ -124,6 +124,7 @@ export function PlanPage() {
     setActiveFilterGroups(new Set())
   }
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null)
+  const [cellClickPosition, setCellClickPosition] = useState<{ x: number; y: number } | null>(null)
   const [contextShift, setContextShift] = useState<ShiftWithDetails | null>(null)
   const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null)
   const [activeRotationCell, setActiveRotationCell] = useState<{
@@ -480,6 +481,7 @@ export function PlanPage() {
     day: string,
     shiftId: number | null,
     shiftKey: boolean,
+    clickPos: { x: number; y: number },
   ) {
     if (shiftKey) {
       // Shift+Klick: Zelle zur Mehrfach-Auswahl hinzufügen / entfernen
@@ -500,6 +502,7 @@ export function PlanPage() {
     setContextShift(null)
     setSelectedDepartmentId(null)
     setActiveCell({ rotationId, doctorId, day, shiftId })
+    setCellClickPosition(clickPos)
     setSelectedDoctorId(doctorId)
     setSidebarTab('details')
   }
@@ -1035,7 +1038,8 @@ export function PlanPage() {
               s.shift_date === activeCell.day &&
               (s.doctor_id === null || s.doctor_id === undefined),
           )}
-          onClose={() => setActiveCell(null)}
+          anchorPosition={cellClickPosition ?? undefined}
+          onClose={() => { setActiveCell(null); setCellClickPosition(null) }}
         />
       )}
 
