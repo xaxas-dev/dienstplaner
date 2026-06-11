@@ -104,6 +104,7 @@ def build_dashboard_summary(db: Session, plan_id: int, target_date: date) -> Das
     dept_totals: dict[int, dict] = {}
     for dept in db.query(DepartmentModel).all():
         dept_totals[dept.id] = {
+            "id": dept.id,
             "name": dept.name,
             "max_headcount": dept.max_headcount,
             "ra_count": 0,
@@ -115,6 +116,7 @@ def build_dashboard_summary(db: Session, plan_id: int, target_date: date) -> Das
         if dept_id not in dept_totals:
             dept_name = ra.department.name if ra.department else f"Bereich {dept_id}"
             dept_totals[dept_id] = {
+                "id": dept_id,
                 "name": dept_name,
                 "max_headcount": None,
                 "ra_count": 0,
@@ -129,6 +131,7 @@ def build_dashboard_summary(db: Session, plan_id: int, target_date: date) -> Das
         filled = info["filled"]
         coverage_by_department.append(
             CoverageBar(
+                department_id=info["id"],
                 department_name=info["name"],
                 filled=filled,
                 total=total,

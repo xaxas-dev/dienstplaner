@@ -55,7 +55,7 @@ const MOCK_SUMMARY: DashboardSummary = {
     },
   ],
   coverage_by_department: [
-    { department_name: 'Neurologie', filled: 2, total: 3, pct: 0.666 },
+    { department_id: 1, department_name: 'Neurologie', filled: 2, total: 3, pct: 0.666 },
   ],
   attention: [
     { date: '2026-05-15', person_name: 'Dr. Smith', message: 'Konflikt', severity: 'error' },

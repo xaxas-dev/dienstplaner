@@ -33,6 +33,7 @@ class DutyShift(BaseModel):
 
 
 class CoverageBar(BaseModel):
+    department_id: int
     department_name: str
     filled: int  # RAs aktiv am date
     total: int  # Alle RAs für dieses Department im Plan

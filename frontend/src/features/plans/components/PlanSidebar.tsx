@@ -74,6 +74,7 @@ export interface PlanSidebarProps {
   departments?: Department[]
   rotations?: RotationAssignmentWithDetails[]
   onDepartmentDeselect?: () => void
+  onAddDoctor?: (departmentId: number) => void
   // Wunsch erstellen
   onNewWishClick: (doctorId: number | null) => void
 }
@@ -110,7 +111,7 @@ export function PlanSidebar({
   showWishes, onToggleWishes,
   fairnessStats, fairnessGroups,
   conflicts, onScrollToShift, onScrollToDate,
-  selectedDepartmentId, departments, rotations, onDepartmentDeselect,
+  selectedDepartmentId, departments, rotations, onDepartmentDeselect, onAddDoctor,
   onNewWishClick,
 }: PlanSidebarProps) {
   const [pendingReason, setPendingReason] = useState<Record<string, string>>({})
@@ -286,6 +287,16 @@ export function PlanSidebar({
                   </div>
                 ) : (
                   <p className="text-[12px] text-ink-3 mt-2">Keine Ärzte zugewiesen</p>
+                )}
+                {onAddDoctor && (
+                  <button
+                    type="button"
+                    onClick={() => onAddDoctor(selectedDepartment.id)}
+                    className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-line py-2 text-[12px] text-ink-3 hover:text-accent hover:border-accent transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Arzt hinzufügen
+                  </button>
                 )}
               </div>
             )}

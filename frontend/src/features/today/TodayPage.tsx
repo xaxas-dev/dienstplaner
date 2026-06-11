@@ -128,7 +128,11 @@ export function TodayPage() {
               <p className="text-sm text-ink-3 italic">Keine Daten</p>
             ) : (
               sortedCoverage.map(bar => (
-                <CoverageBar key={bar.department_name} bar={bar} />
+                <CoverageBar
+                  key={bar.department_name}
+                  bar={bar}
+                  href={planSlug ? `/plans/${planSlug}?mode=besetzung&department=${bar.department_id}` : undefined}
+                />
               ))
             )}
           </div>

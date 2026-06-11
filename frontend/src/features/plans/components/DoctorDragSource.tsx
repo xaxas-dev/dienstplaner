@@ -44,6 +44,21 @@ export function DoctorDragSource({
           Besetzung gesperrt — nur Kontext
         </p>
       )}
+      {available.length > 0 && (
+        <section>
+          <div className="text-xs font-medium text-ink-3 uppercase tracking-wide mb-1">
+            Verfügbar
+          </div>
+          <ul className="flex flex-col gap-1">
+            {available.map((doctor) => (
+              <li key={doctor.id}>
+                <DoctorToken doctor={doctor} locked={locked} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {assigned.length > 0 && (
         <section>
           <div className="text-xs font-medium text-ink-3 uppercase tracking-wide mb-1">
@@ -61,21 +76,6 @@ export function DoctorDragSource({
                     )
                   }
                 />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {available.length > 0 && (
-        <section>
-          <div className="text-xs font-medium text-ink-3 uppercase tracking-wide mb-1">
-            Verfügbar
-          </div>
-          <ul className="flex flex-col gap-1">
-            {available.map((doctor) => (
-              <li key={doctor.id}>
-                <DoctorToken doctor={doctor} locked={locked} />
               </li>
             ))}
           </ul>

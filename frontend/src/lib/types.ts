@@ -106,6 +106,7 @@ export interface DutyShift {
 }
 
 export interface CoverageBar {
+  department_id: number
   department_name: string
   filled: number
   total: number

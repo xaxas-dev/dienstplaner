@@ -444,6 +444,23 @@ export function PlanPage() {
   }, [searchParams, scrollToFirstMatch, setSearchParams])
 
   useEffect(() => {
+    const deptParam = searchParams.get('department')
+    if (!deptParam) return
+    const deptId = parseInt(deptParam, 10)
+    if (isNaN(deptId)) return
+    setSelectedDepartmentId(deptId)
+    setSelectedDoctorId(null)
+    setContextShift(null)
+    setSidebarTab('details')
+    setRightOpen(true)
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.delete('department')
+      return next
+    }, { replace: true })
+  }, [searchParams, setSearchParams])
+
+  useEffect(() => {
     const validBesetzung: SidebarTab[] = ['details', 'konflikte']
     if (mode === 'besetzung' && !validBesetzung.includes(sidebarTab)) {
       setSidebarTab('details')
@@ -1020,6 +1037,9 @@ export function PlanPage() {
                 departments={departments}
                 rotations={rotations}
                 onDepartmentDeselect={() => setSelectedDepartmentId(null)}
+                onAddDoctor={(departmentId) =>
+                  setActiveRotationCell({ departmentId, day: plan?.valid_from ?? '', assignmentId: null })
+                }
                 onNewWishClick={(doctorId) => setWishCreateTarget({ doctorId })}
               />
             )}
