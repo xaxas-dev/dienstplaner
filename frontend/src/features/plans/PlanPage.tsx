@@ -81,6 +81,7 @@ import { parseBereichHeaderDropId, parsePlaceholderDropId, parseRotationMemberDr
 import { useAppSettings } from '@/stores/useAppSettings'
 import { apiGet } from '@/lib/api'
 import type { ShiftWithDetails, TarifWarning, RotationAssignmentWithDetails, INAExclusion, SolveResult } from '@/lib/types'
+import { colorForShiftType } from '@/lib/design/shift-palette'
 
 interface ActiveCell {
   rotationId: number
@@ -134,6 +135,13 @@ export function PlanPage() {
     name: string
     shortName?: string | null
   } | null>(null)
+  const [activeDragShiftType, setActiveDragShiftType] = useState<{
+    id: number
+    shortName: string
+    bg: string
+    fg: string
+  } | null>(null)
+  const [activeDragAbsence, setActiveDragAbsence] = useState<{ label: string } | null>(null)
   const [dragConflictMap, setDragConflictMap] = useState<Map<number, Set<string>> | null>(null)
   const [pendingShiftAssign, setPendingShiftAssign] = useState<{
     shiftId: number
@@ -622,12 +630,25 @@ export function PlanPage() {
         })
       })
 
+      const st = shiftTypes.find((s) => s.id === shiftTypeId)
+      if (st) {
+        const pal = colorForShiftType({ id: st.id, code: st.short_name })
+        setActiveDragShiftType({ id: st.id, shortName: st.short_name, bg: pal.bg, fg: pal.fg })
+      }
       setDragConflictMap(map)
+      return
+    }
+
+    const absenceType = parseAbsenceDragId(activeId)
+    if (absenceType !== null) {
+      setActiveDragAbsence({ label: ABSENCE_TYPE_LABELS[absenceType] })
     }
   }
 
   function handleDragEnd(event: DragEndEvent) {
     setActiveDragDoctor(null)
+    setActiveDragShiftType(null)
+    setActiveDragAbsence(null)
     setDragConflictMap(null)
     const { active, over } = event
     if (!over) return
@@ -754,6 +775,8 @@ export function PlanPage() {
 
   function handleDragCancel() {
     setActiveDragDoctor(null)
+    setActiveDragShiftType(null)
+    setActiveDragAbsence(null)
     setDragConflictMap(null)
   }
 
@@ -1057,6 +1080,16 @@ export function PlanPage() {
             id={activeDragDoctor.id}
           />
         )}
+        {activeDragShiftType && (
+          <ShiftTypeOverlayChip
+            shortName={activeDragShiftType.shortName}
+            bg={activeDragShiftType.bg}
+            fg={activeDragShiftType.fg}
+          />
+        )}
+        {activeDragAbsence && (
+          <AbsenceOverlayChip label={activeDragAbsence.label} />
+        )}
       </DragOverlay>
     </DndContext>
 
@@ -1224,5 +1257,24 @@ export function PlanPage() {
       </AlertDialogContent>
     </AlertDialog>
     </>
+  )
+}
+
+function ShiftTypeOverlayChip({ shortName, bg, fg }: { shortName: string; bg: string; fg: string }) {
+  return (
+    <div
+      style={{ background: bg, color: fg }}
+      className="rounded-md px-2.5 py-1 text-xs font-bold shadow-lg pointer-events-none select-none"
+    >
+      {shortName}
+    </div>
+  )
+}
+
+function AbsenceOverlayChip({ label }: { label: string }) {
+  return (
+    <div className="rounded-md px-2.5 py-1 text-xs font-bold bg-amber-100 text-amber-800 shadow-lg pointer-events-none select-none">
+      {label}
+    </div>
   )
 }
