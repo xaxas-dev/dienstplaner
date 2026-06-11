@@ -31,6 +31,8 @@ interface UnifiedShiftCellProps {
   isLocked?: boolean
   isSelected?: boolean
   isHighlightedRow?: boolean
+  isDragDimmed?: boolean
+  isDragHighlighted?: boolean
   absenceId?: number
   onDoubleClickRemoveAbsence?: (absenceId: number) => void
   onMouseEnter?: () => void
@@ -66,6 +68,8 @@ export function UnifiedShiftCell({
   shiftAssigned,
   isSelected,
   isHighlightedRow,
+  isDragDimmed,
+  isDragHighlighted,
   absenceId,
   onDoubleClickRemoveAbsence,
   onMouseEnter,
@@ -146,6 +150,8 @@ export function UnifiedShiftCell({
         isConflictTarget && 'bg-red-50/70 ring-1 ring-inset ring-red-400/50',
         isSelected && 'ring-2 ring-inset ring-accent',
         dimmed && 'opacity-30 grayscale',
+        isDragDimmed && 'opacity-30 grayscale',
+        isDragHighlighted && 'ring-1 ring-inset ring-emerald-400/60',
       )}
       style={{ backgroundColor: isConflictTarget || isSelected ? undefined : bg }}
       onClick={handleClick}
@@ -183,6 +189,14 @@ export function UnifiedShiftCell({
         <div
           className="absolute inset-0 pointer-events-none"
           style={{ backgroundColor: 'rgba(198,106,61,0.15)' }}
+        />
+      )}
+
+      {/* Drag-Highlight-Tint: Spalten ohne diesen Dienst */}
+      {isDragHighlighted && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ backgroundColor: 'rgba(52, 211, 153, 0.07)' }}
         />
       )}
 

@@ -82,6 +82,7 @@ import { useAppSettings } from '@/stores/useAppSettings'
 import { apiGet } from '@/lib/api'
 import type { ShiftWithDetails, TarifWarning, RotationAssignmentWithDetails, INAExclusion, SolveResult } from '@/lib/types'
 import { colorForShiftType } from '@/lib/design/shift-palette'
+import { computeDragDimDays } from './dragUtils'
 
 interface ActiveCell {
   rotationId: number
@@ -267,6 +268,11 @@ export function PlanPage() {
   const selectedCellKeys = useMemo(
     () => new Set(selectedCells.map((c) => `${c.rotationId}-${c.dayKey}`)),
     [selectedCells],
+  )
+
+  const dragDimDays = useMemo(
+    () => activeDragShiftType ? computeDragDimDays(shifts, activeDragShiftType.id) : undefined,
+    [activeDragShiftType, shifts],
   )
 
   function handleDeletePlan() {
@@ -909,6 +915,7 @@ export function PlanPage() {
               holidayDates={holidayDates}
               activeFilterGroups={activeFilterGroups}
               dragConflictMap={dragConflictMap}
+              dragDimDays={dragDimDays}
               selectedCellKeys={selectedCellKeys}
               highlightedDoctorId={highlightedDoctorId}
               onCellClick={handleCellClick}

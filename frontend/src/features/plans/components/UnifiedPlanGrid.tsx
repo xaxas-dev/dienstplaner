@@ -27,6 +27,7 @@ interface UnifiedPlanGridProps {
   holidayDates?: Set<string>
   activeFilterGroups: Set<string>
   dragConflictMap?: Map<number, Set<string>> | null
+  dragDimDays?: Set<string>
   selectedCellKeys?: Set<string>
   highlightedDoctorId?: number | null
   onCellClick?: (rotationId: number, doctorId: number, dayKey: string, shiftId: number | null, shiftKey: boolean) => void
@@ -161,6 +162,7 @@ export function UnifiedPlanGrid({
   holidayDates,
   activeFilterGroups,
   dragConflictMap,
+  dragDimDays,
   selectedCellKeys,
   highlightedDoctorId,
   onCellClick,
@@ -321,6 +323,7 @@ export function UnifiedPlanGrid({
               onMouseEnter={() => { setHoverDay(dk); setHoverRow(null) }}
               className={cn(
                 'sticky top-0 z-10 border-b border-r border-line text-center py-[7px] px-0.5 transition-colors',
+                dragDimDays?.has(dk) && 'opacity-40',
                 tod ? 'bg-warn-bg' : we ? 'bg-weekend' : effectiveHoverDay === dk ? 'bg-paper/80' : 'bg-[#FAF5E9]',
               )}
             >
@@ -444,6 +447,8 @@ export function UnifiedPlanGrid({
                     isLocked={shift?.is_locked ?? false}
                     isSelected={isSelected || mouseSelectKeys.has(cellKey)}
                     isHighlightedRow={isRowHighlighted}
+                    isDragDimmed={dragDimDays !== undefined && dragDimDays.has(dk)}
+                    isDragHighlighted={dragDimDays !== undefined && !dragDimDays.has(dk)}
                     onMouseDown={() => {
                       setMouseSelectState({
                         rotationId: row.rotation.id,
