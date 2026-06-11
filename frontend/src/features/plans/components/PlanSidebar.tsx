@@ -257,7 +257,12 @@ export function PlanSidebar({
                   />
                   <div>
                     <p className="font-serif text-[19px] leading-[1.15] text-ink">{selectedDepartment.name}</p>
-                    <p className="text-[12px] text-ink-3">{deptDoctors.length} {deptDoctors.length === 1 ? 'Arzt' : 'Ärzte'}</p>
+                    <p className="text-[12px] text-ink-3">
+                      {deptDoctors.length} {deptDoctors.length === 1 ? 'Arzt' : 'Ärzte'}
+                      {selectedDepartment.max_headcount != null && selectedDepartment.max_headcount > 0 && (
+                        <span className="ml-1.5">· {deptDoctors.length}/{selectedDepartment.max_headcount}</span>
+                      )}
+                    </p>
                   </div>
                 </div>
                 {deptDoctors.length > 0 ? (
@@ -288,7 +293,7 @@ export function PlanSidebar({
                 ) : (
                   <p className="text-[12px] text-ink-3 mt-2">Keine Ärzte zugewiesen</p>
                 )}
-                {onAddDoctor && (
+                {onAddDoctor && mode === 'besetzung' && (
                   <button
                     type="button"
                     onClick={() => onAddDoctor(selectedDepartment.id)}
