@@ -16,9 +16,6 @@ import { PlanListPage } from '@/features/plans/PlanListPage'
 import { PlanPage } from '@/features/plans/PlanPage'
 import { useAppSettings } from '@/stores/useAppSettings'
 
-import { PlaygroundPage } from '@/features/playground/PlaygroundPage'
-
-const isDev = import.meta.env.DEV
 
 function AppDevTools() {
   const { devMode } = useAppSettings()
@@ -52,8 +49,7 @@ export default function App() {
         <Route path="/rule-overrides" element={<RuleOverrideListPage />} />
         <Route path="/holidays" element={<HolidayListPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        {isDev && <Route path="/playground" element={<PlaygroundPage />} />}
-        <Route path="*" element={<NotFoundPage />} />
+<Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
     <AppDevTools />
