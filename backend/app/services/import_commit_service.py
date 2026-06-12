@@ -15,9 +15,14 @@ Transaktions-Reihenfolge (atomar, ein einziger db.commit() am Ende):
 from __future__ import annotations
 
 import re
+from collections import defaultdict
+from datetime import date
 
 from sqlalchemy.orm import Session
 
+from app.models.shift import Shift
+from app.models.shift_type import ShiftType
+from app.repositories import absence_repository as absence_repo
 from app.repositories import department_repository as dept_repo
 from app.repositories import doctor_repository as doctor_repo
 from app.repositories import employment_period_repository as ep_repo
@@ -134,6 +139,99 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
         rotation_repo.bulk_create_rotations(db, rotation_dicts)
     created_rotations = len(rotation_dicts)
 
+    # 7. Code-Auflösungen: neue ShiftTypes anlegen + Schicht-Map aufbauen
+    code_res = resolutions.code_resolutions
+    resolved_st_ids: dict[str, int] = {}  # code → shift_type_id
+    for code, res in code_res.items():
+        if res.action == "shift":
+            resolved_st_ids[code] = res.shift_type_id
+        elif res.action == "create_shift":
+            existing_st = db.query(ShiftType).filter(ShiftType.short_name == res.short_name).first()
+            if existing_st:
+                resolved_st_ids[code] = existing_st.id
+            else:
+                st = ShiftType(name=res.name, short_name=res.short_name)
+                db.add(st)
+                db.flush()
+                db.refresh(st)
+                resolved_st_ids[code] = st.id
+
+    # 8. Zellen iterieren: Abwesenheits-Tage und Schichten sammeln
+    plan_year = plan.valid_from.year
+    plan_month = plan.valid_from.month
+
+    absence_days: dict[tuple[int, str], list[date]] = defaultdict(list)
+    shift_entries: list[dict] = []
+    shift_seen: set[tuple[int, date]] = set()  # (shift_type_id, shift_date) für UNIQUE
+
+    for row in parsed.rows:
+        doctor_id = doctor_id_map.get(row.raw_name)
+        if doctor_id is None:
+            continue
+        for day_num, code in row.cells.items():
+            res_code = code_res.get(code)
+            if res_code is None or res_code.action == "ignore":
+                continue
+            try:
+                shift_date = date(plan_year, plan_month, day_num)
+            except ValueError:
+                warnings.append(f"Ungültiger Tag {day_num} im Monat — übersprungen")
+                continue
+            if res_code.action == "absence":
+                absence_days[(doctor_id, res_code.absence_type)].append(shift_date)
+            elif res_code.action in ("shift", "create_shift"):
+                st_id = resolved_st_ids.get(code)
+                if st_id is None:
+                    continue
+                key = (st_id, shift_date)
+                if key in shift_seen:
+                    warnings.append(
+                        f"Kollision: Schicht '{code}' am {shift_date} — mehrere Ärzte, übersprungen"
+                    )
+                    continue
+                shift_seen.add(key)
+                shift_entries.append(
+                    {
+                        "plan_id": plan.id,
+                        "shift_date": shift_date,
+                        "shift_type_id": st_id,
+                        "doctor_id": doctor_id,
+                    }
+                )
+
+    # 9. Abwesenheits-Ranges anlegen (konsekutive Tage → ein Datensatz)
+    created_absences = 0
+    for (doctor_id, absence_type_str), days in absence_days.items():
+        sorted_days = sorted(set(days))
+        ranges: list[tuple[date, date]] = []
+        start = prev = sorted_days[0]
+        for d in sorted_days[1:]:
+            if (d - prev).days == 1:
+                prev = d
+            else:
+                ranges.append((start, prev))
+                start = prev = d
+        ranges.append((start, prev))
+        for valid_from, valid_to in ranges:
+            absence_repo.create_absence(
+                db,
+                doctor_id,
+                {
+                    "absence_type": absence_type_str,
+                    "valid_from": valid_from,
+                    "valid_to": valid_to,
+                },
+            )
+            created_absences += 1
+
+    # 10. Schichten bulk-anlegen
+    created_shifts = 0
+    if shift_entries:
+        for entry in shift_entries:
+            db.add(Shift(**entry))
+        db.flush()
+        created_shifts = len(shift_entries)
+
     db.commit()
 
     return ImportResult(
@@ -143,5 +241,7 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
         created_doctors=created_doctors,
         created_employment_periods=created_eps,
         created_rotations=created_rotations,
+        created_absences=created_absences,
+        created_shifts=created_shifts,
         warnings=warnings,
     )

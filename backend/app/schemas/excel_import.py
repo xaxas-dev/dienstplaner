@@ -140,12 +140,38 @@ DoctorResolution = Annotated[
 ]
 
 
-# --- Code-Auflösungen (Phase D typisiert dies; vorerst beliebiges Dict) ---
+# --- Code-Auflösungen (Phase D) ---
+class CodeResolutionAbsence(BaseModel):
+    action: Literal["absence"]
+    absence_type: str  # AbsenceType enum value, e.g. "URLAUB"
+
+
+class CodeResolutionShift(BaseModel):
+    action: Literal["shift"]
+    shift_type_id: int
+
+
+class CodeResolutionCreateShift(BaseModel):
+    action: Literal["create_shift"]
+    short_name: str
+    name: str
+
+
+class CodeResolutionIgnore(BaseModel):
+    action: Literal["ignore"]
+
+
+CodeResolution = Annotated[
+    CodeResolutionAbsence | CodeResolutionShift | CodeResolutionCreateShift | CodeResolutionIgnore,
+    Field(discriminator="action"),
+]
+
+
 class CommitResolutions(BaseModel):
     target_plan: TargetPlan
     department_resolutions: dict[str, DepartmentResolution]
     doctor_resolutions: dict[str, DoctorResolution]
-    code_resolutions: dict[str, dict]  # Phase D typisiert dies konkret
+    code_resolutions: dict[str, CodeResolution]
 
 
 # --- Ergebnis ---
@@ -156,4 +182,6 @@ class ImportResult(BaseModel):
     created_doctors: int
     created_employment_periods: int
     created_rotations: int
+    created_absences: int = 0
+    created_shifts: int = 0
     warnings: list[str]

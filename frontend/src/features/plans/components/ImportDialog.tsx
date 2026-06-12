@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useAnalyzeImport, useCommitImport } from '../useExcelImport'
 import { usePlans } from '../usePlans'
+import { useShiftTypes } from '@/features/shift-types/useShiftTypes'
 import type {
   ImportAnalysis,
   DepartmentMatch,
@@ -21,7 +22,7 @@ import type {
   CodeResolution,
   CommitResolutions,
 } from '@/lib/importTypes'
-import type { Plan } from '@/lib/types'
+import type { Plan, ShiftType } from '@/lib/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -183,12 +184,28 @@ function DoctorRow({ item, resolution, onChange }: DoctorRowProps) {
 interface CodeRowProps {
   item: CodeEntry
   resolution: CodeResolution
+  shiftTypes: ShiftType[]
   onChange: (res: CodeResolution) => void
 }
 
-function CodeRow({ item, resolution, onChange }: CodeRowProps) {
+const ABSENCE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'URLAUB', label: 'Als Abwesenheit: URLAUB' },
+  { value: 'ELTERNZEIT', label: 'Als Abwesenheit: ELTERNZEIT' },
+  { value: 'KRANKHEIT', label: 'Als Abwesenheit: KRANKHEIT' },
+]
+
+function CodeRow({ item, resolution, shiftTypes, onChange }: CodeRowProps) {
+  const isCreateShift = resolution.action === 'create_shift'
+
   function handleChange(val: string) {
     if (val === '__ignore__') { onChange({ action: 'ignore' }); return }
+    if (val === '__create_shift__') {
+      // Vorbelegen mit dem Roh-Code als Kürzel; Name leer für User-Eingabe.
+      const prevShort = isCreateShift ? resolution.short_name : item.raw
+      const prevName = isCreateShift ? resolution.name : ''
+      onChange({ action: 'create_shift', short_name: prevShort, name: prevName })
+      return
+    }
     if (val.startsWith('absence:')) {
       onChange({ action: 'absence', absence_type: val.slice('absence:'.length) })
       return
@@ -204,43 +221,62 @@ function CodeRow({ item, resolution, onChange }: CodeRowProps) {
     if (resolution.action === 'ignore') return '__ignore__'
     if (resolution.action === 'absence') return `absence:${resolution.absence_type}`
     if (resolution.action === 'shift') return `shift:${resolution.shift_type_id}`
-    if (resolution.action === 'create_shift') return '__ignore__'
+    if (resolution.action === 'create_shift') return '__create_shift__'
     return '__ignore__'
   })()
 
-  const defaultLabel = (() => {
-    if (item.default_action === 'absence' && item.absence_type) return `Abwesenheit: ${item.absence_type}`
-    if (item.default_action === 'shift' && item.shift_type_short_name) return `Dienst: ${item.shift_type_short_name}`
-    if (item.default_action === 'ignore') return 'Ignoriert'
-    return 'Unbekannt'
-  })()
-
   return (
-    <div className="flex items-center gap-3 py-2 border-b border-line last:border-0">
-      <div className="w-16 shrink-0">
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-paper border border-line text-ink">
-          {item.raw}
-        </span>
+    <div className="flex flex-col gap-2 py-2 border-b border-line last:border-0">
+      <div className="flex items-center gap-3">
+        <div className="w-16 shrink-0">
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-paper border border-line text-ink">
+            {item.raw}
+          </span>
+        </div>
+        <div className="flex-1" />
+        <Select value={currentValue} onValueChange={handleChange}>
+          <SelectTrigger className="w-60 h-7 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__ignore__">Ignorieren</SelectItem>
+            {ABSENCE_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={`absence:${opt.value}`}>
+                {opt.label}
+              </SelectItem>
+            ))}
+            {shiftTypes.map((st) => (
+              <SelectItem key={st.id} value={`shift:${st.id}`}>
+                Als Schicht: {st.name}
+              </SelectItem>
+            ))}
+            <SelectItem value="__create_shift__">Neuen Schichttyp anlegen…</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-      <div className="flex-1 text-xs text-ink-3">{defaultLabel}</div>
-      <Select value={currentValue} onValueChange={handleChange}>
-        <SelectTrigger className="w-52 h-7 text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {item.default_action === 'absence' && item.absence_type && (
-            <SelectItem value={`absence:${item.absence_type}`}>
-              Abwesenheit: {item.absence_type}
-            </SelectItem>
-          )}
-          {item.default_action === 'shift' && item.shift_type_id != null && item.shift_type_short_name && (
-            <SelectItem value={`shift:${item.shift_type_id}`}>
-              Dienst: {item.shift_type_short_name}
-            </SelectItem>
-          )}
-          <SelectItem value="__ignore__">Ignorieren</SelectItem>
-        </SelectContent>
-      </Select>
+
+      {isCreateShift && (
+        <div className="flex items-center gap-2 pl-[4.75rem]">
+          <input
+            type="text"
+            value={resolution.short_name}
+            placeholder="Kürzel"
+            onChange={(e) =>
+              onChange({ action: 'create_shift', short_name: e.target.value, name: resolution.name })
+            }
+            className="w-24 h-7 px-2 text-xs rounded border border-line bg-card text-ink"
+          />
+          <input
+            type="text"
+            value={resolution.name}
+            placeholder="Name"
+            onChange={(e) =>
+              onChange({ action: 'create_shift', short_name: resolution.short_name, name: e.target.value })
+            }
+            className="flex-1 h-7 px-2 text-xs rounded border border-line bg-card text-ink"
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -264,6 +300,7 @@ export function ImportDialog({ open, onOpenChange, planId }: ImportDialogProps) 
   const analyzeImport = useAnalyzeImport()
   const commitImport = useCommitImport(planId)
   const { data: plans = [] } = usePlans()
+  const { data: shiftTypes = [] } = useShiftTypes()
 
   function reset() {
     setStep('upload')
@@ -557,6 +594,7 @@ export function ImportDialog({ open, onOpenChange, planId }: ImportDialogProps) 
                     <CodeRow
                       key={code.raw}
                       item={code}
+                      shiftTypes={shiftTypes}
                       resolution={codeResolutions[code.raw] ?? { action: 'ignore' }}
                       onChange={(res) => setCodeResolutions((prev) => ({ ...prev, [code.raw]: res }))}
                     />
