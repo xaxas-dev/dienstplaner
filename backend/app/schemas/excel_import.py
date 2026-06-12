@@ -15,6 +15,12 @@ class MatchStatus(enum.StrEnum):
     UNMATCHED = "unmatched"
 
 
+class EntityDefaultAction(enum.StrEnum):
+    MAP = "map"
+    CREATE = "create"
+    SKIP = "skip"
+
+
 class CodeDefaultAction(enum.StrEnum):
     ABSENCE = "absence"
     SHIFT = "shift"
@@ -33,7 +39,7 @@ class DepartmentMatch(BaseModel):
     match_status: MatchStatus
     matched_id: int | None
     candidates: list[MatchCandidate]
-    default_action: str
+    default_action: EntityDefaultAction
 
 
 class DoctorMatch(BaseModel):
@@ -41,7 +47,7 @@ class DoctorMatch(BaseModel):
     match_status: MatchStatus
     matched_id: int | None
     candidates: list[MatchCandidate]
-    default_action: str
+    default_action: EntityDefaultAction
     parsed_name: str
     percentage: int | None
 

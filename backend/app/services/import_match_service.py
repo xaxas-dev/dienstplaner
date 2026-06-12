@@ -9,6 +9,7 @@ from datetime import date
 from rapidfuzz import fuzz, process
 from sqlalchemy.orm import Session
 
+from app.models.absence import AbsenceType
 from app.models.shift_type import ShiftType
 from app.repositories import department_repository, doctor_repository
 from app.schemas.excel_import import (
@@ -16,6 +17,7 @@ from app.schemas.excel_import import (
     CodeEntry,
     DepartmentMatch,
     DoctorMatch,
+    EntityDefaultAction,
     ImportAnalysis,
     ImportMonth,
     MatchCandidate,
@@ -27,9 +29,9 @@ FUZZY_THRESHOLD = 85
 
 # Default-Verhalten für bekannte Codes. Alles andere → unmatched.
 DEFAULT_CODE_MAP: dict[str, dict] = {
-    "U": {"action": "absence", "absence_type": "URLAUB"},
-    "EZ": {"action": "absence", "absence_type": "ELTERNZEIT"},
-    "N*": {"action": "shift", "shift_short_name": "N"},
+    "U":  {"action": CodeDefaultAction.ABSENCE, "absence_type": AbsenceType.URLAUB},
+    "EZ": {"action": CodeDefaultAction.ABSENCE, "absence_type": AbsenceType.ELTERNZEIT},
+    "N*": {"action": CodeDefaultAction.SHIFT,   "shift_short_name": "N"},
 }
 
 # Regex: "(70%)"-Suffix vom Namen abtrennen.
@@ -46,7 +48,7 @@ def _parse_name(raw: str) -> tuple[str, int | None]:
 
 def _match_against(
     raw: str, db_names: list[tuple[int, str]]
-) -> tuple[MatchStatus, int | None, list[MatchCandidate], str]:
+) -> tuple[MatchStatus, int | None, list[MatchCandidate], EntityDefaultAction]:
     """Liefert (status, matched_id, candidates, default_action) für einen Rohwert.
 
     Exakt (case-insensitiv) → exact; sonst rapidfuzz-Treffer → fuzzy;
@@ -57,7 +59,7 @@ def _match_against(
     # Exakt (case-insensitiv).
     for db_id, name in db_names:
         if name.strip().lower() == raw_lower:
-            return MatchStatus.EXACT, db_id, [], "map"
+            return MatchStatus.EXACT, db_id, [], EntityDefaultAction.MAP
 
     # Fuzzy via rapidfuzz.
     name_to_id = {name: db_id for db_id, name in db_names}
@@ -74,10 +76,10 @@ def _match_against(
             for name, score, _ in hits
         ]
         best_score = candidates[0].score
-        default_action = "map" if best_score > 95 else "create"
+        default_action = EntityDefaultAction.MAP if best_score > 95 else EntityDefaultAction.CREATE
         return MatchStatus.FUZZY, candidates[0].id, candidates, default_action
 
-    return MatchStatus.NEW, None, [], "create"
+    return MatchStatus.NEW, None, [], EntityDefaultAction.CREATE
 
 
 def analyze_import(db: Session, parsed: ParsedSheet) -> ImportAnalysis:
@@ -166,7 +168,7 @@ def analyze_import(db: Session, parsed: ParsedSheet) -> ImportAnalysis:
             continue
 
         action = mapping["action"]
-        if action == "absence":
+        if action == CodeDefaultAction.ABSENCE:
             code_entries.append(
                 CodeEntry(
                     raw=raw,
@@ -176,7 +178,7 @@ def analyze_import(db: Session, parsed: ParsedSheet) -> ImportAnalysis:
                     shift_type_short_name=None,
                 )
             )
-        elif action == "shift":
+        elif action == CodeDefaultAction.SHIFT:
             short_name = mapping["shift_short_name"]
             st = st_by_short.get(short_name)
             if st is None:
