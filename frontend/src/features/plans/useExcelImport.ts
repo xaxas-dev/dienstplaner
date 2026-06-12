@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiPostFormData } from '@/lib/api'
-import type { ImportAnalysis } from '@/lib/importTypes'
+import type { ImportAnalysis, CommitResolutions } from '@/lib/importTypes'
 import { planKeys } from './usePlans'
 import { rotationQueryKeys } from './usePlanRotations'
 import { planAbsenceKeys } from './usePlanAbsences'
@@ -24,7 +24,7 @@ export function useCommitImport(planId?: number) {
       resolutions,
     }: {
       file: File
-      resolutions: object
+      resolutions: CommitResolutions
     }): Promise<unknown> => {
       const fd = new FormData()
       fd.append('file', file)
