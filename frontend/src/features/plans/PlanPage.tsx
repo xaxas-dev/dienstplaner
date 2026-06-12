@@ -1040,6 +1040,10 @@ export function PlanPage() {
                 onAddDoctor={(departmentId) =>
                   setActiveRotationCell({ departmentId, day: plan?.valid_from ?? '', assignmentId: null })
                 }
+                onSelectDoctor={(doctorId) => {
+                  setSelectedDoctorId(doctorId)
+                  setSelectedDepartmentId(null)
+                }}
                 onNewWishClick={(doctorId) => setWishCreateTarget({ doctorId })}
               />
             )}

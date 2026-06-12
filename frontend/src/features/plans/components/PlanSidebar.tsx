@@ -75,6 +75,7 @@ export interface PlanSidebarProps {
   rotations?: RotationAssignmentWithDetails[]
   onDepartmentDeselect?: () => void
   onAddDoctor?: (departmentId: number) => void
+  onSelectDoctor?: (doctorId: number) => void
   // Wunsch erstellen
   onNewWishClick: (doctorId: number | null) => void
 }
@@ -99,8 +100,15 @@ function isWishFulfilled(wish: Wish, shifts: ShiftWithDetails[]): boolean {
   if (wish.wish_type === 'AVOID_DAY') {
     return onDate.length === 0
   }
-  // AVOID_SHIFT: kein Dienst dieses Typs an dem Tag
   return !onDate.some((s) => s.shift_type_id === wish.shift_type_id)
+}
+
+function ampelClasses(count: number, avg: number): { text: string; bar: string } {
+  if (avg < 0.5) return { text: count > 0 ? 'text-ink' : 'text-ink-3', bar: 'bg-line' }
+  const ratio = count / avg
+  if (ratio > 1.3) return { text: 'text-red-600 font-semibold', bar: 'bg-red-400' }
+  if (ratio < 0.7) return { text: 'text-amber-600 font-medium', bar: 'bg-amber-400' }
+  return { text: 'text-emerald-700', bar: 'bg-emerald-500' }
 }
 
 export function PlanSidebar({
@@ -111,7 +119,7 @@ export function PlanSidebar({
   showWishes, onToggleWishes,
   fairnessStats, fairnessGroups,
   conflicts, onScrollToShift, onScrollToDate,
-  selectedDepartmentId, departments, rotations, onDepartmentDeselect, onAddDoctor,
+  selectedDepartmentId, departments, rotations, onDepartmentDeselect, onAddDoctor, onSelectDoctor,
   onNewWishClick,
 }: PlanSidebarProps) {
   const [pendingReason, setPendingReason] = useState<Record<string, string>>({})
@@ -150,9 +158,15 @@ export function PlanSidebar({
 
   const shiftTypeBreakdown = shiftTypes
     .map((st) => ({ st, count: doctorShifts.filter((s) => s.shift_type?.id === st.id).length }))
-    .filter(({ count }) => count > 0)
 
   const doctorWishes = wishes.filter((w) => w.doctor_id === selectedDoctorId)
+
+  const doctorConflicts = useMemo(() =>
+    doctorShifts.flatMap((s) =>
+      s.conflicts.map((c) => ({ ...c, shift_date: s.shift_date, shift_type: s.shift_type }))
+    ),
+    [doctorShifts],
+  )
 
   const selectedDepartment = (departments ?? []).find(d => d.id === selectedDepartmentId) ?? null
   const deptRotations = useMemo(
@@ -166,8 +180,35 @@ export function PlanSidebar({
     [deptRotations, doctors],
   )
 
+  const deptFte = useMemo(() =>
+    deptDoctors.reduce((sum, doc) => {
+      const ep = doc.employment_periods?.find(ep => ep.valid_to == null || ep.valid_to >= today)
+      return sum + (ep?.employment_percentage ?? 100) / 100
+    }, 0),
+    [deptDoctors, today],
+  )
+
   const tabs = mode === 'besetzung' ? TABS_BESETZUNG : TABS_INA
-  const fairnessColTemplate = `1fr ${fairnessGroups.map(() => '2.25rem').join(' ')} 2.25rem`
+
+  const fairnessGroupStats = useMemo(() =>
+    Object.fromEntries(fairnessGroups.map(g => {
+      const values = fairnessStats.map(s => s.byGroup[g] ?? 0)
+      const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0
+      const max = Math.max(...values, 0)
+      return [g, { avg, max }]
+    })),
+    [fairnessGroups, fairnessStats],
+  )
+  const totalMax = useMemo(() =>
+    Math.max(...fairnessStats.map(s => s.total), 0),
+    [fairnessStats],
+  )
+  const avgTotal = useMemo(() =>
+    fairnessStats.length > 0
+      ? fairnessStats.reduce((sum, s) => sum + s.total, 0) / fairnessStats.length
+      : 0,
+    [fairnessStats],
+  )
 
   return (
     <div className="w-[290px] shrink-0 flex flex-col bg-paper border-l border-line overflow-hidden">
@@ -262,11 +303,14 @@ export function PlanSidebar({
                       {selectedDepartment.max_headcount != null && selectedDepartment.max_headcount > 0 && (
                         <span className="ml-1.5">· {deptDoctors.length}/{selectedDepartment.max_headcount}</span>
                       )}
+                      <span className="ml-1.5">
+                        · {deptFte.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} FTE
+                      </span>
                     </p>
                   </div>
                 </div>
                 {deptDoctors.length > 0 ? (
-                  <div className="mt-3 space-y-1.5">
+                  <div className="mt-3 space-y-1">
                     <p className="text-[10px] text-ink-3 uppercase tracking-[0.08em] font-medium mb-1">Besetzung</p>
                     {deptDoctors.map((doc) => {
                       const ep = doc.employment_periods?.find(
@@ -275,7 +319,12 @@ export function PlanSidebar({
                       const fte = ep?.employment_percentage ?? null
                       const shiftCount = shifts.filter((s) => s.doctor_id === doc.id).length
                       return (
-                        <div key={doc.id} className="flex items-center gap-2 text-[12px]">
+                        <button
+                          key={doc.id}
+                          type="button"
+                          onClick={() => onSelectDoctor?.(doc.id)}
+                          className="w-full flex items-center gap-2 text-[12px] hover:bg-line/30 rounded-lg px-1 py-0.5 -mx-1 transition-colors text-left"
+                        >
                           <div
                             className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0"
                             style={{ background: '#E8DCC4', color: '#26221C' }}
@@ -286,7 +335,7 @@ export function PlanSidebar({
                           <span className="text-ink-3 tabular-nums text-[11px] shrink-0">
                             {fte != null ? `${fte}%` : ''}{fte != null && shiftCount > 0 ? ' · ' : ''}{shiftCount > 0 ? `${shiftCount} D` : ''}
                           </span>
-                        </div>
+                        </button>
                       )
                     })}
                   </div>
@@ -306,28 +355,27 @@ export function PlanSidebar({
               </div>
             )}
 
-            {/* Ausgewählt */}
-            <div>
-              <p className="text-[10px] text-ink-3 uppercase tracking-[0.08em] font-medium mb-2">Ausgewählt</p>
-              {selectedDoctor ? (
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-[14px] font-semibold shrink-0"
-                    style={{ background: '#E8DCC4', color: '#26221C' }}
-                  >
-                    {selectedDoctor.short_name ?? selectedDoctor.name.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="font-serif text-[19px] leading-[1.15] text-ink">{selectedDoctor.name}</p>
-                    <p className="text-[12px] text-ink-3 mt-0.5">
-                      {employmentPct != null ? `${employmentPct}%` : ''}
-                    </p>
-                  </div>
+            {/* Arzt-Karte */}
+            {selectedDoctor && !selectedDepartment && (
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-[14px] font-semibold shrink-0"
+                  style={{ background: '#E8DCC4', color: '#26221C' }}
+                >
+                  {selectedDoctor.short_name ?? selectedDoctor.name.slice(0, 2).toUpperCase()}
                 </div>
-              ) : (
-                <p className="text-[12px] text-ink-3">Zelle klicken zum Auswählen</p>
-              )}
-            </div>
+                <div>
+                  <p className="font-serif text-[19px] leading-[1.15] text-ink">
+                    {[selectedDoctor.title, selectedDoctor.name].filter(Boolean).join(' ')}
+                  </p>
+                  <p className="text-[12px] text-ink-3 mt-0.5">
+                    {employmentPct != null
+                      ? employmentPct === 100 ? 'Vollzeit' : `${employmentPct}% Teilzeit`
+                      : ''}
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Konflikte & Tarif für gewählten Shift */}
             {shift && (shift.conflicts.length > 0 || (tarifWarnings && tarifWarnings.length > 0)) && (
@@ -453,8 +501,8 @@ export function PlanSidebar({
               </div>
             )}
 
-            {/* Schichttypen */}
-            {selectedDoctor && shiftTypeBreakdown.length > 0 && (
+            {/* Schichttypen — alle, auch 0-Zähler */}
+            {selectedDoctor && shiftTypes.length > 0 && (
               <div>
                 <p className="text-[10px] text-ink-3 uppercase tracking-[0.08em] font-medium mb-2">
                   Schichttypen
@@ -468,39 +516,116 @@ export function PlanSidebar({
                       >
                         {st.short_name}
                       </span>
-                      <span className="flex-1 text-ink-2">{st.name}</span>
-                      <span className="font-serif text-[16px] text-ink tabular-nums">{count}</span>
+                      <span className={cn('flex-1', count > 0 ? 'text-ink-2' : 'text-ink-3')}>{st.name}</span>
+                      <span className={cn('font-serif text-[16px] tabular-nums', count > 0 ? 'text-ink' : 'text-ink-3')}>
+                        {count}
+                      </span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Wünsche Preview */}
-            {selectedDoctor && doctorWishes.length > 0 && (
+            {/* Konflikte des Arztes */}
+            {selectedDoctor && doctorConflicts.length > 0 && (
               <div>
                 <p className="text-[10px] text-ink-3 uppercase tracking-[0.08em] font-medium mb-2">
-                  Wünsche
+                  Konflikte
                 </p>
-                <div className="bg-card border border-line rounded-[10px] p-[10px_12px] text-[12px] text-ink-2 space-y-1">
-                  {doctorWishes.slice(0, 5).map((w) => {
-                    const label = wishLabel(w, shiftTypes)
-                    return (
-                      <div key={w.id}>
-                        {w.wish_date ? (
-                          <span>{format(parseISO(w.wish_date), 'dd.MM.yyyy')} → <strong>{label}</strong></span>
-                        ) : w.day_of_week != null ? (
-                          <span className="text-ink-3">{DAY_ABBR[w.day_of_week]} → {label}</span>
-                        ) : (
-                          <span className="text-ink-3">allgemein → {label}</span>
-                        )}
-                      </div>
-                    )
-                  })}
+                <div className="space-y-1">
+                  {doctorConflicts.map((c, i) => (
+                    <div
+                      key={i}
+                      className="px-3 py-1.5 rounded-lg border border-warn-line bg-warn-bg text-[12px] text-warn-ink"
+                    >
+                      <span className="font-medium">
+                        {c.shift_date}{c.shift_type ? ` · ${c.shift_type.short_name}` : ''}
+                      </span>
+                      {' — '}
+                      {c.message}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
+            {/* Wünsche mit Erfüllt-Status + Neu-Button */}
+            {selectedDoctor && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] text-ink-3 uppercase tracking-[0.08em] font-medium">
+                    Wünsche
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onNewWishClick(selectedDoctorId ?? null)}
+                    className="inline-flex items-center gap-1 text-[11px] text-ink-2 border border-line rounded-lg px-2 py-1 hover:bg-line/30 transition-colors"
+                  >
+                    <Plus className="size-3" /> Neuer Wunsch
+                  </button>
+                </div>
+                {doctorWishes.length > 0 ? (
+                  <div className="space-y-1">
+                    {doctorWishes.map((w) => {
+                      const fulfilled = isWishFulfilled(w, shifts)
+                      const label = wishLabel(w, shiftTypes)
+                      const content = (
+                        <div className="min-w-0 truncate pr-4">
+                          {w.wish_date ? (
+                            <span>
+                              {format(parseISO(w.wish_date), 'dd.MM.yyyy')} →{' '}
+                              <strong>{label}</strong>
+                            </span>
+                          ) : w.day_of_week != null ? (
+                            <span className="text-ink-3">{DAY_ABBR[w.day_of_week]} → {label}</span>
+                          ) : (
+                            <span className="text-ink-3">allgemein → {label}</span>
+                          )}
+                        </div>
+                      )
+                      if (w.wish_date) {
+                        return (
+                          <button
+                            key={w.id}
+                            type="button"
+                            onClick={() => onScrollToDate?.(w.wish_date!)}
+                            className={cn(
+                              'relative w-full text-left px-3 py-1.5 rounded-lg border text-[12px] transition-colors',
+                              fulfilled
+                                ? 'bg-green-50 border-green-300 hover:bg-green-100/60'
+                                : 'bg-paper border-line hover:bg-line/30',
+                            )}
+                          >
+                            {content}
+                            {fulfilled && (
+                              <Check className="absolute top-1 right-1 size-3 text-green-600 pointer-events-none" />
+                            )}
+                          </button>
+                        )
+                      }
+                      return (
+                        <div
+                          key={w.id}
+                          className={cn(
+                            'relative px-3 py-1.5 rounded-lg border text-[12px] text-ink-2',
+                            fulfilled
+                              ? 'bg-green-50 border-green-300'
+                              : 'bg-paper border-line',
+                          )}
+                        >
+                          {content}
+                          {fulfilled && (
+                            <Check className="absolute top-1 right-1 size-3 text-green-600 pointer-events-none" />
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-[12px] text-ink-3">Keine Wünsche erfasst</p>
+                )}
+              </div>
+            )}
 
             {shift && onCloseShift && (
               <button
@@ -688,20 +813,15 @@ export function PlanSidebar({
         {/* ── Fairness (INA only) ── */}
         {activeTab === 'fairness' && (
           <div className="flex flex-col overflow-hidden h-full">
-            <p className="px-4 pt-3 pb-1 text-[11px] text-ink-3 leading-relaxed shrink-0">
-              INA-Dienste je Arzt im Plan-Zeitraum, aufgeteilt nach Dienstgruppe. Nur Ärzte mit aktiver Rotation werden gezählt.
-            </p>
-            <div
-              className="grid border-b border-line text-[10px] text-ink-3 font-medium bg-paper/40 shrink-0"
-              style={{ gridTemplateColumns: fairnessColTemplate }}
-            >
-              <div className="px-2 py-1.5">Arzt</div>
-              {fairnessGroups.map((g) => (
-                <div key={g} className="px-1 py-1.5 text-center truncate" title={g}>
-                  {g}
-                </div>
-              ))}
-              <div className="px-1 py-1.5 text-center">∑</div>
+            {/* KPI */}
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-line bg-paper/30 shrink-0">
+              <div className="flex items-baseline gap-1">
+                <span className="font-serif text-[22px] text-ink tabular-nums leading-none">
+                  {avgTotal.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                </span>
+                <span className="text-[11px] text-ink-3 ml-1">Ø Dienste/Arzt</span>
+              </div>
+              <span className="text-[11px] text-ink-3">{fairnessStats.length} Ärzte</span>
             </div>
             <div className="flex-1 overflow-y-auto">
               {fairnessStats.length === 0 ? (
@@ -709,39 +829,62 @@ export function PlanSidebar({
                   Keine Ärzte im Plan
                 </div>
               ) : (
-                fairnessStats.map((stat) => (
-                  <div
-                    key={stat.doctorId}
-                    className="grid border-b border-line last:border-0 text-xs hover:bg-paper/60 transition-colors"
-                    style={{ gridTemplateColumns: fairnessColTemplate }}
-                  >
-                    <div
-                      className="px-2 py-1.5 truncate text-ink"
-                      title={stat.doctorName}
-                    >
-                      {stat.doctorName}
-                    </div>
-                    {fairnessGroups.map((g) => (
+                <>
+                  {[...fairnessStats].sort((a, b) => b.total - a.total).map((stat) => {
+                    const totalCls = ampelClasses(stat.total, avgTotal)
+                    return (
                       <div
-                        key={g}
-                        className={cn(
-                          'px-1 py-1.5 text-center tabular-nums',
-                          (stat.byGroup[g] ?? 0) > 0 ? 'text-ink' : 'text-ink-3',
-                        )}
+                        key={stat.doctorId}
+                        className="px-3 py-2.5 border-b border-line last:border-0 hover:bg-paper/60 transition-colors"
                       >
-                        {stat.byGroup[g] ?? 0}
+                        {/* Name + Total */}
+                        <div className="flex items-center justify-between mb-2">
+                          <span
+                            className="text-[12px] font-medium text-ink truncate"
+                            title={stat.doctorName}
+                          >
+                            {stat.doctorName}
+                          </span>
+                          <div className="flex items-center gap-2 shrink-0 ml-2">
+                            <div className="w-12 h-[5px] bg-line rounded-full overflow-hidden">
+                              <div
+                                className={cn('h-full rounded-full', totalCls.bar)}
+                                style={{ width: `${totalMax > 0 ? Math.round(stat.total / totalMax * 100) : 0}%` }}
+                              />
+                            </div>
+                            <span className={cn('text-[14px] font-serif tabular-nums w-5 text-right', totalCls.text)}>
+                              {stat.total}
+                            </span>
+                          </div>
+                        </div>
+                        {/* Group bars */}
+                        {fairnessGroups.length > 0 && (
+                          <div className="space-y-1">
+                            {fairnessGroups.map((g) => {
+                              const count = stat.byGroup[g] ?? 0
+                              const gStats = fairnessGroupStats[g] ?? { avg: 0, max: 0 }
+                              const cls = ampelClasses(count, gStats.avg)
+                              return (
+                                <div key={g} className="flex items-center gap-2">
+                                  <span className="text-[10px] text-ink-3 w-8 shrink-0 truncate" title={g}>{g}</span>
+                                  <div className="flex-1 h-[5px] bg-line rounded-full overflow-hidden">
+                                    <div
+                                      className={cn('h-full rounded-full transition-all', cls.bar)}
+                                      style={{ width: `${gStats.max > 0 ? Math.round(count / gStats.max * 100) : 0}%` }}
+                                    />
+                                  </div>
+                                  <span className={cn('text-[11px] tabular-nums w-4 text-right shrink-0', cls.text)}>
+                                    {count}
+                                  </span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
                       </div>
-                    ))}
-                    <div
-                      className={cn(
-                        'px-1 py-1.5 text-center font-medium tabular-nums',
-                        stat.total > 0 ? 'text-ink' : 'text-ink-3',
-                      )}
-                    >
-                      {stat.total}
-                    </div>
-                  </div>
-                ))
+                    )
+                  })}
+                </>
               )}
             </div>
           </div>
