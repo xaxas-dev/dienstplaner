@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import enum
 from datetime import date
+from typing import Annotated, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class MatchStatus(enum.StrEnum):
@@ -73,4 +74,86 @@ class ImportAnalysis(BaseModel):
     departments: list[DepartmentMatch]
     doctors: list[DoctorMatch]
     codes: list[CodeEntry]
+    warnings: list[str]
+
+
+# ---------------------------------------------------------------------------
+# Commit-DTOs (Phase C): Eingabe der bestätigten Reconciliation + Ergebnis.
+# ---------------------------------------------------------------------------
+
+
+# --- Ziel-Plan ---
+class TargetPlanNew(BaseModel):
+    mode: Literal["new"]
+    name: str
+    valid_from: date
+    valid_to: date
+
+
+class TargetPlanExisting(BaseModel):
+    mode: Literal["existing"]
+    plan_id: int
+
+
+TargetPlan = Annotated[TargetPlanNew | TargetPlanExisting, Field(discriminator="mode")]
+
+
+# --- Bereichs-Auflösungen ---
+class DeptResolutionMap(BaseModel):
+    action: Literal["map"]
+    id: int
+
+
+class DeptResolutionCreate(BaseModel):
+    action: Literal["create"]
+
+
+class DeptResolutionSkip(BaseModel):
+    action: Literal["skip"]
+
+
+DepartmentResolution = Annotated[
+    DeptResolutionMap | DeptResolutionCreate | DeptResolutionSkip,
+    Field(discriminator="action"),
+]
+
+
+# --- Arzt-Auflösungen ---
+class DoctorResolutionMap(BaseModel):
+    action: Literal["map"]
+    id: int
+    percentage: int | None = None
+
+
+class DoctorResolutionCreate(BaseModel):
+    action: Literal["create"]
+    percentage: int | None = None
+
+
+class DoctorResolutionSkip(BaseModel):
+    action: Literal["skip"]
+
+
+DoctorResolution = Annotated[
+    DoctorResolutionMap | DoctorResolutionCreate | DoctorResolutionSkip,
+    Field(discriminator="action"),
+]
+
+
+# --- Code-Auflösungen (Phase D typisiert dies; vorerst beliebiges Dict) ---
+class CommitResolutions(BaseModel):
+    target_plan: TargetPlan
+    department_resolutions: dict[str, DepartmentResolution]
+    doctor_resolutions: dict[str, DoctorResolution]
+    code_resolutions: dict[str, dict]  # Phase D typisiert dies konkret
+
+
+# --- Ergebnis ---
+class ImportResult(BaseModel):
+    plan_id: int
+    plan_name: str
+    created_departments: int
+    created_doctors: int
+    created_employment_periods: int
+    created_rotations: int
     warnings: list[str]
