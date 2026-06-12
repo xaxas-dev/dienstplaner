@@ -21,7 +21,7 @@ funktionieren und der Solver später additiv aufsetzt.
 
 ## Tech-Stack
 - **Backend:** Python 3.12, FastAPI, SQLAlchemy, SQLite, pydantic v2,
-  timefold-solver (Phase B), openpyxl, alembic
+  timefold-solver (Phase B), openpyxl, alembic, rapidfuzz, python-multipart
 - **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui,
   dnd-kit, TanStack Query, Zustand
 - **Tooling:** uv (Python), pnpm (Node), ruff (lint+format), pytest, vitest
@@ -455,6 +455,40 @@ Punkte nennt.
 - **Fokus-V/N-Toggle:** `focusMode: 'alle' | 'vn'` als Session-State in `PlanPage`. `UnifiedShiftCell` dimmt Nicht-V/N-Zellen bei `focusMode === 'vn'`. `ShiftTypeDragBar` dimmt Nicht-V/N-Chips. Kein URL-Param.
 - **`GET /api/plans/{id}/absences`:** Liefert alle Abwesenheiten von Ärzten mit aktiver Rotation im Plan, deren Periode den Plan-Zeitraum überlappt. Hook `usePlanAbsences` mit Query-Key `planAbsenceKeys.byPlan(planId)`.
 - **`Department.color`:** Nullable Hex-String (`VARCHAR(9)`). Frontend: `<input type="color">` + Reset-Button in `DepartmentFormDialog`. Backend: in `DepartmentBase`, `DepartmentUpdate`, `DepartmentRead` als `color: str | None`.
+
+### Backend — Excel-Import (Besetzungsplan)
+- **Stateless 2-Phasen-Flow (ADR-104):** Kein Import-Job in der DB.
+  `POST /api/imports/besetzungsplan/analyze` → read-only `ImportAnalysis` (kein DB-Write).
+  `POST /api/imports/besetzungsplan/commit` → eine atomare Transaktion, Datei wird zweimal hochgeladen.
+- **Dienstleistungsschicht:** `import_parse_service.py` (openpyxl, kein FastAPI) →
+  `import_match_service.py` (rapidfuzz, kein DB-Write) →
+  `import_commit_service.py` (Transaktion). Strikte Trennung — Parse und Match nie in api/ mischen.
+- **`plan_repo.create_plan` statt `create_plan_with_shifts` (ADR-108):**
+  `create_plan_with_shifts` ruft intern `db.commit()` auf — bricht die Atomizität.
+  Bei Multi-Entity-Imports immer `plan_repo.create_plan` (flush-only) verwenden, einziger `db.commit()` am Ende.
+- **rapidfuzz (ADR-105):** `fuzz.token_sort_ratio`, Schwelle 85 für fuzzy-Kandidat,
+  100 case-insensitiv = exact. `process.extract(query, choices, scorer=..., limit=3)`.
+- **Default-Code-Map (ADR-106):** `U`→URLAUB, `EZ`→ELTERNZEIT, `N*`→ShiftType `N` (Fuzzy).
+  Alle anderen Codes default `unmatched` — User mappt sie manuell in der Reconcile-UI.
+  Definition in `import_match_service.py:DEFAULT_CODE_MAP`.
+- **Absence-Range-Konsolidierung (ADR-107):** Konsekutive gleiche Absence-Codes je Arzt
+  werden zu einem `Absence`-Datensatz zusammengefasst. Sortierten Tages-Set iterieren,
+  `(d - prev).days == 1` prüfen, Range bei Lücke schließen.
+- **UNIQUE-Shift-Kollision:** `(plan_id, shift_date, shift_type_id)` ist UNIQUE.
+  Bei mehreren Ärzten mit gleichem Code am selben Tag: erster Treffer gewinnt,
+  übrige als `warnings[]`-Eintrag. Nie werfen — immer fortfahren.
+- **Roster-Zeilen-Erkennung:** Col A UND Col B nicht-leer. Schließt Aggregat-Zeilen
+  (Zeilen 48+, nur Col A) und Leerzeilen sauber aus.
+
+### Frontend — Excel-Import (Besetzungsplan)
+- **`apiPostFormData<T>(path, formData)`** in `api.ts`: `Content-Type` NICHT setzen
+  (Browser setzt multipart boundary automatisch). 204-Guard: `if (response.status === 204) return undefined as T`.
+- **Hooks** in `features/plans/useExcelImport.ts`: `useAnalyzeImport()` (Mutation,
+  File → ImportAnalysis), `useCommitImport(planId?)` (Mutation, invalidiert nach
+  onSuccess: plans, doctors, departments, rotations, shifts, absences).
+- **ImportDialog** ist 4-stufig: Upload → Reconcile (Bereiche/Ärzte/Codes-Tabs) →
+  Ziel-Plan (neu aus Monat / bestehend) → Ergebnis-Summary.
+- **Types** in `frontend/src/lib/importTypes.ts` (manuell gepflegt, kein OpenAPI-Generator).
 
 ## Entwicklungs-Workflow
 - **Brainstorming vor Implementierung:** `superpowers:brainstorming` → Plan →
