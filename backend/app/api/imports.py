@@ -2,7 +2,7 @@
 
 import json
 
-from fastapi import APIRouter, Depends, File, Form, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -29,5 +29,8 @@ async def commit_besetzungsplan(
     db: Session = Depends(get_db),
 ) -> ImportResult:
     file_bytes = await file.read()
-    parsed_resolutions = CommitResolutions.model_validate(json.loads(resolutions))
+    try:
+        parsed_resolutions = CommitResolutions.model_validate(json.loads(resolutions))
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=f"Ungültige Resolutions: {exc}") from exc
     return import_commit_service.commit_import(db, file_bytes, parsed_resolutions)

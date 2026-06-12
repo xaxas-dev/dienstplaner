@@ -4,11 +4,10 @@ Wendet eine bestätigte Reconciliation an: legt neue Bereiche/Ärzte an und
 schreibt RotationAssignments. Schema-Auflösung kommt aus der Frontend-
 Bestätigung (CommitResolutions), nicht aus erneutem Matching.
 
-Transaktions-Reihenfolge (siehe Briefing):
+Transaktions-Reihenfolge (atomar, ein einziger db.commit() am Ende):
 1. Bereiche anlegen (flush)
 2. Ärzte + EmploymentPeriods anlegen (flush)
-3. Plan anlegen — bei mode="new" via plan_service.create_plan_with_shifts,
-   das intern committed (und damit die geflushten Bereiche/Ärzte mit-committed)
+3. Plan anlegen — bei mode="new" via plan_repo.create_plan (kein interner Commit)
 4. RotationAssignments bulk-anlegen (flush)
 5. db.commit()
 """
@@ -25,7 +24,6 @@ from app.repositories import employment_period_repository as ep_repo
 from app.repositories import plan_repository as plan_repo
 from app.repositories import rotation_assignment_repository as rotation_repo
 from app.schemas.excel_import import CommitResolutions, ImportResult
-from app.services import plan_service
 from app.services.exceptions import PlanNotFoundError
 from app.services.import_parse_service import parse_besetzungsplan
 
@@ -92,10 +90,11 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
         # skip: vom Import ausgeschlossen
 
     # 5. Plan anlegen oder laden.
-    # create_plan_with_shifts committed intern → das committet auch die oben
-    # geflushten Bereiche/Ärzte/EPs in derselben Transaktion.
+    # plan_repo.create_plan macht keinen internen Commit — alles bleibt in einer
+    # gemeinsamen Transaktion (flush only, commit erst am Ende von commit_import).
+    # Shift-Slots werden nicht automatisch generiert; Phase D übernimmt das.
     if target_plan.mode == "new":
-        plan = plan_service.create_plan_with_shifts(
+        plan = plan_repo.create_plan(
             db,
             {
                 "name": target_plan.name,
