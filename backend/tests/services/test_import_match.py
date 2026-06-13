@@ -126,3 +126,16 @@ def test_doctor_exact_match_uses_parsed_name(db: Session) -> None:
     assert doc.percentage == 70
     assert doc.match_status == MatchStatus.EXACT
     assert doc.matched_id == doctor.id
+
+
+def test_department_numeric_prefix_stripped(db: Session) -> None:
+    """'511/LBEST' soll 'LBEST' in der DB exact matchen."""
+    db.add(Department(name="LBEST"))
+    db.commit()
+
+    sheet = _sheet([ParsedRow(raw_department="511/LBEST", raw_name="Mustermann, Max", cells={})])
+    analysis = analyze_import(db, sheet)
+
+    dept = next(d for d in analysis.departments if d.raw == "511/LBEST")
+    assert dept.match_status == MatchStatus.EXACT
+    assert dept.matched_id is not None

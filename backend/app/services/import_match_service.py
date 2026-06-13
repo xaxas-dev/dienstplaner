@@ -37,6 +37,14 @@ DEFAULT_CODE_MAP: dict[str, dict] = {
 # Regex: "(70%)"-Suffix vom Namen abtrennen.
 _PERCENTAGE_RE = re.compile(r"^(.*?)\s*\((\d+)%\)\s*$")
 
+# Regex: numerisches Stations-Präfix wie "511/" entfernen.
+_DEPT_PREFIX_RE = re.compile(r'^\d+/')
+
+
+def _strip_dept_prefix(raw: str) -> str:
+	"""Entfernt numerisches Präfix '\\d+/' aus Bereichsnamen vor dem Matching."""
+	return _DEPT_PREFIX_RE.sub('', raw).strip()
+
 
 def _parse_name(raw: str) -> tuple[str, int | None]:
     """Trennt 'Berger Johann (70%)' → ('Berger Johann', 70)."""
@@ -105,7 +113,8 @@ def analyze_import(db: Session, parsed: ParsedSheet) -> ImportAnalysis:
 
     department_matches: list[DepartmentMatch] = []
     for raw in distinct_departments:
-        status, matched_id, candidates, default_action = _match_against(raw, dept_names)
+        cleaned = _strip_dept_prefix(raw)
+        status, matched_id, candidates, default_action = _match_against(cleaned, dept_names)
         department_matches.append(
             DepartmentMatch(
                 raw=raw,
