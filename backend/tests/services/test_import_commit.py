@@ -310,3 +310,37 @@ def test_commit_skipped_entities_excluded(db, file_bytes, parsed):
     # Keine Rotationen, weil kein Arzt aufgelöst werden konnte.
     assert result.created_rotations == 0
     assert db.query(RotationAssignment).count() == 0
+
+
+def test_ep_created_for_new_doctor_in_existing_plan(db: Session, file_bytes: bytes) -> None:
+    """Neue Ärzte bekommen EmploymentPeriod auch bei Ziel-Plan mode='existing'."""
+    from app.repositories import plan_repository as _plan_repo
+
+    # Parse um einen echten Raw-Namen zu bekommen
+    parsed_sheet = parse_besetzungsplan(file_bytes)
+    raw_name = parsed_sheet.rows[0].raw_name
+    raw_dept = parsed_sheet.rows[0].raw_department
+
+    dept = Department(name=raw_dept)
+    db.add(dept)
+    db.flush()
+
+    plan = _plan_repo.create_plan(
+        db,
+        {"name": "Test", "valid_from": date(2026, 7, 1), "valid_to": date(2026, 7, 31)},
+    )
+    db.commit()
+
+    resolutions = CommitResolutions.model_validate({
+        "target_plan": {"mode": "existing", "plan_id": plan.id},
+        "department_resolutions": {raw_dept: {"action": "map", "id": dept.id}},
+        "doctor_resolutions": {raw_name: {"action": "create", "percentage": 75}},
+        "code_resolutions": {},
+    })
+
+    import_commit_service.commit_import(db, file_bytes, resolutions)
+
+    eps = db.query(EmploymentPeriod).all()
+    assert len(eps) == 1
+    assert eps[0].employment_percentage == 75
+    assert eps[0].valid_from == date(2026, 7, 1)
