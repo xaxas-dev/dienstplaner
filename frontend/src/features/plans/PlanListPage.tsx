@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
-import { MoreHorizontal, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Trash2, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { CommandBar } from '@/components/dp/CommandBar'
 import { usePlans } from './usePlans'
@@ -10,6 +10,8 @@ import { useDeletePlan } from './useDeletePlan'
 import { useUpdatePlan } from './useUpdatePlan'
 import { planToSlug } from './planSlug'
 import { PlanCreateDialog } from './components/PlanCreateDialog'
+import { Button } from '@/components/ui/button'
+import { ImportDialog } from './components/ImportDialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -135,6 +137,7 @@ function PlanCard({ plan, onClick }: { plan: Plan; onClick: () => void }) {
 
 export function PlanListPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   const [filter, setFilter] = useState<PlanFilterKey>('all')
   const navigate = useNavigate()
   const { data: plans = [], isLoading, isError, refetch } = usePlans()
@@ -166,6 +169,12 @@ export function PlanListPage() {
         titleAccent="Pläne"
         title={count > 0 ? `· ${count} ${count === 1 ? 'Plan' : 'Pläne'}` : ''}
         filters={filterChips}
+        extras={
+          <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+            <Upload className="size-4" />
+            Importieren
+          </Button>
+        }
         primaryAction={{ label: '+ Neuer Plan', onClick: () => setDialogOpen(true) }}
       />
       <div className="px-10 py-6 flex-1">
@@ -219,6 +228,7 @@ export function PlanListPage() {
         )}
       </div>
       <PlanCreateDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   )
 }

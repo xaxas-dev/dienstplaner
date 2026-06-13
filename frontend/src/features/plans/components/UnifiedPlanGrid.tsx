@@ -367,11 +367,13 @@ export function UnifiedPlanGrid({
             return [
               <div key={row.rowKey} className="contents">
                 <PlaceholderLabelCell department={row.department} />
-                {dayKeys.map((dk) => (
+                {dayKeys.map((dk, i) => (
                   <div
                     key={dk}
                     className="border-b border-r border-line"
-                    style={{ backgroundColor: `${color}10` }}
+                    style={{
+                      backgroundColor: isWeekend(days[i]) ? '#F3ECD8' : `${color}10`,
+                    }}
                   />
                 ))}
               </div>,

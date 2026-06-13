@@ -68,7 +68,17 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
 
     # 4. Ärzte + Beschäftigungszeiträume auflösen
     target_plan = resolutions.target_plan
-    plan_start = target_plan.valid_from if target_plan.mode == "new" else None
+
+    # plan_start wird für EmploymentPeriod-Erstellung benötigt — VOR Doctor-Loop.
+    # Bei "existing"-Mode Plan früh laden um valid_from zu ermitteln.
+    existing_plan = None
+    if target_plan.mode == "new":
+        plan_start = target_plan.valid_from
+    else:
+        existing_plan = plan_repo.get_plan(db, target_plan.plan_id)
+        if existing_plan is None:
+            raise PlanNotFoundError(target_plan.plan_id)
+        plan_start = existing_plan.valid_from
 
     doctor_id_map: dict[str, int] = {}  # raw → doctor_id
     created_doctors = 0
@@ -108,9 +118,8 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
             },
         )
     else:
-        plan = plan_repo.get_plan(db, target_plan.plan_id)
-        if plan is None:
-            raise PlanNotFoundError(target_plan.plan_id)
+        # Bereits in Schritt 4 geladen — kein zweiter Query.
+        plan = existing_plan
 
     # 6. RotationAssignments — je eindeutigem (doctor, dept)-Paar genau eine.
     seen_pairs: set[tuple[int, int]] = set()

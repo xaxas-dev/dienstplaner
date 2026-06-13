@@ -181,8 +181,18 @@ export function PlanModeBar({
 
       <div className="flex-1" />
 
-      {/* Rechts: Plan generieren + Settings */}
+      {/* Rechts: Importieren + Plan generieren + Settings */}
       <div className="flex items-center gap-px">
+        {mode === 'besetzung' && onImportClick && (
+          <button
+            type="button"
+            onClick={onImportClick}
+            className="inline-flex items-center gap-1.5 px-3.5 h-8 rounded-[10px] bg-paper border border-line text-ink-2 text-[12.5px] font-medium hover:bg-line/20 transition-colors"
+          >
+            <Upload className="size-3.5" />
+            Importieren
+          </button>
+        )}
         {solverEnabled && (
           <button
             type="button"
@@ -192,16 +202,6 @@ export function PlanModeBar({
           >
             <Zap className="size-3.5" />
             {isSolving ? 'Berechne…' : 'Plan generieren'}
-          </button>
-        )}
-        {mode === 'besetzung' && onImportClick && (
-          <button
-            type="button"
-            onClick={onImportClick}
-            className="inline-flex items-center gap-1.5 px-3.5 h-8 rounded-[10px] bg-paper border border-line text-ink-2 text-[12.5px] font-medium hover:bg-line/20 transition-colors"
-          >
-            <Upload className="size-3.5" />
-            Importieren
           </button>
         )}
         <button

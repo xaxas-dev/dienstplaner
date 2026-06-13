@@ -177,6 +177,14 @@ export function UnifiedShiftCell({
         />
       )}
 
+      {/* Weekend-Overlay — dezente Einfärbung Sa/So */}
+      {isWeekend && !isConflictTarget && !isSelected && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ backgroundColor: 'rgba(243, 236, 216, 0.45)' }}
+        />
+      )}
+
       {/* Highlighted-Row-Tint */}
       {isHighlightedRow && !isSelected && (
         <div
