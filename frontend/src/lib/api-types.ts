@@ -1869,6 +1869,8 @@ export interface components {
             notes?: string | null;
             /** Filter Group */
             filter_group?: string | null;
+            /** Color */
+            color?: string | null;
         };
         /** ShiftTypeResponse */
         ShiftTypeResponse: {
@@ -1909,6 +1911,8 @@ export interface components {
             notes?: string | null;
             /** Filter Group */
             filter_group?: string | null;
+            /** Color */
+            color?: string | null;
             /** Id */
             id: number;
             /**
@@ -1946,6 +1950,8 @@ export interface components {
             notes?: string | null;
             /** Filter Group */
             filter_group?: string | null;
+            /** Color */
+            color?: string | null;
         };
         /** ShiftUpdate */
         ShiftUpdate: {
