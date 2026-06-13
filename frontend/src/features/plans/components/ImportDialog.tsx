@@ -6,6 +6,7 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -13,6 +14,7 @@ import { cn } from '@/lib/utils'
 import { useAnalyzeImport, useCommitImport } from '../useExcelImport'
 import { usePlans } from '../usePlans'
 import { useShiftTypes } from '@/features/shift-types/useShiftTypes'
+import { useDepartments } from '@/features/departments/useDepartments'
 import type {
   ImportAnalysis,
   DepartmentMatch,
@@ -22,7 +24,7 @@ import type {
   CodeResolution,
   CommitResolutions,
 } from '@/lib/importTypes'
-import type { Plan, ShiftType } from '@/lib/types'
+import type { Plan, ShiftType, Department } from '@/lib/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -74,10 +76,11 @@ function tabCountBadge(count: number, variant: 'amber' | 'blue') {
 interface DeptRowProps {
   item: DepartmentMatch
   resolution: EntityResolution
+  allDepts: Department[]
   onChange: (res: EntityResolution) => void
 }
 
-function DeptRow({ item, resolution, onChange }: DeptRowProps) {
+function DeptRow({ item, resolution, allDepts, onChange }: DeptRowProps) {
   const isExact = item.match_status === 'exact'
 
   function handleChange(val: string) {
@@ -94,6 +97,11 @@ function DeptRow({ item, resolution, onChange }: DeptRowProps) {
     return '__skip__'
   })()
 
+  const candidateIds = new Set(item.candidates.map((c) => c.id))
+  const remainingDepts = allDepts
+    .filter((d) => !candidateIds.has(d.id))
+    .sort((a, b) => a.name.localeCompare(b.name, 'de'))
+
   return (
     <div className="flex items-center gap-3 py-2 border-b border-line last:border-0">
       <div className="w-20 shrink-0">{statusBadge(item.match_status)}</div>
@@ -108,9 +116,20 @@ function DeptRow({ item, resolution, onChange }: DeptRowProps) {
           <SelectContent>
             {item.candidates.map((c) => (
               <SelectItem key={c.id} value={String(c.id)}>
-                → {c.name}
+                → {c.name} ({Math.round(c.score)}%)
               </SelectItem>
             ))}
+            {remainingDepts.length > 0 && (
+              <>
+                <SelectSeparator />
+                {remainingDepts.map((d) => (
+                  <SelectItem key={`all-${d.id}`} value={String(d.id)}>
+                    {d.name}
+                  </SelectItem>
+                ))}
+                <SelectSeparator />
+              </>
+            )}
             <SelectItem value="__create__">Neu anlegen</SelectItem>
             <SelectItem value="__skip__">Ignorieren</SelectItem>
           </SelectContent>
@@ -301,6 +320,7 @@ export function ImportDialog({ open, onOpenChange, planId }: ImportDialogProps) 
   const commitImport = useCommitImport(planId)
   const { data: plans = [] } = usePlans()
   const { data: shiftTypes = [] } = useShiftTypes()
+  const { data: allDepts = [] } = useDepartments()
 
   function reset() {
     setStep('upload')
@@ -569,6 +589,7 @@ export function ImportDialog({ open, onOpenChange, planId }: ImportDialogProps) 
                       key={dept.raw}
                       item={dept}
                       resolution={deptResolutions[dept.raw] ?? { action: 'skip' }}
+                      allDepts={allDepts}
                       onChange={(res) => setDeptResolutions((prev) => ({ ...prev, [dept.raw]: res }))}
                     />
                   ))
