@@ -1,5 +1,5 @@
 import React from 'react'
-import { ChevronRight, MoonStar, Settings, Zap } from 'lucide-react'
+import { ChevronRight, MoonStar, Settings, Upload, Zap } from 'lucide-react'
 import { useDraggable } from '@dnd-kit/core'
 import { cn } from '@/lib/utils'
 import { colorForShiftType } from '@/lib/design/shift-palette'
@@ -61,13 +61,14 @@ export interface PlanModeBarProps {
   onSolve: () => void
   onNachtwocheClick: () => void
   onSettingsClick: () => void
+  onImportClick?: () => void
 }
 
 export function PlanModeBar({
   mode, onModeChange, shiftTypes,
   activeFilterGroups, onFilterGroupToggle, onFilterGroupClear,
   solverEnabled, isSolving, onSolve,
-  onNachtwocheClick, onSettingsClick,
+  onNachtwocheClick, onSettingsClick, onImportClick,
 }: PlanModeBarProps) {
   const sortedShiftTypes = [...shiftTypes].sort((a, b) => a.display_order - b.display_order)
   const filterGroups = [
@@ -191,6 +192,16 @@ export function PlanModeBar({
           >
             <Zap className="size-3.5" />
             {isSolving ? 'Berechne…' : 'Plan generieren'}
+          </button>
+        )}
+        {mode === 'besetzung' && onImportClick && (
+          <button
+            type="button"
+            onClick={onImportClick}
+            className="inline-flex items-center gap-1.5 px-3.5 h-8 rounded-[10px] bg-paper border border-line text-ink-2 text-[12.5px] font-medium hover:bg-line/20 transition-colors"
+          >
+            <Upload className="size-3.5" />
+            Importieren
           </button>
         )}
         <button

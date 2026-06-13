@@ -61,6 +61,7 @@ import { buildSolverDiff } from './solverUtils'
 import { SolverResultPanel } from './components/SolverResultPanel'
 import { PlanSettingsModal } from './components/PlanSettingsModal'
 import { LockedWeekDialog } from './components/LockedWeekDialog'
+import { ImportDialog } from './components/ImportDialog'
 import { useDoctors } from '@/features/doctors/useDoctors'
 import { useDepartments } from '@/features/departments/useDepartments'
 import { useShiftTypes } from '@/features/shift-types/useShiftTypes'
@@ -167,6 +168,7 @@ export function PlanPage() {
     to: string
   } | null>(null)
   const [showWishes, setShowWishes] = useState(true)
+  const [showImportDialog, setShowImportDialog] = useState(false)
   const rawMode = searchParams.get('mode')
   const mode: 'besetzung' | 'ina' = rawMode === 'ina' ? 'ina' : 'besetzung'
   function setMode(newMode: 'besetzung' | 'ina') {
@@ -873,6 +875,7 @@ export function PlanPage() {
           onSolve={handleSolve}
           onNachtwocheClick={() => setLockedWeekDialogOpen(true)}
           onSettingsClick={() => setSettingsOpen(true)}
+          onImportClick={() => setShowImportDialog(true)}
         />
       )}
       {/* Mehrfach-Auswahl-Indikator */}
@@ -1257,6 +1260,12 @@ export function PlanPage() {
         doctors={doctors}
       />
     )}
+
+    <ImportDialog
+      open={showImportDialog}
+      onOpenChange={setShowImportDialog}
+      planId={isNaN(id) ? undefined : id}
+    />
 
     <AlertDialog
       open={pendingDeleteAbsence !== null}

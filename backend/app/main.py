@@ -14,6 +14,7 @@ from app.api.doctors import router as doctors_router
 from app.api.error_handlers import register_error_handlers
 from app.api.health import router as health_router
 from app.api.holidays import router as holidays_router
+from app.api.imports import router as imports_router
 from app.api.wishes import doctor_wishes_router, plan_wishes_router, wishes_router
 from app.api.ina_exclusions import router as ina_exclusions_router
 from app.api.plan_shifts import router as plan_shifts_router
@@ -65,6 +66,7 @@ app.include_router(constraint_overrides_router, prefix="/api")
 app.include_router(doctor_overrides_router, prefix="/api")
 app.include_router(system_router, prefix="/api/system")
 app.include_router(holidays_router, prefix="/api")
+app.include_router(imports_router, prefix="/api")
 app.include_router(doctor_wishes_router, prefix="/api")
 app.include_router(wishes_router, prefix="/api")
 app.include_router(plan_wishes_router, prefix="/api")

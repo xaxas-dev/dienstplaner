@@ -62,3 +62,11 @@ export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
 export async function apiDelete(path: string): Promise<void> {
   return request<void>('DELETE', path)
 }
+
+export async function apiPostFormData<T>(path: string, formData: FormData): Promise<T> {
+  // Do NOT set Content-Type — browser sets multipart boundary automatically
+  const response = await fetch(path, { method: 'POST', body: formData })
+  if (!response.ok) throw await parseError(response)
+  if (response.status === 204) return undefined as T
+  return response.json() as Promise<T>
+}
