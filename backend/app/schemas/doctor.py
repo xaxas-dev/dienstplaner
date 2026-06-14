@@ -4,7 +4,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
-from app.models.doctor import DoctorType
+from app.models.doctor import DoctorRank, DoctorType
 from app.schemas.employment_period import EmploymentPeriodResponse
 from app.schemas.qualification import QualificationResponse
 
@@ -14,7 +14,7 @@ class DoctorBase(BaseModel):
     title: str | None = Field(default=None, max_length=50)
     short_name: str | None = Field(default=None, max_length=50)
     doctor_type: DoctorType = DoctorType.INTERNAL
-    is_facharzt: bool = False
+    rank: DoctorRank | None = None
     active: bool = True
     entry_date: date | None = None
     virtual_entry_date: date | None = None
@@ -30,7 +30,7 @@ class DoctorUpdate(BaseModel):
     title: str | None = Field(default=None, max_length=50)
     short_name: str | None = Field(default=None, max_length=50)
     doctor_type: DoctorType | None = None
-    is_facharzt: bool | None = None
+    rank: DoctorRank | None = None
     active: bool | None = None
     entry_date: date | None = None
     virtual_entry_date: date | None = None
@@ -48,7 +48,7 @@ class DoctorResponse(DoctorBase):
     @computed_field
     @property
     def weiterbildungsjahr(self) -> int | None:
-        if self.is_facharzt or self.entry_date is None:
+        if (self.rank is not None and self.rank != DoctorRank.ASSISTENT) or self.entry_date is None:
             return None
         delta_days = (date.today() - self.entry_date).days
         if delta_days < 0:
