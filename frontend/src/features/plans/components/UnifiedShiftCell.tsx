@@ -4,6 +4,7 @@ import { Lock, Star } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { getDepartmentColor } from '@/lib/bereichColors'
+import { shiftTypeColorMuted } from '@/lib/shiftTypeColors'
 import type { Department } from '@/lib/types'
 
 export function makeCellDropId(rotationId: number, dayKey: string): string {
@@ -28,6 +29,7 @@ interface UnifiedShiftCellProps {
   isConflictTarget?: boolean
   isPinned?: boolean
   shiftAssigned?: boolean
+  shiftTypeColor?: string
   isLocked?: boolean
   isSelected?: boolean
   isHighlightedRow?: boolean
@@ -66,6 +68,7 @@ export function UnifiedShiftCell({
   isLocked,
   isPinned,
   shiftAssigned,
+  shiftTypeColor,
   isSelected,
   isHighlightedRow,
   isDragDimmed,
@@ -134,7 +137,16 @@ export function UnifiedShiftCell({
     !activeFilterGroups.has(shiftFilterGroup)
   const showCrosshair = (isHoveredRow || isHoveredCol) && !dimmed
 
-  const bg = inRotation ? bereichColor : `${bereichColor}28`
+  // Absence cells keep department color. Assigned shifts use shift type color.
+  // Empty rotation slots use neutral gray. Out-of-rotation stays faint dept color.
+  const bg = (() => {
+    if (absenceId !== undefined) {
+      return inRotation ? bereichColor : `${bereichColor}28`
+    }
+    if (shiftAssigned) return shiftTypeColorMuted(shiftTypeColor)
+    if (inRotation) return '#f4f4f5'
+    return `${bereichColor}28`
+  })()
 
   return (
     <div
