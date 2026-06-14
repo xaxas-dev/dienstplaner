@@ -9,7 +9,7 @@ const baseDoctor: Doctor = {
   name: 'Lena Hartmann',
   short_name: 'LH',
   doctor_type: 'INTERNAL',
-  is_facharzt: true,
+  rank: 'FACHARZT',
   active: true,
   weiterbildungsjahr: null,
   entry_date: null,
@@ -47,7 +47,7 @@ describe('DoctorCard', () => {
   })
 
   it('zeigt Assistenzarzt-Label für Arzt mit Weiterbildungsjahr', () => {
-    const wbaDoctor: Doctor = { ...baseDoctor, is_facharzt: false, weiterbildungsjahr: 3 }
+    const wbaDoctor: Doctor = { ...baseDoctor, rank: null, weiterbildungsjahr: 3 }
     render(<Wrapper><DoctorCard doctor={wbaDoctor} /></Wrapper>)
     expect(screen.getByText(/assistenzarzt/i)).toBeInTheDocument()
   })

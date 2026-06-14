@@ -48,7 +48,7 @@ function makeRotation(
       title: null,
       short_name: 'Mu',
       doctor_type: 'INTERNAL',
-      is_facharzt: false,
+      rank: null,
       active: true,
       entry_date: null,
       weiterbildungsjahr: null,
@@ -89,7 +89,7 @@ describe('buildUnifiedRows', () => {
       id: 2,
       doctor_id: 101,
       department_id: 1,
-      doctor: { id: 101, name: 'Dr. Zweiter', title: null, short_name: null, doctor_type: 'INTERNAL', is_facharzt: false, active: true, entry_date: null, weiterbildungsjahr: null, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
+      doctor: { id: 101, name: 'Dr. Zweiter', title: null, short_name: null, doctor_type: 'INTERNAL', rank: null, active: true, entry_date: null, weiterbildungsjahr: null, created_at: '2026-01-01T00:00:00', updated_at: '2026-01-01T00:00:00' },
     })
     const rows = buildUnifiedRows([dept], [rot1, rot2])
     expect(rows).toHaveLength(3)

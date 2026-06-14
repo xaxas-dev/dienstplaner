@@ -14,19 +14,19 @@ vi.mock('@/features/command-palette/useCommandPalette', () => ({
 const mockDoctors: Doctor[] = [
   {
     id: 1, name: 'Anna Facharzt', short_name: 'AF', doctor_type: 'INTERNAL',
-    is_facharzt: true, weiterbildungsjahr: null, active: true,
+    rank: 'FACHARZT', weiterbildungsjahr: null, active: true,
     entry_date: null, virtual_entry_date: null, notes: null,
     created_at: '', updated_at: '', employment_periods: [], qualifications: [],
   },
   {
     id: 2, name: 'Bruno WBA', short_name: 'BW', doctor_type: 'INTERNAL',
-    is_facharzt: false, weiterbildungsjahr: 2, active: true,
+    rank: null, weiterbildungsjahr: 2, active: true,
     entry_date: null, virtual_entry_date: null, notes: null,
     created_at: '', updated_at: '', employment_periods: [], qualifications: [],
   },
   {
     id: 3, name: 'Clara Extern', short_name: 'CE', doctor_type: 'EXTERNAL',
-    is_facharzt: false, weiterbildungsjahr: null, active: true,
+    rank: null, weiterbildungsjahr: null, active: true,
     entry_date: null, virtual_entry_date: null, notes: null,
     created_at: '', updated_at: '', employment_periods: [], qualifications: [],
   },
