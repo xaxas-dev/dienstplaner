@@ -25,4 +25,5 @@ class ShiftType(Base):
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     is_bereitschaftsdienst: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     filter_group: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    color: Mapped[str | None] = mapped_column(String(9), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)

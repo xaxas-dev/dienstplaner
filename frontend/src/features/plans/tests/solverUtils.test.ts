@@ -42,7 +42,7 @@ function makeDoctor(id: number, name: string): Doctor {
     id,
     name,
     doctor_type: 'INTERNAL',
-    is_facharzt: false,
+    rank: null,
     active: true,
     title: null,
     short_name: null,

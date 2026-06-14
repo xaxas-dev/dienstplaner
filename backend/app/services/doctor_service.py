@@ -65,7 +65,7 @@ def update_doctor_with_validation(db: Session, doctor_id: int, data: dict) -> Do
 
     merged = {
         "doctor_type": doctor.doctor_type,
-        "is_facharzt": doctor.is_facharzt,
+        "rank": doctor.rank,
     }
     merged.update(data)
     validate_doctor_data(merged)

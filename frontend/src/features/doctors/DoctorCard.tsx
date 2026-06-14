@@ -6,9 +6,20 @@ import { ShiftHeatmap14 } from '@/components/dp/ShiftHeatmap14'
 import { getCurrentEmploymentPeriod } from './doctorHelpers'
 import type { Doctor, ShiftWithDetails } from '@/lib/types'
 
+const RANK_LABELS: Record<string, string> = {
+  ASSISTENT: 'Assistent',
+  FACHARZT: 'Facharzt',
+  FUNKTIONSOBERARZT: 'Funktionsoberarzt',
+  OBERARZT: 'Oberarzt',
+  CHEFARZT: 'Chefarzt',
+}
+
 function roleLabel(doctor: Doctor): string {
-  if (doctor.doctor_type === 'EXTERNAL') return doctor.is_facharzt ? 'Facharzt (Extern)' : 'Extern'
-  if (doctor.is_facharzt) return 'Facharzt'
+  if (doctor.doctor_type === 'EXTERNAL') {
+    const label = doctor.rank ? RANK_LABELS[doctor.rank] ?? doctor.rank : null
+    return label ? `${label} (Extern)` : 'Extern'
+  }
+  if (doctor.rank) return RANK_LABELS[doctor.rank] ?? doctor.rank
   if (doctor.weiterbildungsjahr != null) return `Assistenzarzt ${doctor.weiterbildungsjahr}`
   return 'Assistenzarzt'
 }

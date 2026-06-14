@@ -27,7 +27,7 @@ def test_doctor_create_and_query(db: Session) -> None:
     assert result.name == "Max Mustermann"
     assert result.short_name == "MM"
     assert result.doctor_type == DoctorType.INTERNAL
-    assert result.is_facharzt is False
+    assert result.rank is None
     assert result.active is True
     assert result.created_at is not None
     assert result.updated_at is not None

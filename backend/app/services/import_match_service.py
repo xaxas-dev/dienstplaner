@@ -99,7 +99,11 @@ def analyze_import(db: Session, parsed: ParsedSheet) -> ImportAnalysis:
     shift_types = db.query(ShiftType).filter(ShiftType.active.is_(True)).all()
     st_by_short = {st.short_name: st for st in shift_types}
 
-    dept_names = [(d.id, d.name) for d in departments]
+    dept_names: list[tuple[int, str]] = []
+    for d in departments:
+        dept_names.append((d.id, d.name))
+        if d.short_name:
+            dept_names.append((d.id, d.short_name))
     doctor_names = [(d.id, d.name) for d in doctors]
 
     # --- Bereiche ---

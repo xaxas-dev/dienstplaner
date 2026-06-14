@@ -60,7 +60,7 @@ function makeDoctor(overrides: Partial<Doctor>): Doctor {
     name: 'Müller, Anna',
     short_name: 'AM',
     doctor_type: 'INTERNAL',
-    is_facharzt: true,
+    rank: 'FACHARZT',
     active: true,
     weiterbildungsjahr: null,
     entry_date: null,

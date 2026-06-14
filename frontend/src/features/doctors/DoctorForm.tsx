@@ -32,7 +32,7 @@ const schema = z.object({
   title: z.string().max(50, 'Maximal 50 Zeichen').nullable().optional(),
   short_name: z.string().max(50, 'Maximal 50 Zeichen').nullable().optional(),
   doctor_type: z.enum(['INTERNAL', 'EXTERNAL']),
-  is_facharzt: z.boolean(),
+  rank: z.string().nullable().optional(),
   active: z.boolean(),
   entry_date: z.string().nullable().optional(),
   virtual_entry_date: z.string().nullable().optional(),
@@ -59,7 +59,7 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
       title: doctor?.title ?? null,
       short_name: doctor?.short_name ?? null,
       doctor_type: doctor?.doctor_type ?? 'INTERNAL',
-      is_facharzt: doctor?.is_facharzt ?? false,
+      rank: doctor?.rank ?? null,
       active: doctor?.active ?? true,
       entry_date: doctor?.entry_date ?? null,
       virtual_entry_date: doctor?.virtual_entry_date ?? null,
@@ -76,7 +76,7 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
         title: doctor.title ?? null,
         short_name: doctor.short_name ?? null,
         doctor_type: doctor.doctor_type,
-        is_facharzt: doctor.is_facharzt,
+        rank: doctor.rank ?? null,
         active: doctor.active,
         entry_date: doctor.entry_date ?? null,
         virtual_entry_date: doctor.virtual_entry_date ?? null,
@@ -220,16 +220,31 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
           )}
         />
 
-        {/* Facharzt */}
+        {/* Rang */}
         <FormField
           control={form.control}
-          name="is_facharzt"
+          name="rank"
           render={({ field }) => (
-            <FormItem className="flex items-center gap-3">
-              <FormControl>
-                <Switch checked={field.value} onCheckedChange={field.onChange} />
-              </FormControl>
-              <FormLabel className="!mt-0 cursor-pointer">Facharzt</FormLabel>
+            <FormItem>
+              <FormLabel>Rang</FormLabel>
+              <Select
+                value={field.value ?? '__none__'}
+                onValueChange={v => field.onChange(v === '__none__' ? null : v)}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="—" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="__none__">—</SelectItem>
+                  <SelectItem value="ASSISTENT">Assistent</SelectItem>
+                  <SelectItem value="FACHARZT">Facharzt</SelectItem>
+                  <SelectItem value="FUNKTIONSOBERARZT">Funktionsoberarzt</SelectItem>
+                  <SelectItem value="OBERARZT">Oberarzt</SelectItem>
+                  <SelectItem value="CHEFARZT">Chefarzt</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

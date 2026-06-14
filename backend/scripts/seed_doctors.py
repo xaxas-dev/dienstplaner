@@ -199,7 +199,7 @@ def apply_seed(session) -> tuple[int, int, int]:
                 "doctor_type": (
                     DoctorType.EXTERNAL if index in external_indices else DoctorType.INTERNAL
                 ),
-                "is_facharzt": index % 4 == 0,
+                "rank": "FACHARZT" if index % 4 == 0 else None,
                 "active": index != inactive_index,
                 "entry_date": _entry_date_for_index(today, index, target_total),
                 "virtual_entry_date": _entry_date_for_index(today, index, target_total),

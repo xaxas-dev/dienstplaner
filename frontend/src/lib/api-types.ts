@@ -1002,11 +1002,8 @@ export interface components {
             short_name?: string | null;
             /** @default INTERNAL */
             doctor_type: components["schemas"]["DoctorType"];
-            /**
-             * Is Facharzt
-             * @default false
-             */
-            is_facharzt: boolean;
+            /** Rank */
+            rank?: string | null;
             /**
              * Active
              * @default true
@@ -1071,11 +1068,8 @@ export interface components {
             short_name?: string | null;
             /** @default INTERNAL */
             doctor_type: components["schemas"]["DoctorType"];
-            /**
-             * Is Facharzt
-             * @default false
-             */
-            is_facharzt: boolean;
+            /** Rank */
+            rank?: string | null;
             /**
              * Active
              * @default true
@@ -1118,8 +1112,8 @@ export interface components {
             /** Short Name */
             short_name?: string | null;
             doctor_type?: components["schemas"]["DoctorType"] | null;
-            /** Is Facharzt */
-            is_facharzt?: boolean | null;
+            /** Rank */
+            rank?: string | null;
             /** Active */
             active?: boolean | null;
             /** Entry Date */
@@ -1141,11 +1135,8 @@ export interface components {
             short_name?: string | null;
             /** @default INTERNAL */
             doctor_type: components["schemas"]["DoctorType"];
-            /**
-             * Is Facharzt
-             * @default false
-             */
-            is_facharzt: boolean;
+            /** Rank */
+            rank?: string | null;
             /**
              * Active
              * @default true
@@ -1869,6 +1860,8 @@ export interface components {
             notes?: string | null;
             /** Filter Group */
             filter_group?: string | null;
+            /** Color */
+            color?: string | null;
         };
         /** ShiftTypeResponse */
         ShiftTypeResponse: {
@@ -1909,6 +1902,8 @@ export interface components {
             notes?: string | null;
             /** Filter Group */
             filter_group?: string | null;
+            /** Color */
+            color?: string | null;
             /** Id */
             id: number;
             /**
@@ -1946,6 +1941,8 @@ export interface components {
             notes?: string | null;
             /** Filter Group */
             filter_group?: string | null;
+            /** Color */
+            color?: string | null;
         };
         /** ShiftUpdate */
         ShiftUpdate: {

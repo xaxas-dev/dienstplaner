@@ -40,7 +40,7 @@ def test_create_doctor_minimal(client: TestClient) -> None:
     data = r.json()
     assert data["name"] == "Dr. Minimal"
     assert data["active"] is True
-    assert data["is_facharzt"] is False
+    assert data["rank"] is None
     assert data["doctor_type"] == "INTERNAL"
 
 
@@ -50,7 +50,7 @@ def test_create_doctor_full(client: TestClient) -> None:
         "title": "Dr.",
         "short_name": "VV",
         "doctor_type": "INTERNAL",
-        "is_facharzt": False,
+        "rank": None,
         "active": True,
         "notes": "Test-Notiz",
     }
@@ -66,10 +66,10 @@ def test_create_doctor_full(client: TestClient) -> None:
 def test_create_doctor_facharzt(client: TestClient) -> None:
     r = client.post(
         "/api/doctors",
-        json={"name": "Dr. Facharzt", "is_facharzt": True},
+        json={"name": "Dr. Facharzt", "rank": "FACHARZT"},
     )
     assert r.status_code == 201
-    assert r.json()["is_facharzt"] is True
+    assert r.json()["rank"] == "FACHARZT"
     assert r.json()["weiterbildungsjahr"] is None
 
 
@@ -223,7 +223,7 @@ def test_include_inactive_filter(client: TestClient) -> None:
 def test_doctor_weiterbildungsjahr_computed_facharzt(client: TestClient) -> None:
     r = client.post(
         "/api/doctors",
-        json={"name": "Dr. Facharzt WBJ", "is_facharzt": True, "entry_date": "2020-01-01"},
+        json={"name": "Dr. Facharzt WBJ", "rank": "FACHARZT", "entry_date": "2020-01-01"},
     )
     assert r.status_code == 201
     assert r.json()["weiterbildungsjahr"] is None

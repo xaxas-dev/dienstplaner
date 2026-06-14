@@ -26,6 +26,8 @@ import { ApiError } from '@/lib/api'
 import { useCreateShiftType, useUpdateShiftType } from './useShiftTypes'
 import type { ShiftType } from '@/lib/types'
 
+const COLOR_REGEX = /^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$/
+
 const schema = z
   .object({
     name: z.string().min(1, 'Name ist erforderlich'),
@@ -41,6 +43,7 @@ const schema = z
     active: z.boolean(),
     notes: z.string().nullable().optional(),
     filter_group: z.string().nullable().optional(),
+    color: z.string().regex(COLOR_REGEX, 'Ungültiger Farbcode').nullable().optional(),
   })
   .refine((d) => d.applies_on_weekdays || d.applies_on_weekend, {
     message: 'Mindestens ein Tag-Typ muss aktiv sein (Werktag oder Wochenende)',
@@ -93,6 +96,7 @@ export function ShiftTypeFormDialog({ open, onOpenChange, shiftType }: ShiftType
       active: shiftType?.active ?? true,
       notes: shiftType?.notes ?? null,
       filter_group: shiftType?.filter_group ?? null,
+      color: shiftType?.color ?? null,
     },
   })
 
@@ -109,6 +113,7 @@ export function ShiftTypeFormDialog({ open, onOpenChange, shiftType }: ShiftType
         active: shiftType?.active ?? true,
         notes: shiftType?.notes ?? null,
         filter_group: shiftType?.filter_group ?? null,
+        color: shiftType?.color ?? null,
       })
     }
   }, [open, shiftType, form])
@@ -125,6 +130,7 @@ export function ShiftTypeFormDialog({ open, onOpenChange, shiftType }: ShiftType
       end_time: values.end_time || null,
       notes: values.notes || null,
       filter_group: values.filter_group || null,
+      color: values.color || null,
     }
 
     const handleError = (err: unknown) => {
@@ -338,6 +344,35 @@ export function ShiftTypeFormDialog({ open, onOpenChange, shiftType }: ShiftType
                   <FormDescription>
                     Optional. Zellen ohne Gruppe werden beim Filtern nie gedimmt.
                   </FormDescription>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="color"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Farbe</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={field.value ?? '#ffffff'}
+                        onChange={e => field.onChange(e.target.value)}
+                        className="h-9 w-16 rounded border border-input p-1 cursor-pointer"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => field.onChange(null)}
+                      >
+                        Zurücksetzen
+                      </Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />

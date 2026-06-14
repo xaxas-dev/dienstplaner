@@ -17,9 +17,9 @@ from app.services.exceptions import EmploymentPeriodOverlapError
 
 def test_validate_doctor_data_noop() -> None:
     # validate_doctor_data hat keine Validierungsregeln mehr; sollte immer durchlaufen
-    validate_doctor_data({"is_facharzt": True, "doctor_type": DoctorType.INTERNAL})
+    validate_doctor_data({"rank": "FACHARZT", "doctor_type": DoctorType.INTERNAL})
     validate_doctor_data({})
-    validate_doctor_data({"is_facharzt": False, "doctor_type": DoctorType.EXTERNAL})
+    validate_doctor_data({"rank": None, "doctor_type": DoctorType.EXTERNAL})
 
 
 # ── _periods_overlap ───────────────────────────────────────────────────────────

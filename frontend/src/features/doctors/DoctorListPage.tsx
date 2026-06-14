@@ -12,7 +12,7 @@ type FilterKey = 'all' | 'facharzt' | 'wba' | 'extern'
 
 function applyFilter(doctors: Doctor[], filter: FilterKey): Doctor[] {
   switch (filter) {
-    case 'facharzt': return doctors.filter((d) => d.is_facharzt)
+    case 'facharzt': return doctors.filter((d) => d.rank === 'FACHARZT')
     case 'wba':      return doctors.filter((d) => d.weiterbildungsjahr != null)
     case 'extern':   return doctors.filter((d) => d.doctor_type === 'EXTERNAL')
     default:         return doctors

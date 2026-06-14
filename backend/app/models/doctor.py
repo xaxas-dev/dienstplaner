@@ -12,6 +12,14 @@ class DoctorType(enum.StrEnum):
     EXTERNAL = "EXTERNAL"
 
 
+class DoctorRank(enum.StrEnum):
+    ASSISTENT = "ASSISTENT"
+    FACHARZT = "FACHARZT"
+    FUNKTIONSOBERARZT = "FUNKTIONSOBERARZT"
+    OBERARZT = "OBERARZT"
+    CHEFARZT = "CHEFARZT"
+
+
 class Doctor(Base):
     __tablename__ = "doctors"
 
@@ -29,7 +37,11 @@ class Doctor(Base):
         nullable=False,
         default=DoctorType.INTERNAL,
     )
-    is_facharzt: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    rank: Mapped[DoctorRank | None] = mapped_column(
+        Enum(DoctorRank, native_enum=False, length=50),
+        nullable=True,
+        default=None,
+    )
     entry_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     virtual_entry_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)

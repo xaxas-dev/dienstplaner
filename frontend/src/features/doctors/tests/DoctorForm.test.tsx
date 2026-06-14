@@ -22,7 +22,7 @@ const mockDoctor: Doctor = {
   short_name: 'MM',
   doctor_type: 'INTERNAL',
   weiterbildungsjahr: null,
-  is_facharzt: false,
+  rank: null,
   active: true,
   entry_date: null,
   virtual_entry_date: null,
