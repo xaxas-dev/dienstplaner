@@ -418,6 +418,11 @@ export function UnifiedPlanGrid({
                   unassignedShiftByDate.get(dk)?.shift_type?.filter_group ??
                   null
 
+                const shiftTypeColor: string | undefined =
+                  shift?.shift_type?.color ??
+                  unassignedShiftByDate.get(dk)?.shift_type?.color ??
+                  undefined
+
                 const isConflictTarget =
                   dragConflictMap != null &&
                   !!(dragConflictMap.get(row.doctor.id)?.has(dk)) &&
@@ -440,6 +445,7 @@ export function UnifiedPlanGrid({
                     hasTarifWarning={hasTarifWarning}
                     activeFilterGroups={activeFilterGroups}
                     shiftFilterGroup={shiftFilterGroup}
+                    shiftTypeColor={shiftTypeColor}
                     isHoveredRow={isRowHovered}
                     isHoveredCol={effectiveHoverDay === dk}
                     shiftId={cellShiftId}
