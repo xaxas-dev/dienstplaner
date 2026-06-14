@@ -92,7 +92,6 @@ export function RuleOverrideListPage() {
       <CommandBar
         titleAccent="Sonderregelungen"
         title={(overrides?.length ?? 0) > 0 ? `· ${overrides!.length} Sonderregelungen` : ''}
-        showSearch={false}
         primaryAction={{ label: '+ Neue Sonderregelung', onClick: handleNewClick }}
       />
 

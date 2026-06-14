@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Trash2, ArrowLeft } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { CommandBar } from '@/components/dp/CommandBar'
 import { Separator } from '@/components/ui/separator'
 import {
   AlertDialog,
@@ -81,26 +83,17 @@ export function DoctorDetailPage() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="border-b border-border px-6 py-4">
-        <div className="flex items-center gap-3 mb-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => void navigate(-1)}
-            className="-ml-2"
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Zurück
-          </Button>
-        </div>
-        <div className="flex items-center justify-between">
+      <CommandBar
+        breadcrumb={[{ label: 'Ärzte', href: '/doctors' }]}
+        titleNode={
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold">{doctor.name}</h1>
+            <span>{doctor.name}</span>
             <Badge variant={doctor.active ? 'default' : 'secondary'}>
               {doctor.active ? 'Aktiv' : 'Inaktiv'}
             </Badge>
           </div>
+        }
+        extras={
           <Button
             variant="outline"
             size="sm"
@@ -110,8 +103,8 @@ export function DoctorDetailPage() {
             <Trash2 className="h-4 w-4 mr-1.5" />
             Löschen
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Tabs */}
       <div className="border-b border-border px-6">

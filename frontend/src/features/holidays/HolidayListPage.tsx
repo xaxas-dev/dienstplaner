@@ -73,7 +73,6 @@ export function HolidayListPage() {
     <div className="flex flex-col h-full">
       <CommandBar
         title="Feiertage"
-        showSearch={false}
         primaryAction={{
           label: 'Manuell hinzufügen',
           icon: Plus,

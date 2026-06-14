@@ -77,7 +77,6 @@ export function ShiftTypeListPage() {
         titleAccent="Schichttypen"
         title={count > 0 ? `· ${count} ${count === 1 ? 'Schichttyp' : 'Schichttypen'}` : ''}
         filters={filterChips}
-        showSearch={false}
         primaryAction={{ label: '+ Neuer Schichttyp', onClick: handleNewClick }}
       />
 

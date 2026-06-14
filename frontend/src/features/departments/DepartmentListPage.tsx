@@ -55,7 +55,6 @@ export function DepartmentListPage() {
         titleAccent="Stationen"
         title={count > 0 ? `· ${count} ${count === 1 ? 'Station' : 'Stationen'}` : ''}
         filters={filterChips}
-        showSearch={false}
         primaryAction={{ label: '+ Neue Station', onClick: handleNewClick }}
       />
 

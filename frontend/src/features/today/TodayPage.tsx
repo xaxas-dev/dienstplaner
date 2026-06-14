@@ -32,10 +32,10 @@ export function TodayPage() {
     }) ?? []
 
   return (
-    <div className="flex flex-col flex-1 overflow-y-auto">
+    <div className="flex flex-col h-full">
       <CommandBar titleAccent="Heute" title="Dashboard" showSearch />
 
-      <div className="grid grid-cols-[1.4fr_1fr] gap-7 px-10 py-6 items-stretch">
+      <div className="grid grid-cols-[1.4fr_1fr] gap-7 px-10 py-6 items-stretch flex-1 overflow-y-auto">
         {/* LINKE SPALTE */}
         <div className="flex flex-col gap-5">
           <GreetingBlock date={now} />

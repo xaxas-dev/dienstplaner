@@ -50,84 +50,81 @@ export function CommandBar({
   function handleSearchClick() { open() }
 
   return (
-    <div className={cn('flex items-center gap-3 px-10 py-4 bg-paper', className)}>
-      {/* Breadcrumb / Zurück-Navigation — vor dem Titel */}
-      {breadcrumb && breadcrumb.length > 0 && (
-        <nav className="flex items-center gap-1 shrink-0">
-          {breadcrumb.map((item, i) => (
-            <React.Fragment key={i}>
-              {i > 0 && <ChevronRight className="size-3 text-ink-3" />}
-              {item.href ? (
-                <Link
-                  to={item.href}
-                  className={cn(
-                    'text-xs text-ink-3 hover:text-ink transition-colors',
-                    i === 0 && 'flex items-center gap-0.5',
-                  )}
-                >
-                  {i === 0 && <ChevronLeft className="size-3.5" />}
-                  {item.label}
-                </Link>
-              ) : (
-                <span className="text-xs text-ink-3">{item.label}</span>
+    <div className={cn('grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-10 py-4 bg-paper', className)}>
+      {/* Links: Breadcrumb, Titel, Filter-Chips */}
+      <div className="flex items-center gap-3 min-w-0">
+        {breadcrumb && breadcrumb.length > 0 && (
+          <nav className="flex items-center gap-1 shrink-0">
+            {breadcrumb.map((item, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && <ChevronRight className="size-3 text-ink-3" />}
+                {item.href ? (
+                  <Link
+                    to={item.href}
+                    className={cn(
+                      'text-xs text-ink-3 hover:text-ink transition-colors',
+                      i === 0 && 'flex items-center gap-0.5',
+                    )}
+                  >
+                    {i === 0 && <ChevronLeft className="size-3.5" />}
+                    {item.label}
+                  </Link>
+                ) : (
+                  <span className="text-xs text-ink-3">{item.label}</span>
+                )}
+              </React.Fragment>
+            ))}
+          </nav>
+        )}
+
+        <h1 className="font-serif text-2xl text-ink leading-none shrink-0">
+          {titleNode ?? (
+            <>
+              {titleAccent && (
+                <em className="not-italic text-dp-accent">{titleAccent}</em>
               )}
-            </React.Fragment>
-          ))}
-        </nav>
+              {titleAccent && title && ' '}
+              {title}
+            </>
+          )}
+        </h1>
+
+        {filters && filters.length > 0 && (
+          <div className="flex items-center gap-1.5 shrink-0">
+            {filters.map((f) => (
+              <Chip
+                key={f.label}
+                variant={f.active ? 'active' : 'default'}
+                onClick={f.onClick}
+              >
+                {f.label}
+              </Chip>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Mitte: Suchfeld — immer zentriert */}
+      {showSearch ? (
+        <button
+          type="button"
+          onClick={handleSearchClick}
+          className="flex items-center gap-2 h-9 min-w-[220px] px-3 rounded-full border border-line bg-card text-ink-3 text-sm hover:border-line-2 hover:text-ink transition-colors"
+        >
+          <Search className="size-3.5 shrink-0" />
+          <span className="text-xs flex-1 text-left hidden sm:inline">Suchen oder Befehl …</span>
+          <span className="font-mono text-[10px] bg-line rounded px-1 py-0.5 leading-none shrink-0">
+            {isMac() ? `${getModifierGlyph()}K` : `${getModifierGlyph()}+K`}
+          </span>
+        </button>
+      ) : (
+        <div />
       )}
 
-      {/* Titel */}
-      <h1 className="font-serif text-2xl text-ink leading-none shrink-0">
-        {titleNode ?? (
-          <>
-            {titleAccent && (
-              <em className="not-italic text-dp-accent">{titleAccent}</em>
-            )}
-            {titleAccent && title && ' '}
-            {title}
-          </>
-        )}
-      </h1>
-
-      {/* Filter-Chips */}
-      {filters && filters.length > 0 && (
-        <div className="flex items-center gap-1.5 shrink-0">
-          {filters.map((f) => (
-            <Chip
-              key={f.label}
-              variant={f.active ? 'active' : 'default'}
-              onClick={f.onClick}
-            >
-              {f.label}
-            </Chip>
-          ))}
-        </div>
-      )}
-
-      {/* Spacer */}
-      <div className="flex-1" />
-
-      {/* Right side actions */}
-      <div className="flex items-center gap-2">
-        {/* Suchfeld */}
-        {showSearch && (
-          <button
-            type="button"
-            onClick={handleSearchClick}
-            className="flex items-center gap-2 h-8 px-3 rounded-full border border-line bg-card text-ink-3 text-sm hover:border-line-2 hover:text-ink transition-colors"
-          >
-            <Search className="size-3.5 shrink-0" />
-            <span className="text-xs hidden sm:inline">Suchen</span>
-            <span className="font-mono text-[10px] bg-line rounded px-1 py-0.5 leading-none">
-              {isMac() ? `${getModifierGlyph()}K` : `${getModifierGlyph()}+K`}
-            </span>
-          </button>
-        )}
-
-        {/* Extras */}
+      {/* Rechts: Extras, Primärbutton */}
+      <div className="flex items-center gap-2 justify-end">
         {extras}
 
-        {/* Primärbutton */}
         {primaryAction && (
           <Button
             variant="accent"

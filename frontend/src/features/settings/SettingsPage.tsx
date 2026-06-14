@@ -53,7 +53,7 @@ export function SettingsPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <CommandBar title="Einstellungen" showSearch={false} />
+      <CommandBar title="Einstellungen" />
 
       <div className="flex-1 px-10 py-6 overflow-y-auto">
         <div className="max-w-xl space-y-6">

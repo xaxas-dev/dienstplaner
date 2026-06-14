@@ -63,7 +63,6 @@ export function QualificationListPage() {
         titleAccent="Qualifikationen"
         title={count > 0 ? `· ${count} Qualifikationen` : ''}
         filters={filterChips}
-        showSearch={false}
         primaryAction={{ label: '+ Neue Qualifikation', onClick: handleNewClick }}
       />
 
