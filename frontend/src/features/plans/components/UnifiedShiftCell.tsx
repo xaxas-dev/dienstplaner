@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { getDepartmentColor } from '@/lib/bereichColors'
 import { shiftTypeColorMuted } from '@/lib/shiftTypeColors'
-import type { Department } from '@/lib/types'
+import type { AbsenceType, Department } from '@/lib/types'
 
 export function makeCellDropId(rotationId: number, dayKey: string): string {
   return `cell-${rotationId}-${dayKey}`
@@ -36,6 +36,8 @@ interface UnifiedShiftCellProps {
   isDragDimmed?: boolean
   isDragHighlighted?: boolean
   absenceId?: number
+  absenceType?: AbsenceType | null
+  absenceColors?: Record<AbsenceType, string>
   onDoubleClickRemoveAbsence?: (absenceId: number) => void
   onMouseEnter?: () => void
   onMouseDown?: () => void
@@ -74,6 +76,8 @@ export function UnifiedShiftCell({
   isDragDimmed,
   isDragHighlighted,
   absenceId,
+  absenceType,
+  absenceColors,
   onDoubleClickRemoveAbsence,
   onMouseEnter,
   onMouseDown,
@@ -137,11 +141,13 @@ export function UnifiedShiftCell({
     !activeFilterGroups.has(shiftFilterGroup)
   const showCrosshair = (isHoveredRow || isHoveredCol) && !dimmed
 
-  // Absence cells keep department color. Assigned shifts use shift type color.
+  // Absence cells use configured absence type color. Assigned shifts use shift type color.
   // Empty rotation slots use neutral gray. Out-of-rotation stays faint dept color.
   const bg = (() => {
     if (absenceId !== undefined) {
-      return inRotation ? bereichColor : `${bereichColor}28`
+      const absColor = absenceType && absenceColors?.[absenceType]
+      if (absColor) return inRotation ? absColor + '80' : absColor + '40'
+      return inRotation ? '#E5E7EB' : '#E5E7EB40'
     }
     if (shiftAssigned) return shiftTypeColorMuted(shiftTypeColor)
     if (inRotation) return '#f4f4f5'

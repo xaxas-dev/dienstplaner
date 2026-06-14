@@ -238,7 +238,7 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="__none__">—</SelectItem>
-                  <SelectItem value="ASSISTENT">Assistent</SelectItem>
+                  <SelectItem value="ASSISTENT">Assistenzarzt</SelectItem>
                   <SelectItem value="FACHARZT">Facharzt</SelectItem>
                   <SelectItem value="FUNKTIONSOBERARZT">Funktionsoberarzt</SelectItem>
                   <SelectItem value="OBERARZT">Oberarzt</SelectItem>

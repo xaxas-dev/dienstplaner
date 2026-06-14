@@ -88,6 +88,7 @@ export interface ResolvedCell {
   text: string
   shiftId: number | null
   absenceId: number | null
+  absenceType: AbsenceType | null
 }
 
 export function resolveCell(
@@ -115,5 +116,6 @@ export function resolveCell(
     text,
     shiftId: shift?.id ?? null,
     absenceId: absence?.id ?? null,
+    absenceType: absence?.absence_type ?? null,
   }
 }

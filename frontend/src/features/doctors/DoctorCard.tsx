@@ -7,7 +7,7 @@ import { getCurrentEmploymentPeriod } from './doctorHelpers'
 import type { Doctor, ShiftWithDetails } from '@/lib/types'
 
 const RANK_LABELS: Record<string, string> = {
-  ASSISTENT: 'Assistent',
+  ASSISTENT: 'Assistenzarzt',
   FACHARZT: 'Facharzt',
   FUNKTIONSOBERARZT: 'Funktionsoberarzt',
   OBERARZT: 'Oberarzt',

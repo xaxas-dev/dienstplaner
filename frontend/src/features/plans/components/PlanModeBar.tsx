@@ -5,6 +5,11 @@ import { cn } from '@/lib/utils'
 import { colorForShiftType } from '@/lib/design/shift-palette'
 import type { ShiftType, AbsenceType } from '@/lib/types'
 
+function shiftChipStyle(color: string | null | undefined, fallbackBg: string, fallbackFg: string): React.CSSProperties {
+  if (color) return { background: color + '80', color: '#1f2937' }
+  return { background: fallbackBg, color: fallbackFg }
+}
+
 // ─── DnD Helpers ──────────────────────────────────────────────────────────────
 export const SHIFT_TYPE_DRAG_ID_PREFIX = 'shift-'
 
@@ -62,6 +67,7 @@ export interface PlanModeBarProps {
   onNachtwocheClick: () => void
   onSettingsClick: () => void
   onImportClick?: () => void
+  absenceColors?: Record<AbsenceType, string>
 }
 
 export function PlanModeBar({
@@ -69,11 +75,13 @@ export function PlanModeBar({
   activeFilterGroups, onFilterGroupToggle, onFilterGroupClear,
   solverEnabled, isSolving, onSolve,
   onNachtwocheClick, onSettingsClick, onImportClick,
+  absenceColors,
 }: PlanModeBarProps) {
   const sortedShiftTypes = [...shiftTypes].sort((a, b) => a.display_order - b.display_order)
   const filterGroups = [
     ...new Set(shiftTypes.map((st) => st.filter_group).filter((g): g is string => g != null)),
   ].sort()
+  const nachtShiftType = shiftTypes.find((st) => st.short_name === 'N')
 
   return (
     <div className="flex items-center gap-3 px-5 py-2 border-b border-line bg-card flex-wrap shrink-0">
@@ -128,7 +136,7 @@ export function PlanModeBar({
         <span className="text-[10px] text-ink-3 uppercase tracking-[0.07em]">Abwesenheiten</span>
 
         {VALID_ABSENCE_TYPES.map((type) => (
-          <AbsenceDraggableChip key={type} absenceType={type} />
+          <AbsenceDraggableChip key={type} absenceType={type} color={absenceColors?.[type]} />
         ))}
 
         {mode === 'besetzung' && (
@@ -137,7 +145,11 @@ export function PlanModeBar({
             <button
               type="button"
               onClick={onNachtwocheClick}
-              className="inline-flex items-center gap-1.5 px-2.5 py-[3px] rounded-full text-[11px] font-medium bg-card border border-line text-ink-2 hover:bg-line/20 transition-colors"
+              className="inline-flex items-center gap-1.5 px-2.5 py-[3px] rounded-full text-[11px] font-medium border transition-colors"
+              style={nachtShiftType?.color
+                ? { background: nachtShiftType.color + '80', color: '#1f2937', borderColor: nachtShiftType.color + 'a0' }
+                : { background: 'var(--card)', color: 'var(--ink-2)', borderColor: 'var(--line)' }
+              }
             >
               <MoonStar className="size-3" />
               Nachtwoche
@@ -224,6 +236,7 @@ function ShiftTypeDraggableChip({ shiftType, dimmed }: { shiftType: ShiftType; d
     data: { shiftTypeId: shiftType.id, shortName: shiftType.short_name },
   })
   const pal = colorForShiftType({ id: shiftType.id, code: shiftType.short_name })
+  const chipStyle = shiftChipStyle(shiftType.color, pal.bg, pal.fg)
   return (
     <div
       ref={setNodeRef}
@@ -235,19 +248,22 @@ function ShiftTypeDraggableChip({ shiftType, dimmed }: { shiftType: ShiftType; d
         isDragging && 'opacity-40 cursor-grabbing',
         dimmed && 'opacity-40',
       )}
-      style={{ background: pal.bg, color: pal.fg }}
+      style={chipStyle}
     >
       {shiftType.short_name}
     </div>
   )
 }
 
-function AbsenceDraggableChip({ absenceType }: { absenceType: AbsenceType }) {
+function AbsenceDraggableChip({ absenceType, color }: { absenceType: AbsenceType; color?: string }) {
   const { short, full } = ABSENCE_CHIP_META[absenceType]
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: makeAbsenceDragId(absenceType),
     data: { absenceType },
   })
+  const chipStyle: React.CSSProperties = color
+    ? { background: color + '80', color: '#1f2937', borderColor: color + 'a0' }
+    : {}
   return (
     <div
       ref={setNodeRef}
@@ -255,10 +271,11 @@ function AbsenceDraggableChip({ absenceType }: { absenceType: AbsenceType }) {
       {...attributes}
       title={full}
       className={cn(
-        'inline-flex items-center px-2.5 py-[3px] rounded-full text-[11px] font-medium cursor-grab select-none',
-        'bg-card border border-line text-ink-2 hover:bg-line/20 active:cursor-grabbing',
+        'inline-flex items-center px-2.5 py-[3px] rounded-full text-[11px] font-medium cursor-grab select-none border',
+        color ? 'active:cursor-grabbing' : 'bg-card border-line text-ink-2 hover:bg-line/20 active:cursor-grabbing',
         isDragging && 'opacity-40 cursor-grabbing',
       )}
+      style={chipStyle}
     >
       {short}
     </div>

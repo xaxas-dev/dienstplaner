@@ -11,7 +11,7 @@ import type { RotationRow } from '../unifiedGridUtils'
 import { getWishHint, getWishBadge } from '../wishGridUtils'
 import { BereichHeaderRow, makePlaceholderDropId, makeRotationMemberDropId } from './BereichHeaderRow'
 import { UnifiedShiftCell } from './UnifiedShiftCell'
-import type { Department, Doctor, RotationAssignmentWithDetails, ShiftWithDetails, Absence, TarifWarning, Wish, ShiftType } from '@/lib/types'
+import type { AbsenceType, Department, Doctor, RotationAssignmentWithDetails, ShiftWithDetails, Absence, TarifWarning, Wish, ShiftType } from '@/lib/types'
 
 const WEEKDAY_ABBR = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 
@@ -45,6 +45,7 @@ interface UnifiedPlanGridProps {
   shiftTypes?: ShiftType[]
   onWishCreate?: (doctorId: number, date: string) => void
   onDoctorClick?: (doctorId: number) => void
+  absenceColors?: Record<AbsenceType, string>
 }
 
 
@@ -180,6 +181,7 @@ export function UnifiedPlanGrid({
   shiftTypes,
   onWishCreate,
   onDoctorClick,
+  absenceColors,
 }: UnifiedPlanGridProps) {
   const [hoverRow, setHoverRow] = useState<string | null>(null)
   const [hoverDay, setHoverDay] = useState<string | null>(null)
@@ -480,6 +482,8 @@ export function UnifiedPlanGrid({
                       onCellClick?.(row.rotation.id, row.doctor.id, dk, shift?.id ?? null, shiftKey, clickPos)
                     }}
                     absenceId={cell.absenceId ?? undefined}
+                    absenceType={cell.absenceType}
+                    absenceColors={absenceColors}
                     onDoubleClickRemove={
                       shift?.id != null
                         ? () => onDoubleClickRemove?.(shift.id)

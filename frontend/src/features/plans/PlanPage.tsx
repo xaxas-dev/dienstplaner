@@ -144,7 +144,7 @@ export function PlanPage() {
     bg: string
     fg: string
   } | null>(null)
-  const [activeDragAbsence, setActiveDragAbsence] = useState<{ label: string } | null>(null)
+  const [activeDragAbsence, setActiveDragAbsence] = useState<{ label: string; color?: string } | null>(null)
   const [dragConflictMap, setDragConflictMap] = useState<Map<number, Set<string>> | null>(null)
   const [pendingShiftAssign, setPendingShiftAssign] = useState<{
     shiftId: number
@@ -227,7 +227,7 @@ export function PlanPage() {
   const createRotation = useCreateRotation(id)
   const solvePlan = useSolvePlan(id)
   const applySolver = useApplySolverResult(id)
-  const { solverEnabled } = useAppSettings()
+  const { solverEnabled, absenceColors } = useAppSettings()
   const { data: constraintOverrides = [] } = useConstraintOverrides(isNaN(id) ? null : id)
   const createOverrideMutation = useCreateConstraintOverride(isNaN(id) ? 0 : id)
   const deleteOverrideMutation = useDeleteConstraintOverride(isNaN(id) ? 0 : id)
@@ -661,7 +661,9 @@ export function PlanPage() {
       const st = shiftTypes.find((s) => s.id === shiftTypeId)
       if (st) {
         const pal = colorForShiftType({ id: st.id, code: st.short_name })
-        setActiveDragShiftType({ id: st.id, shortName: st.short_name, bg: pal.bg, fg: pal.fg })
+        const bg = st.color ? st.color + '80' : pal.bg
+        const fg = st.color ? '#1f2937' : pal.fg
+        setActiveDragShiftType({ id: st.id, shortName: st.short_name, bg, fg })
       }
       setDragConflictMap(map)
       return
@@ -669,7 +671,7 @@ export function PlanPage() {
 
     const absenceType = parseAbsenceDragId(activeId)
     if (absenceType !== null) {
-      setActiveDragAbsence({ label: ABSENCE_TYPE_LABELS[absenceType] })
+      setActiveDragAbsence({ label: ABSENCE_TYPE_LABELS[absenceType], color: absenceColors[absenceType] })
     }
   }
 
@@ -876,6 +878,7 @@ export function PlanPage() {
           onNachtwocheClick={() => setLockedWeekDialogOpen(true)}
           onSettingsClick={() => setSettingsOpen(true)}
           onImportClick={() => setShowImportDialog(true)}
+          absenceColors={absenceColors}
         />
       )}
       {/* Mehrfach-Auswahl-Indikator */}
@@ -983,6 +986,7 @@ export function PlanPage() {
                 setSidebarTab('details')
                 if (!rightOpen) setRightOpen(true)
               }}
+              absenceColors={absenceColors}
             />
           )}
         </div>
@@ -1126,7 +1130,7 @@ export function PlanPage() {
           />
         )}
         {activeDragAbsence && (
-          <AbsenceOverlayChip label={activeDragAbsence.label} />
+          <AbsenceOverlayChip label={activeDragAbsence.label} color={activeDragAbsence.color} />
         )}
       </DragOverlay>
     </DndContext>
@@ -1315,9 +1319,15 @@ function ShiftTypeOverlayChip({ shortName, bg, fg }: { shortName: string; bg: st
   )
 }
 
-function AbsenceOverlayChip({ label }: { label: string }) {
+function AbsenceOverlayChip({ label, color }: { label: string; color?: string }) {
   return (
-    <div className="rounded-md px-2.5 py-1 text-xs font-bold bg-amber-100 text-amber-800 shadow-lg pointer-events-none select-none">
+    <div
+      className="rounded-md px-2.5 py-1 text-xs font-bold shadow-lg pointer-events-none select-none"
+      style={color
+        ? { background: color + '80', color: '#1f2937' }
+        : { background: '#fef3c7', color: '#92400e' }
+      }
+    >
       {label}
     </div>
   )

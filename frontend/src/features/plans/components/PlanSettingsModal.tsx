@@ -12,7 +12,8 @@ import {
 } from '../useConstraintOverrides'
 import { usePlan } from '../usePlans'
 import { useUpdatePlan } from '../useUpdatePlan'
-import type { ConstraintOverride } from '@/lib/types'
+import { useAppSettings, DEFAULT_ABSENCE_COLORS } from '@/stores/useAppSettings'
+import type { AbsenceType, ConstraintOverride } from '@/lib/types'
 
 const REGULATORISCH_HART = [
   { id: 'max-bd-per-month', label: 'Max. Bereitschaftsdienste/Monat' },
@@ -20,6 +21,19 @@ const REGULATORISCH_HART = [
   { id: 'min-rest-time', label: 'Mindestruhezeit (ArbZG § 5)' },
   { id: 'max-weekly-hours', label: 'Max. Wochenstunden (ArbZG § 3)' },
 ] as const
+
+const ABSENCE_TYPE_LABELS: Record<AbsenceType, string> = {
+  URLAUB: 'Urlaub',
+  KRANKHEIT: 'Krankheit',
+  FORTBILDUNG: 'Fortbildung',
+  ELTERNZEIT: 'Elternzeit',
+  MUTTERSCHUTZ: 'Mutterschutz',
+  SONSTIGES: 'Sonstiges',
+}
+
+const ABSENCE_TYPES: AbsenceType[] = [
+  'URLAUB', 'KRANKHEIT', 'FORTBILDUNG', 'ELTERNZEIT', 'MUTTERSCHUTZ', 'SONSTIGES',
+]
 
 interface Props {
   planId: number
@@ -60,9 +74,11 @@ export function PlanSettingsModal({ planId, open, onOpenChange }: Props) {
 
   const isPending = createMutation.isPending || deleteMutation.isPending
 
+  const { absenceColors, setAbsenceColor } = useAppSettings()
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings size={16} />
@@ -89,6 +105,46 @@ export function PlanSettingsModal({ planId, open, onOpenChange }: Props) {
               aria-label={besetzungLocked ? 'Besetzung entsperren' : 'Besetzung sperren'}
             />
           </div>
+
+          <div>
+            <p className="text-[13px] font-medium mb-2">Abwesenheitsfarben</p>
+            <div className="space-y-2">
+              {ABSENCE_TYPES.map((type) => {
+                const color = absenceColors[type] ?? DEFAULT_ABSENCE_COLORS[type]
+                return (
+                  <div key={type} className="flex items-center justify-between rounded-lg border border-border px-4 py-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className="w-4 h-4 rounded-full border border-border/60 shrink-0"
+                        style={{ background: color + '80' }}
+                      />
+                      <Label className="text-sm">{ABSENCE_TYPE_LABELS[type]}</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={color}
+                        onChange={(e) => setAbsenceColor(type, e.target.value)}
+                        className="w-7 h-7 rounded cursor-pointer border border-border bg-transparent p-0.5"
+                        aria-label={`Farbe für ${ABSENCE_TYPE_LABELS[type]}`}
+                      />
+                      {color !== DEFAULT_ABSENCE_COLORS[type] && (
+                        <button
+                          type="button"
+                          onClick={() => setAbsenceColor(type, DEFAULT_ABSENCE_COLORS[type])}
+                          className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                          title="Zurücksetzen"
+                        >
+                          ↺
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
           <p className="text-[13px] text-muted-foreground">
             Deaktivierte Constraints werden beim Solver und bei Tarif-Warnungen ignoriert.
           </p>
