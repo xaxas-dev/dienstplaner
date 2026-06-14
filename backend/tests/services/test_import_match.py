@@ -6,7 +6,7 @@ from app.models.department import Department
 from app.models.doctor import Doctor
 from app.models.shift_type import ShiftType
 from app.schemas.excel_import import CodeDefaultAction, MatchStatus
-from app.services.import_match_service import analyze_import
+from app.services.import_match_service import analyze_import, _match_against
 from app.services.import_parse_service import ParsedRow, ParsedSheet
 
 
@@ -139,3 +139,17 @@ def test_department_numeric_prefix_stripped(db: Session) -> None:
     dept = next(d for d in analysis.departments if d.raw == "511/LBEST")
     assert dept.match_status == MatchStatus.EXACT
     assert dept.matched_id is not None
+def test_match_against_short_name_exact():
+    """Short name in db_names list -> exact match."""
+    db_names = [(7, "Neurologie Allgemein"), (7, "NEU")]
+    status, matched_id, _, _ = _match_against("NEU", db_names)
+    assert status == MatchStatus.EXACT
+    assert matched_id == 7
+
+
+def test_match_against_without_short_name_returns_new():
+    """Without short name entry, short-name query yields NEW."""
+    db_names = [(7, "Neurologie Allgemein")]
+    status, matched_id, _, _ = _match_against("NEU", db_names)
+    assert status == MatchStatus.NEW
+    assert matched_id is None
