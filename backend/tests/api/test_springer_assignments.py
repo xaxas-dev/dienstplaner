@@ -1,6 +1,7 @@
 from datetime import date, datetime
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.models.department import Department
@@ -154,3 +155,108 @@ def test_delete_existing(db: Session, plan: Plan, doctor: Doctor, dept_a: Depart
 
 def test_delete_nonexistent(db: Session) -> None:
     assert repo.delete(db, 9999) is False
+
+
+# ── API-Tests ────────────────────────────────────────────────────────────────
+
+def _make_plan(db: Session, name: str = "ApiTestPlan") -> Plan:
+    """Plan direkt per ORM anlegen – vermeidet Abhängigkeit von Schichttypen bei POST /api/plans."""
+    p = Plan(
+        name=name,
+        valid_from=date(2026, 1, 1),
+        valid_to=date(2026, 1, 31),
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+    db.add(p)
+    db.commit()
+    db.refresh(p)
+    return p
+
+
+def _make_doctor(client: TestClient) -> dict:
+    r = client.post("/api/doctors", json={
+        "name": "API Arzt", "short_name": "AA", "active": True
+    })
+    assert r.status_code in (200, 201)
+    return r.json()
+
+
+def _make_dept(client: TestClient, name: str, short_name: str) -> dict:
+    r = client.post("/api/departments", json={
+        "name": name, "short_name": short_name, "active": True, "display_order": 99
+    })
+    assert r.status_code in (200, 201)
+    return r.json()
+
+
+def test_api_list_empty(client: TestClient, db: Session) -> None:
+    plan = _make_plan(db)
+    r = client.get(f"/api/plans/{plan.id}/springer-assignments")
+    assert r.status_code == 200
+    assert r.json() == []
+
+
+def test_api_list_unknown_plan(client: TestClient) -> None:
+    r = client.get("/api/plans/9999/springer-assignments")
+    assert r.status_code == 404
+
+
+def test_api_upsert_create(client: TestClient, db: Session) -> None:
+    plan = _make_plan(db)
+    doctor = _make_doctor(client)
+    dept = _make_dept(client, "IMC API", "IMCA")
+
+    r = client.post(f"/api/plans/{plan.id}/springer-assignments", json={
+        "shift_date": "2026-01-15",
+        "doctor_id": doctor["id"],
+        "target_department_id": dept["id"],
+    })
+    assert r.status_code == 200
+    body = r.json()
+    assert body["doctor_id"] == doctor["id"]
+    assert body["target_department"]["id"] == dept["id"]
+    assert body["shift_date"] == "2026-01-15"
+
+
+def test_api_upsert_updates(client: TestClient, db: Session) -> None:
+    plan = _make_plan(db)
+    doctor = _make_doctor(client)
+    dept_a = _make_dept(client, "IMC X", "IMX")
+    dept_b = _make_dept(client, "NEU X", "NEX")
+
+    r1 = client.post(f"/api/plans/{plan.id}/springer-assignments", json={
+        "shift_date": "2026-01-15", "doctor_id": doctor["id"], "target_department_id": dept_a["id"],
+    })
+    assert r1.status_code == 200
+    id1 = r1.json()["id"]
+
+    r2 = client.post(f"/api/plans/{plan.id}/springer-assignments", json={
+        "shift_date": "2026-01-15", "doctor_id": doctor["id"], "target_department_id": dept_b["id"],
+    })
+    assert r2.status_code == 200
+    assert r2.json()["id"] == id1
+    assert r2.json()["target_department"]["id"] == dept_b["id"]
+
+
+def test_api_delete(client: TestClient, db: Session) -> None:
+    plan = _make_plan(db)
+    doctor = _make_doctor(client)
+    dept = _make_dept(client, "DEL Dept", "DEL")
+
+    r_create = client.post(f"/api/plans/{plan.id}/springer-assignments", json={
+        "shift_date": "2026-01-15", "doctor_id": doctor["id"], "target_department_id": dept["id"],
+    })
+    assert r_create.status_code == 200
+    assignment_id = r_create.json()["id"]
+
+    r_del = client.delete(f"/api/springer-assignments/{assignment_id}")
+    assert r_del.status_code == 204
+
+    r_list = client.get(f"/api/plans/{plan.id}/springer-assignments")
+    assert r_list.json() == []
+
+
+def test_api_delete_not_found(client: TestClient) -> None:
+    r = client.delete("/api/springer-assignments/9999")
+    assert r.status_code == 404
