@@ -11,6 +11,8 @@ export const DEFAULT_ABSENCE_COLORS: Record<AbsenceType, string> = {
   SONSTIGES:    '#E5E7EB',
 }
 
+export const DEFAULT_SPRINGER_COLOR = '#d1fae5'
+
 interface AppSettings {
   devMode: boolean
   setDevMode: (devMode: boolean) => void
@@ -18,6 +20,8 @@ interface AppSettings {
   setSolverEnabled: (v: boolean) => void
   absenceColors: Record<AbsenceType, string>
   setAbsenceColor: (type: AbsenceType, color: string) => void
+  springerColor: string
+  setSpringerColor: (color: string) => void
 }
 
 export const useAppSettings = create<AppSettings>()(
@@ -30,6 +34,8 @@ export const useAppSettings = create<AppSettings>()(
       absenceColors: { ...DEFAULT_ABSENCE_COLORS },
       setAbsenceColor: (type, color) =>
         set((s) => ({ absenceColors: { ...s.absenceColors, [type]: color } })),
+      springerColor: DEFAULT_SPRINGER_COLOR,
+      setSpringerColor: (springerColor) => set({ springerColor }),
     }),
     { name: 'dp-app-settings' }
   )
