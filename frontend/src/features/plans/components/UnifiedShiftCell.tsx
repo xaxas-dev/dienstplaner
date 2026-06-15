@@ -50,6 +50,9 @@ interface UnifiedShiftCellProps {
   wishBadge?: string | null
   doctorId?: number
   onWishCreate?: (doctorId: number, date: string) => void
+  springerDeptShortName?: string
+  springerAssignmentId?: number
+  onDoubleClickRemoveSpringer?: (assignmentId: number) => void
 }
 
 export function UnifiedShiftCell({
@@ -91,6 +94,9 @@ export function UnifiedShiftCell({
   wishBadge,
   doctorId,
   onWishCreate,
+  springerDeptShortName,
+  springerAssignmentId,
+  onDoubleClickRemoveSpringer,
 }: UnifiedShiftCellProps) {
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -123,11 +129,17 @@ export function UnifiedShiftCell({
       clearTimeout(clickTimerRef.current)
       clickTimerRef.current = null
     }
-    // Absence-Delete hat Vorrang vor Shift-Delete
+    // Absence-Delete hat Vorrang
     if (absenceId !== undefined) {
       onDoubleClickRemoveAbsence?.(absenceId)
       return
     }
+    // Springer-Delete — immer Vorrang vor Shift (inkl. Split-Cell)
+    if (springerAssignmentId !== undefined) {
+      onDoubleClickRemoveSpringer?.(springerAssignmentId)
+      return
+    }
+    // Shift-Delete
     if (!shiftAssigned) return
     if (isPinned) {
       toast.info('Gepinnte Schicht — erst entpinnen')
@@ -146,6 +158,10 @@ export function UnifiedShiftCell({
   // Absence cells use configured absence type color. Assigned shifts use shift type color.
   // Empty rotation slots use neutral gray. Out-of-rotation stays faint dept color.
   const bg = (() => {
+    // Split-Mode: beide Hälften übernehmen ihr eigenes Bg
+    if (springerDeptShortName && text) return 'transparent'
+    // Nur Springer (kein regulärer Shift)
+    if (springerDeptShortName && !text) return '#d1fae5'  // emerald-100
     if (absenceId !== undefined) {
       const absColor = absenceType && absenceColors?.[absenceType]
       if (absColor) return inRotation ? absColor + '80' : absColor + '40'
@@ -228,16 +244,35 @@ export function UnifiedShiftCell({
         />
       )}
 
-      {text && (
-        <span
-          className={cn(
-            'relative z-[1]',
-            isWeekend ? 'text-gray-600' : 'text-gray-800',
-            !inRotation && 'opacity-50',
-          )}
-        >
-          {text}
+      {/* Split-Cell: Springer oben, Shift unten */}
+      {springerDeptShortName && text ? (
+        <div className="absolute inset-0 flex flex-col pointer-events-none select-none">
+          <div className="flex-1 flex items-center justify-center bg-emerald-100 text-emerald-800 text-[10px] font-bold leading-none">
+            {springerDeptShortName}
+          </div>
+          <div
+            className="flex-1 flex items-center justify-center text-[11px] font-bold leading-none"
+            style={{ background: shiftTypeColorMuted(shiftTypeColor) }}
+          >
+            {text}
+          </div>
+        </div>
+      ) : springerDeptShortName ? (
+        <span className="text-[11px] font-bold leading-none pointer-events-none select-none text-emerald-800">
+          {springerDeptShortName}
         </span>
+      ) : (
+        text && (
+          <span
+            className={cn(
+              'relative z-[1]',
+              isWeekend ? 'text-gray-600' : 'text-gray-800',
+              !inRotation && 'opacity-50',
+            )}
+          >
+            {text}
+          </span>
+        )
       )}
 
       {/* Tarif-Dot (Sand, oben links) */}
