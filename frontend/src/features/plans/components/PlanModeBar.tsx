@@ -24,6 +24,7 @@ export function parseShiftTypeDragId(id: string): number | null {
 }
 
 export const NACHTWOCHE_DRAG_ID = 'nachtwoche'
+export const SPRINGER_DRAG_ID = 'springer'
 
 export const ABSENCE_DRAG_ID_PREFIX = 'absence-'
 
@@ -140,6 +141,9 @@ export function PlanModeBar({
             <NachtwocheDraggableChip nachtShiftType={nachtShiftType} onClick={onNachtwocheClick} />
           </>
         )}
+
+        <span className="text-line-2 mx-0.5">|</span>
+        <SpringerDraggableChip />
 
         <span className="text-line-2 mx-0.5">|</span>
         <span className="text-[10px] text-ink-3 uppercase tracking-[0.07em]">Abwesenheiten</span>
@@ -268,6 +272,28 @@ function NachtwocheDraggableChip({ nachtShiftType, onClick }: { nachtShiftType: 
     >
       <MoonStar className="size-3" />
       Nachtwoche
+    </div>
+  )
+}
+
+function SpringerDraggableChip() {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: SPRINGER_DRAG_ID,
+    data: { springer: true },
+  })
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      title="Springer — auf andere Station einteilen"
+      className={cn(
+        'inline-flex items-center px-2.5 py-[3px] rounded-full text-[11px] font-bold cursor-grab select-none active:cursor-grabbing border',
+        'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200',
+        isDragging && 'opacity-40 cursor-grabbing',
+      )}
+    >
+      Sp
     </div>
   )
 }
