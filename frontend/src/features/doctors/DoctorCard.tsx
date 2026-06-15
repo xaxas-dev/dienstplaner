@@ -21,7 +21,7 @@ function roleLabel(doctor: Doctor): string {
   }
   if (doctor.rank) return RANK_LABELS[doctor.rank] ?? doctor.rank
   if (doctor.weiterbildungsjahr != null) return `Assistenzarzt ${doctor.weiterbildungsjahr}`
-  return 'Assistenzarzt'
+  return ''
 }
 
 interface DoctorCardProps {
