@@ -49,7 +49,7 @@ function SettingRow({ setting }: { setting: AppSettingResponse }) {
 
 export function SettingsPage() {
   const { data: settings, isLoading, isError } = useSettings()
-  const { devMode, setDevMode, solverEnabled, setSolverEnabled } = useAppSettings()
+  const { devMode, setDevMode, solverEnabled, setSolverEnabled, springerColor, setSpringerColor } = useAppSettings()
 
   return (
     <div className="flex flex-col h-full">
@@ -69,7 +69,7 @@ export function SettingsPage() {
                 aria-label="Entwicklermodus aktivieren"
               />
             </div>
-            <div className="flex items-center justify-between py-3">
+            <div className="flex items-center justify-between py-3 border-b border-line">
               <div>
                 <p className="text-sm font-medium text-ink">Solver (Plan generieren)</p>
                 <p className="text-xs text-ink-3 mt-0.5">
@@ -81,6 +81,27 @@ export function SettingsPage() {
                 onCheckedChange={setSolverEnabled}
                 aria-label="Solver aktivieren"
               />
+            </div>
+            <div className="flex items-center justify-between py-3 border-t border-line">
+              <div>
+                <p className="text-sm font-medium text-ink">Springer-Farbe</p>
+                <p className="text-xs text-ink-3 mt-0.5">Hintergrundfarbe der Springer-Zuweisung im Grid</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={springerColor}
+                  onChange={(e) => setSpringerColor(e.target.value)}
+                  className="w-8 h-8 rounded cursor-pointer border border-line"
+                  aria-label="Springer-Farbe"
+                />
+                <button
+                  onClick={() => setSpringerColor('#d1fae5')}
+                  className="text-xs text-ink-3 hover:text-ink transition"
+                >
+                  Reset
+                </button>
+              </div>
             </div>
           </div>
 
