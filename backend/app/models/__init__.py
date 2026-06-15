@@ -14,6 +14,7 @@ from app.models.rotation_assignment import RotationAssignment
 from app.models.rule_override import OverrideScope, RuleOverride
 from app.models.shift import Shift
 from app.models.shift_type import ShiftType
+from app.models.springer_assignment import SpringerAssignment  # noqa: F401
 from app.models.wish import Wish, WishType
 
 __all__ = [
@@ -39,6 +40,7 @@ __all__ = [
     "RuleOverride",
     "Shift",
     "ShiftType",
+    "SpringerAssignment",
     "Wish",
     "WishType",
 ]
