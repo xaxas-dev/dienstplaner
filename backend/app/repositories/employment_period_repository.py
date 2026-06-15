@@ -1,7 +1,27 @@
-from sqlalchemy import desc
+from datetime import date
+
+from sqlalchemy import desc, or_
 from sqlalchemy.orm import Session
 
 from app.models.employment_period import EmploymentPeriod
+
+
+def get_employment_period_covering_date(
+    db: Session, doctor_id: int, target_date: date
+) -> EmploymentPeriod | None:
+    """Gibt den EP zurück, dessen Zeitraum target_date enthält, oder None."""
+    return (
+        db.query(EmploymentPeriod)
+        .filter(
+            EmploymentPeriod.doctor_id == doctor_id,
+            EmploymentPeriod.valid_from <= target_date,
+            or_(
+                EmploymentPeriod.valid_to.is_(None),
+                EmploymentPeriod.valid_to >= target_date,
+            ),
+        )
+        .first()
+    )
 
 
 def list_employment_periods(db: Session, doctor_id: int) -> list[EmploymentPeriod]:

@@ -26,6 +26,28 @@ from app.repositories import absence_repository as absence_repo
 from app.repositories import department_repository as dept_repo
 from app.repositories import doctor_repository as doctor_repo
 from app.repositories import employment_period_repository as ep_repo
+
+def _upsert_employment_period(
+    db: Session,
+    doctor_id: int,
+    plan_start: date,
+    percentage: int,
+    created_eps_counter: list[int],
+) -> None:
+    existing = ep_repo.get_employment_period_covering_date(db, doctor_id, plan_start)
+    if existing is None:
+        ep_repo.create_employment_period(
+            db,
+            doctor_id,
+            {"valid_from": plan_start, "valid_to": None, "employment_percentage": percentage},
+        )
+        created_eps_counter[0] += 1
+    elif existing.employment_percentage != percentage:
+        ep_repo.update_employment_period(
+            db, existing.id, {"employment_percentage": percentage}
+        )
+        created_eps_counter[0] += 1
+    # gleicher Wert → kein Schreibzugriff
 from app.repositories import plan_repository as plan_repo
 from app.repositories import rotation_assignment_repository as rotation_repo
 from app.schemas.excel_import import CommitResolutions, ImportResult
@@ -82,27 +104,21 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
 
     doctor_id_map: dict[str, int] = {}  # raw → doctor_id
     created_doctors = 0
-    created_eps = 0
+    _ep_counter = [0]  # mutable für _upsert_employment_period
     for raw, res in resolutions.doctor_resolutions.items():
         if res.action == "map":
             doctor_id_map[raw] = res.id
+            if res.percentage is not None and plan_start is not None:
+                _upsert_employment_period(db, res.id, plan_start, res.percentage, _ep_counter)
         elif res.action == "create":
             parsed_name = raw_to_parsed_name.get(raw, _parse_name(raw))
             doctor = doctor_repo.create_doctor(db, {"name": parsed_name})
             created_doctors += 1
             if res.percentage is not None and plan_start is not None:
-                ep_repo.create_employment_period(
-                    db,
-                    doctor.id,
-                    {
-                        "valid_from": plan_start,
-                        "valid_to": None,
-                        "employment_percentage": res.percentage,
-                    },
-                )
-                created_eps += 1
+                _upsert_employment_period(db, doctor.id, plan_start, res.percentage, _ep_counter)
             doctor_id_map[raw] = doctor.id
         # skip: vom Import ausgeschlossen
+    created_eps = _ep_counter[0]
 
     # 5. Plan anlegen oder laden.
     # plan_repo.create_plan macht keinen internen Commit — alles bleibt in einer

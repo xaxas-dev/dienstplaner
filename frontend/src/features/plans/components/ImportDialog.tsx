@@ -355,12 +355,13 @@ export function ImportDialog({ open, onOpenChange, planId }: ImportDialogProps) 
       }
     }
 
-    const doctors: Record<string, EntityResolution> = {}
+    const doctors: Record<string, EntityResolution & { percentage?: number }> = {}
     for (const doc of a.doctors) {
+      const pct = doc.percentage != null ? { percentage: doc.percentage } : {}
       if (doc.default_action === 'map' && doc.matched_id != null) {
-        doctors[doc.raw] = { action: 'map', id: doc.matched_id }
+        doctors[doc.raw] = { action: 'map', id: doc.matched_id, ...pct }
       } else if (doc.default_action === 'create') {
-        doctors[doc.raw] = { action: 'create' }
+        doctors[doc.raw] = { action: 'create', ...pct }
       } else {
         doctors[doc.raw] = { action: 'skip' }
       }
