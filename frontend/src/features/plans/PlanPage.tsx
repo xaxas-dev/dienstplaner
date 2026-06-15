@@ -60,7 +60,9 @@ import { useDoctors } from '@/features/doctors/useDoctors'
 import { useDepartments } from '@/features/departments/useDepartments'
 import { useShiftTypes } from '@/features/shift-types/useShiftTypes'
 import { UnifiedPlanGrid } from './components/UnifiedPlanGrid'
-import { parseShiftTypeDragId, parseAbsenceDragId, NACHTWOCHE_DRAG_ID } from './components/PlanModeBar'
+import { parseShiftTypeDragId, parseAbsenceDragId, NACHTWOCHE_DRAG_ID, SPRINGER_DRAG_ID } from './components/PlanModeBar'
+import { SpringerPopover } from './components/SpringerPopover'
+import { usePlanSpringerAssignments, useDeleteSpringerAssignment } from './useSpringerAssignments'
 import { PlanSidebar } from './components/PlanSidebar'
 import type { SidebarTab } from './components/PlanSidebar'
 import { DoctorAssignPopover } from './components/DoctorAssignPopover'
@@ -169,6 +171,11 @@ export function PlanPage() {
   } | null>(null)
   const [showWishes, setShowWishes] = useState(true)
   const [showImportDialog, setShowImportDialog] = useState(false)
+  const [springerPopover, setSpringerPopover] = useState<{
+    doctorId: number
+    dayKey: string
+    currentDepartmentId: number
+  } | null>(null)
   const rawMode = searchParams.get('mode')
   const mode: 'besetzung' | 'ina' = rawMode === 'ina' ? 'ina' : 'besetzung'
   function setMode(newMode: 'besetzung' | 'ina') {
@@ -194,6 +201,17 @@ export function PlanPage() {
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<number | null>(null)
 
   const deleteAbsence = useDeleteAbsence(id)
+
+  const { data: springerAssignments = [] } = usePlanSpringerAssignments(isNaN(id) ? null : id)
+  const { mutate: deleteSpringer } = useDeleteSpringerAssignment(isNaN(id) ? 0 : id)
+
+  const springerByKey = useMemo(() => {
+    const map = new Map<string, typeof springerAssignments[0]>()
+    for (const sa of springerAssignments) {
+      map.set(`${sa.doctor_id}-${sa.shift_date}`, sa)
+    }
+    return map
+  }, [springerAssignments])
 
   const ABSENCE_TYPE_LABELS: Record<AbsenceType, string> = {
     URLAUB:       'Urlaub',
@@ -753,6 +771,24 @@ export function PlanPage() {
       return
     }
 
+    // ── Springer → Cell-Drop ──────────────────────────────────────────────────
+    if (activeId === SPRINGER_DRAG_ID) {
+      const cellMatch = overId.match(/^cell-(\d+)-(\d{4}-\d{2}-\d{2})$/)
+      if (cellMatch) {
+        const rotationId = Number(cellMatch[1])
+        const dayKey = cellMatch[2]
+        const rotation = rotations.find((r) => r.id === rotationId)
+        if (rotation) {
+          setSpringerPopover({
+            doctorId: rotation.doctor_id,
+            dayKey,
+            currentDepartmentId: rotation.department_id,
+          })
+        }
+      }
+      return
+    }
+
     // ── Doctor → Bereich-Header-Drop ──────────────────────────────────────────
     const doctorId = parseDoctorDragId(activeId)
     if (doctorId !== null) {
@@ -1074,6 +1110,8 @@ export function PlanPage() {
                 if (!rightOpen) setRightOpen(true)
               }}
               absenceColors={absenceColors}
+              springerByKey={springerByKey}
+              onDoubleClickRemoveSpringer={(assignmentId) => deleteSpringer(assignmentId)}
             />
           )}
         </div>
@@ -1201,6 +1239,16 @@ export function PlanPage() {
         ) : null
       })()}
     </div>
+      {springerPopover && (
+        <SpringerPopover
+          planId={id}
+          doctorId={springerPopover.doctorId}
+          dayKey={springerPopover.dayKey}
+          currentDepartmentId={springerPopover.currentDepartmentId}
+          departments={departments}
+          onClose={() => setSpringerPopover(null)}
+        />
+      )}
       <DragOverlay modifiers={[overlayModifier]} dropAnimation={dropSucceededRef.current ? null : undefined}>
         {activeDragDoctor && (
           <DoctorDragOverlayToken

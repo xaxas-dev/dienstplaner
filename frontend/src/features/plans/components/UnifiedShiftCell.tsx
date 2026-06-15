@@ -111,7 +111,8 @@ export function UnifiedShiftCell({
     const clickPos = { x: e.clientX, y: e.clientY }
     const needsDoubleClickDelay =
       (onDoubleClickRemove && shiftAssigned) ||
-      (onDoubleClickRemoveAbsence && absenceId !== undefined)
+      (onDoubleClickRemoveAbsence && absenceId !== undefined) ||
+      (onDoubleClickRemoveSpringer !== undefined && springerAssignmentId !== undefined)
 
     if (needsDoubleClickDelay) {
       if (clickTimerRef.current) {
