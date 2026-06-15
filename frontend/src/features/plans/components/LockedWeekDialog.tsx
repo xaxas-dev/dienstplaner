@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -26,6 +26,8 @@ interface LockedWeekDialogProps {
   planId: number
   doctors: Doctor[]
   shiftTypes: ShiftType[]
+  initialDate?: string
+  initialDoctorId?: number
 }
 
 export function LockedWeekDialog({
@@ -34,10 +36,20 @@ export function LockedWeekDialog({
   planId,
   doctors,
   shiftTypes,
+  initialDate,
+  initialDoctorId,
 }: LockedWeekDialogProps) {
   const [doctorId, setDoctorId] = useState<string>('')
   const [startDate, setStartDate] = useState<string>('')
-  const [shiftTypeId, setShiftTypeId] = useState<string>('')
+
+  const nachtShiftType = shiftTypes.find((st) => st.short_name === 'N')
+
+  useEffect(() => {
+    if (open) {
+      if (initialDate) setStartDate(initialDate)
+      if (initialDoctorId !== undefined) setDoctorId(String(initialDoctorId))
+    }
+  }, [open, initialDate, initialDoctorId])
 
   const mutation = useCreateLockedWeek(planId)
 
@@ -45,13 +57,17 @@ export function LockedWeekDialog({
     onClose()
     setDoctorId('')
     setStartDate('')
-    setShiftTypeId('')
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    if (!doctorId || !startDate || !shiftTypeId) {
+    if (!nachtShiftType) {
+      toast.error('Kein Schichttyp "N" (Nachtdienst) konfiguriert.')
+      return
+    }
+
+    if (!doctorId || !startDate) {
       toast.error('Alle Felder sind Pflichtfelder.')
       return
     }
@@ -66,17 +82,11 @@ export function LockedWeekDialog({
       {
         doctor_id: parseInt(doctorId),
         start_date: startDate,
-        shift_type_id: parseInt(shiftTypeId),
+        shift_type_id: nachtShiftType.id,
       },
       {
-        onSuccess: (result) => {
-          if (result.skipped.length > 0) {
-            toast.success(
-              `Nachtdienstwoche eingetragen. ${result.skipped.length} Schicht(en) bereits vorhanden, übersprungen.`,
-            )
-          } else {
-            toast.success('Nachtdienstwoche eingetragen.')
-          }
+        onSuccess: () => {
+          toast.success('Nachtdienstwoche eingetragen.')
           handleClose()
         },
         onError: () => {
@@ -123,22 +133,6 @@ export function LockedWeekDialog({
             <p className="text-xs text-muted-foreground">
               Muss ein Sonntag sein (So–Do wird erzeugt).
             </p>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="lw-shifttype">Schichttyp</Label>
-            <Select value={shiftTypeId} onValueChange={setShiftTypeId}>
-              <SelectTrigger id="lw-shifttype">
-                <SelectValue placeholder="Schichttyp wählen…" />
-              </SelectTrigger>
-              <SelectContent>
-                {shiftTypes.map((st) => (
-                  <SelectItem key={st.id} value={String(st.id)}>
-                    {st.short_name} — {st.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <DialogFooter className="pt-2">

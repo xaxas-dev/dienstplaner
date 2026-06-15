@@ -47,7 +47,11 @@ const FALLBACK_ORDER: ShiftColorToken[] = [
 export function colorForShiftType(args: {
   id?: number
   code?: string
+  color?: string | null
 }): typeof SHIFT_PALETTE[ShiftColorToken] {
+  if (args.color) {
+    return { bg: args.color + '33', fg: '#1f2937', dot: args.color }
+  }
   if (args.id != null && SHIFT_TYPE_COLOR_MAP[args.id]) {
     return SHIFT_PALETTE[SHIFT_TYPE_COLOR_MAP[args.id]]
   }

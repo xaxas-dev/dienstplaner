@@ -32,7 +32,10 @@ def create_locked_week(db: Session, plan_id: int, data: LockedWeekCreate) -> Loc
             .first()
         )
         if existing is not None:
-            skipped.append(existing.id)
+            existing.doctor_id = data.doctor_id
+            existing.is_locked = True
+            db.flush()
+            created.append(ShiftResponse.model_validate(existing))
         else:
             shift = Shift(
                 plan_id=plan_id,
@@ -40,7 +43,6 @@ def create_locked_week(db: Session, plan_id: int, data: LockedWeekCreate) -> Loc
                 shift_type_id=data.shift_type_id,
                 doctor_id=data.doctor_id,
                 is_locked=True,
-                is_pinned=True,
             )
             db.add(shift)
             db.flush()

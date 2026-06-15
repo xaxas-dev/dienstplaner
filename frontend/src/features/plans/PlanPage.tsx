@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueries } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { eachDayOfInterval, format, parseISO, isWeekend } from 'date-fns'
+import { eachDayOfInterval, format, parseISO, isWeekend, addDays } from 'date-fns'
 import { de } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoonStar } from 'lucide-react'
 import {
   DndContext,
   DragOverlay,
@@ -18,13 +18,7 @@ import {
   type Modifier,
 } from '@dnd-kit/core'
 
-// Cursor-Hotspot am Avatar-Top: x zentriert (14 = half of 28px), y = 0
-const avatarTopModifier: Modifier = ({ activatorEvent, draggingNodeRect, transform }) => {
-  if (!draggingNodeRect || !(activatorEvent instanceof MouseEvent)) return transform
-  const offsetX = activatorEvent.clientX - draggingNodeRect.left
-  const offsetY = activatorEvent.clientY - draggingNodeRect.top
-  return { ...transform, x: transform.x + offsetX - 14, y: transform.y + offsetY }
-}
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,7 +41,7 @@ import { useTarifWarnings } from './useTarifWarnings'
 import { usePlanAbsences } from './usePlanAbsences'
 import { usePlanWishes } from './useWishes'
 import { useHolidays } from '@/features/holidays/useHolidays'
-import { useAssignShift, findShiftId } from './useAssignShift'
+import { useAssignShift, useCreateShift, findShiftId } from './useAssignShift'
 import { useUpdatePlan } from './useUpdatePlan'
 import { useDeletePlan } from './useDeletePlan'
 import { useSolvePlan, JvmUnavailableError } from './useSolvePlan'
@@ -66,7 +60,7 @@ import { useDoctors } from '@/features/doctors/useDoctors'
 import { useDepartments } from '@/features/departments/useDepartments'
 import { useShiftTypes } from '@/features/shift-types/useShiftTypes'
 import { UnifiedPlanGrid } from './components/UnifiedPlanGrid'
-import { parseShiftTypeDragId, parseAbsenceDragId } from './components/PlanModeBar'
+import { parseShiftTypeDragId, parseAbsenceDragId, NACHTWOCHE_DRAG_ID } from './components/PlanModeBar'
 import { PlanSidebar } from './components/PlanSidebar'
 import type { SidebarTab } from './components/PlanSidebar'
 import { DoctorAssignPopover } from './components/DoctorAssignPopover'
@@ -146,6 +140,12 @@ export function PlanPage() {
   } | null>(null)
   const [activeDragAbsence, setActiveDragAbsence] = useState<{ label: string; color?: string } | null>(null)
   const [dragConflictMap, setDragConflictMap] = useState<Map<number, Set<string>> | null>(null)
+  const [activeDragNachtwoche, setActiveDragNachtwoche] = useState(false)
+  const [nachtwocheCellWidth, setNachtwocheCellWidth] = useState(36)
+  const [lockedWeekInitialDate, setLockedWeekInitialDate] = useState('')
+  const [lockedWeekInitialDoctorId, setLockedWeekInitialDoctorId] = useState<number | undefined>()
+  const activeDragTypeRef = useRef<'doctor' | 'nachtwoche' | null>(null)
+  const dropSucceededRef = useRef(false)
   const [pendingShiftAssign, setPendingShiftAssign] = useState<{
     shiftId: number
     doctorId: number
@@ -221,6 +221,7 @@ export function PlanPage() {
     [holidaysData],
   )
   const assignShift = useAssignShift(id)
+  const createShift = useCreateShift(id)
   const updatePlan = useUpdatePlan(id)
   const deletePlan = useDeletePlan()
   const deleteRotation = useDeleteRotation(id)
@@ -277,6 +278,26 @@ export function PlanPage() {
     () => activeDragShiftType ? computeDragDimDays(shifts, activeDragShiftType.id) : undefined,
     [activeDragShiftType, shifts],
   )
+
+  const dragHighlightDays = useMemo(() => {
+    if (!activeDragShiftType || !plan) return undefined
+    const fullSt = shiftTypes.find((s) => s.id === activeDragShiftType.id)
+    const coveredDays = new Set(
+      shifts
+        .filter((s) => s.shift_type_id === activeDragShiftType.id && s.doctor_id != null)
+        .map((s) => s.shift_date),
+    )
+    const days = new Set<string>()
+    for (const d of eachDayOfInterval({ start: parseISO(plan.valid_from), end: parseISO(plan.valid_to) })) {
+      const dk = format(d, 'yyyy-MM-dd')
+      const we = isWeekend(d)
+      const applies = fullSt ? (we ? fullSt.applies_on_weekend : fullSt.applies_on_weekdays) : true
+      if (applies && !coveredDays.has(dk)) {
+        days.add(dk)
+      }
+    }
+    return days
+  }, [activeDragShiftType, shifts, plan, shiftTypes])
 
   function handleDeletePlan() {
     deletePlan.mutate(id, {
@@ -385,7 +406,7 @@ export function PlanPage() {
   const scrollToFirstMatch = useCallback((type: 'open' | 'conflict') => {
     const candidateIds: number[] =
       type === 'open'
-        ? (conflicts?.open_shifts?.map((s) => s.shift_id) ?? [])
+        ? (conflicts?.open_shifts?.map((s) => s.shift_id).filter((id): id is number => id != null) ?? [])
         : (conflicts?.conflicts?.map((c) => c.shift_id) ?? [])
 
     if (!candidateIds.length) return
@@ -419,6 +440,11 @@ export function PlanPage() {
   }, [])
 
   const scrollToShift = useCallback((shiftId: number) => {
+    const found = shifts.find((s) => s.id === shiftId)
+    if (found) {
+      setContextShift(found)
+      setSidebarTab('details')
+    }
     const el = document.querySelector(`[data-shift-id="${shiftId}"]`)
     if (!el) return
     el.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -428,7 +454,7 @@ export function PlanPage() {
       el.classList.remove('dp-highlight-pulse')
       highlightTimerRef.current = null
     }, 2000)
-  }, [])
+  }, [shifts])
 
   useEffect(() => {
     const highlight = searchParams.get('highlight')
@@ -596,11 +622,32 @@ export function PlanPage() {
     useSensor(KeyboardSensor),
   )
 
+  // Cursor-Hotspot: Avatar-Drag → Mitte oben; Nachtwoche-Drag → linke Kante (erster Chip)
+  const overlayModifier: Modifier = useCallback(({ activatorEvent, draggingNodeRect, transform }) => {
+    if (!draggingNodeRect || !(activatorEvent instanceof MouseEvent)) return transform
+    const offsetX = activatorEvent.clientX - draggingNodeRect.left
+    const offsetY = activatorEvent.clientY - draggingNodeRect.top
+    if (activeDragTypeRef.current === 'nachtwoche') {
+      return { ...transform, x: transform.x + offsetX, y: transform.y + offsetY }
+    }
+    return { ...transform, x: transform.x + offsetX - 14, y: transform.y + offsetY }
+  }, [])
+
   function handleDragStart(event: DragStartEvent) {
     const activeId = String(event.active.id)
 
+    if (activeId === NACHTWOCHE_DRAG_ID) {
+      activeDragTypeRef.current = 'nachtwoche'
+      const cellEl = document.querySelector('[data-grid-cell]')
+      const cellW = cellEl ? cellEl.getBoundingClientRect().width : 36
+      setNachtwocheCellWidth(cellW)
+      setActiveDragNachtwoche(true)
+      return
+    }
+
     const doctorId = parseDoctorDragId(activeId)
     if (doctorId !== null) {
+      activeDragTypeRef.current = 'doctor'
       if (plan?.besetzung_locked) return
       const doctor = doctors.find((d) => d.id === doctorId)
       const name = (event.active.data.current as { doctorName?: string } | undefined)?.doctorName ?? doctor?.name ?? ''
@@ -676,15 +723,35 @@ export function PlanPage() {
   }
 
   function handleDragEnd(event: DragEndEvent) {
+    dropSucceededRef.current = false
     setActiveDragDoctor(null)
     setActiveDragShiftType(null)
     setActiveDragAbsence(null)
+    setActiveDragNachtwoche(false)
     setDragConflictMap(null)
+    activeDragTypeRef.current = null
     const { active, over } = event
     if (!over) return
 
     const activeId = String(active.id)
     const overId = String(over.id)
+
+    // ── Nachtwoche → Cell-Drop ────────────────────────────────────────────────
+    if (activeId === NACHTWOCHE_DRAG_ID) {
+      const cellMatch = overId.match(/^cell-(\d+)-(\d{4}-\d{2}-\d{2})$/)
+      if (cellMatch) {
+        const rotationId = Number(cellMatch[1])
+        const dayKey = cellMatch[2]
+        const rotation = rotations.find((r) => r.id === rotationId)
+        const date = parseISO(dayKey)
+        const sunday = addDays(date, -date.getDay())
+        setLockedWeekInitialDate(format(sunday, 'yyyy-MM-dd'))
+        setLockedWeekInitialDoctorId(rotation?.doctor_id)
+      }
+      dropSucceededRef.current = true
+      setLockedWeekDialogOpen(true)
+      return
+    }
 
     // ── Doctor → Bereich-Header-Drop ──────────────────────────────────────────
     const doctorId = parseDoctorDragId(activeId)
@@ -722,6 +789,7 @@ export function PlanPage() {
 
       if (deptId === null) return
 
+      dropSucceededRef.current = true
       createRotation.mutate(
         {
           plan_id: id,
@@ -750,6 +818,7 @@ export function PlanPage() {
       const rotation = rotations.find((r) => r.id === rotationId)
       if (!rotation) return
       const doctor = doctors.find((d) => d.id === rotation.doctor_id)
+      dropSucceededRef.current = true
       setActiveAbsenceCell({
         type: absenceType,
         doctorId: rotation.doctor_id,
@@ -774,6 +843,15 @@ export function PlanPage() {
 
     const shiftId = findShiftId(shifts, dayKey, shiftTypeId)
     if (shiftId === null) {
+      // Grüne Zelle = Shift-Typ gilt an diesem Tag, aber kein Record vorhanden → erstellen
+      if (dragHighlightDays?.has(dayKey)) {
+        dropSucceededRef.current = true
+        createShift.mutate(
+          { shift_type_id: shiftTypeId, shift_date: dayKey, doctor_id: targetDoctorId },
+          { onError: () => toast.error('Fehler beim Erstellen der Zuweisung') },
+        )
+        return
+      }
       const st = shiftTypes.find((s) => s.id === shiftTypeId)
       toast.error(`${st?.short_name ?? 'Dienst'} ist an diesem Tag nicht verfügbar`)
       return
@@ -788,6 +866,7 @@ export function PlanPage() {
     if (shift.doctor_id != null && shift.doctor_id !== targetDoctorId) {
       const prevDoctor = doctors.find((d) => d.id === shift.doctor_id)
       const newDoctor = doctors.find((d) => d.id === targetDoctorId)
+      dropSucceededRef.current = true
       setPendingShiftAssign({
         shiftId,
         doctorId: targetDoctorId,
@@ -797,6 +876,7 @@ export function PlanPage() {
       return
     }
 
+    dropSucceededRef.current = true
     assignShift.mutate(
       { shiftId, data: { doctor_id: targetDoctorId } },
       { onError: () => toast.error('Fehler beim Speichern der Zuweisung') },
@@ -807,7 +887,9 @@ export function PlanPage() {
     setActiveDragDoctor(null)
     setActiveDragShiftType(null)
     setActiveDragAbsence(null)
+    setActiveDragNachtwoche(false)
     setDragConflictMap(null)
+    activeDragTypeRef.current = null
   }
 
   return (
@@ -875,7 +957,11 @@ export function PlanPage() {
           solverEnabled={solverEnabled}
           isSolving={solvePlan.isPending}
           onSolve={handleSolve}
-          onNachtwocheClick={() => setLockedWeekDialogOpen(true)}
+          onNachtwocheClick={() => {
+            setLockedWeekInitialDate('')
+            setLockedWeekInitialDoctorId(undefined)
+            setLockedWeekDialogOpen(true)
+          }}
           onSettingsClick={() => setSettingsOpen(true)}
           onImportClick={() => setShowImportDialog(true)}
           absenceColors={absenceColors}
@@ -942,6 +1028,7 @@ export function PlanPage() {
               activeFilterGroups={activeFilterGroups}
               dragConflictMap={dragConflictMap}
               dragDimDays={dragDimDays}
+              dragHighlightDays={dragHighlightDays}
               selectedCellKeys={selectedCellKeys}
               highlightedDoctorId={highlightedDoctorId}
               onCellClick={handleCellClick}
@@ -1114,7 +1201,7 @@ export function PlanPage() {
         ) : null
       })()}
     </div>
-      <DragOverlay modifiers={[avatarTopModifier]}>
+      <DragOverlay modifiers={[overlayModifier]} dropAnimation={dropSucceededRef.current ? null : undefined}>
         {activeDragDoctor && (
           <DoctorDragOverlayToken
             name={activeDragDoctor.name}
@@ -1131,6 +1218,12 @@ export function PlanPage() {
         )}
         {activeDragAbsence && (
           <AbsenceOverlayChip label={activeDragAbsence.label} color={activeDragAbsence.color} />
+        )}
+        {activeDragNachtwoche && (
+          <NachtwocheOverlayChip
+            nachtShiftType={shiftTypes.find((s) => s.short_name === 'N')}
+            cellWidth={nachtwocheCellWidth}
+          />
         )}
       </DragOverlay>
     </DndContext>
@@ -1248,10 +1341,16 @@ export function PlanPage() {
     {!isNaN(id) && (
       <LockedWeekDialog
         open={lockedWeekDialogOpen}
-        onClose={() => setLockedWeekDialogOpen(false)}
+        onClose={() => {
+          setLockedWeekDialogOpen(false)
+          setLockedWeekInitialDate('')
+          setLockedWeekInitialDoctorId(undefined)
+        }}
         planId={id}
         doctors={doctors}
         shiftTypes={shiftTypes}
+        initialDate={lockedWeekInitialDate}
+        initialDoctorId={lockedWeekInitialDoctorId}
       />
     )}
 
@@ -1329,6 +1428,21 @@ function AbsenceOverlayChip({ label, color }: { label: string; color?: string })
       }
     >
       {label}
+    </div>
+  )
+}
+
+function NachtwocheOverlayChip({ nachtShiftType, cellWidth }: { nachtShiftType: { color?: string | null } | undefined; cellWidth: number }) {
+  const style: React.CSSProperties = nachtShiftType?.color
+    ? { background: nachtShiftType.color + '80', color: '#1f2937', borderColor: nachtShiftType.color + 'a0', width: cellWidth * 5 }
+    : { background: '#1e293bcc', color: '#f8fafc', width: cellWidth * 5 }
+  return (
+    <div
+      style={style}
+      className="rounded-md py-1 px-2 text-xs font-bold shadow-lg pointer-events-none select-none flex items-center gap-1.5 border whitespace-nowrap overflow-hidden"
+    >
+      <MoonStar className="size-3 shrink-0" />
+      So–Do Nacht
     </div>
   )
 }

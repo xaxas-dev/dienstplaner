@@ -117,7 +117,7 @@ export function ShiftTypeListPage() {
                   <TableRow key={st.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <ShiftChip code={st.short_name} shiftTypeId={st.id} size="sm" />
+                        <ShiftChip code={st.short_name} shiftTypeId={st.id} color={st.color} size="sm" />
                         <span className="font-medium text-ink">{st.name}</span>
                       </div>
                     </TableCell>

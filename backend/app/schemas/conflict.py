@@ -22,7 +22,7 @@ class ShiftConflict(BaseModel):
 
 
 class OpenShift(BaseModel):
-    shift_id: int
+    shift_id: int | None
     shift_date: date
     shift_type_short_name: str
 

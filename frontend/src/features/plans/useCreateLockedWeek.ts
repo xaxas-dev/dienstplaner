@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiPost } from '@/lib/api'
 import { shiftQueryKeys } from './usePlanShifts'
+import { conflictQueryKeys } from './usePlanConflicts'
 
 interface LockedWeekCreate {
   doctor_id: number
@@ -20,6 +21,7 @@ export function useCreateLockedWeek(planId: number) {
       apiPost<LockedWeekResult>(`/api/plans/${planId}/locked-week`, data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: shiftQueryKeys.byPlan(planId) })
+      void qc.invalidateQueries({ queryKey: conflictQueryKeys.byPlan(planId) })
     },
   })
 }

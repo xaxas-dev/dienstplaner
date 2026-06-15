@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { apiPatch } from '@/lib/api'
+import { apiPatch, apiPost } from '@/lib/api'
 import type { ShiftUpdate, ShiftWithDetails } from '@/lib/types'
 import { shiftQueryKeys } from './usePlanShifts'
 import { conflictQueryKeys } from './usePlanConflicts'
@@ -10,6 +10,19 @@ export function useAssignShift(planId: number) {
   return useMutation({
     mutationFn: ({ shiftId, data }: { shiftId: number; data: ShiftUpdate }) =>
       apiPatch<ShiftWithDetails>(`/api/shifts/${shiftId}`, data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: shiftQueryKeys.byPlan(planId) })
+      void qc.invalidateQueries({ queryKey: conflictQueryKeys.byPlan(planId) })
+      void qc.invalidateQueries({ queryKey: tarifWarningKeys.byPlan(planId) })
+    },
+  })
+}
+
+export function useCreateShift(planId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: { shift_type_id: number; shift_date: string; doctor_id: number | null }) =>
+      apiPost<ShiftWithDetails>(`/api/plans/${planId}/shifts`, data),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: shiftQueryKeys.byPlan(planId) })
       void qc.invalidateQueries({ queryKey: conflictQueryKeys.byPlan(planId) })

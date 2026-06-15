@@ -17,7 +17,7 @@ export type SidebarTab = 'details' | 'wuensche' | 'fairness' | 'konflikte'
 
 type PlanConflictSummary = {
   conflicts: Array<{ shift_id: number }>
-  open_shifts: Array<{ shift_id: number }>
+  open_shifts: Array<{ shift_id: number | null; shift_date: string; shift_type_short_name: string }>
 }
 
 const SEVERITY_CLASS: Record<string, string> = {
@@ -680,20 +680,21 @@ export function PlanSidebar({
                 </p>
                 <div className="space-y-1">
                   {conflicts?.open_shifts.map((c) => {
-                    const s = shifts.find((sh) => sh.id === c.shift_id)
+                    const key = `${c.shift_date}-${c.shift_type_short_name}`
+                    const s = c.shift_id != null ? shifts.find((sh) => sh.id === c.shift_id) : undefined
+                    const canNavigate = c.shift_id != null
                     return (
                       <button
-                        key={c.shift_id}
+                        key={key}
                         type="button"
-                        aria-label={s?.shift_date ?? `Schicht ${c.shift_id}`}
-                        onClick={() => onScrollToShift(c.shift_id)}
-                        className="w-full text-left px-3 py-1.5 rounded-lg border border-line bg-paper text-[12px] text-ink-2 hover:bg-line/30 transition-colors"
+                        aria-label={`${c.shift_date} ${c.shift_type_short_name}`}
+                        onClick={() => canNavigate && onScrollToShift(c.shift_id!)}
+                        disabled={!canNavigate}
+                        className="w-full text-left px-3 py-1.5 rounded-lg border border-line bg-paper text-[12px] text-ink-2 hover:bg-line/30 transition-colors disabled:opacity-60 disabled:cursor-default disabled:hover:bg-paper"
                       >
-                        {s?.shift_date ?? `#${c.shift_id}`}
-                        {s?.shift_type && (
-                          <span className="ml-2 font-semibold">{s.shift_type.short_name}</span>
-                        )}
-                        {(() => {
+                        <span>{c.shift_date}</span>
+                        <span className="ml-2 font-semibold">{c.shift_type_short_name}</span>
+                        {s && (() => {
                           const doc = doctors.find((d) => d.id === s?.doctor_id)
                           return doc ? <span className="ml-2 text-ink-3">{doc.name}</span> : null
                         })()}

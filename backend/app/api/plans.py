@@ -20,6 +20,7 @@ from app.schemas.plan import (
     PlanUpdate,
     PlanWithRelations,
 )
+from app.schemas.shift import ShiftPlanCreate, ShiftWithDetails
 from app.schemas.solve import ApplyRequest, ApplyResult, SolveResult
 from app.services import (
     conflict_service,
@@ -28,6 +29,7 @@ from app.services import (
     plan_absence_service,
     plan_export_service,
     plan_service,
+    shift_service,
 )
 from app.services.exceptions import PlanNotFoundError
 
@@ -147,6 +149,23 @@ def apply_plan(plan_id: int, body: ApplyRequest, db: Session = Depends(get_db)) 
     from app.solver import solver_service  # kein JVM-Import, aber konsistenter Importpfad
 
     return solver_service.apply_solution(db, plan_id, body.proposed_assignments)
+
+
+@router.post(
+    "/{plan_id}/shifts",
+    response_model=ShiftWithDetails,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_plan_shift(
+    plan_id: int, body: ShiftPlanCreate, db: Session = Depends(get_db)
+) -> ShiftWithDetails:
+    # Upsert: erstellt Shift oder setzt doctor_id falls (plan, Datum, Typ) schon existiert.
+    try:
+        return shift_service.create_or_assign_shift(db, plan_id, body)
+    except PlanNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Plan {plan_id} nicht gefunden")
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
 
 
 @router.post(

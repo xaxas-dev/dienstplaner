@@ -28,6 +28,7 @@ interface UnifiedPlanGridProps {
   activeFilterGroups: Set<string>
   dragConflictMap?: Map<number, Set<string>> | null
   dragDimDays?: Set<string>
+  dragHighlightDays?: Set<string>
   selectedCellKeys?: Set<string>
   highlightedDoctorId?: number | null
   onCellClick?: (rotationId: number, doctorId: number, dayKey: string, shiftId: number | null, shiftKey: boolean, clickPos: { x: number; y: number }) => void
@@ -164,6 +165,7 @@ export function UnifiedPlanGrid({
   activeFilterGroups,
   dragConflictMap,
   dragDimDays,
+  dragHighlightDays,
   selectedCellKeys,
   highlightedDoctorId,
   onCellClick,
@@ -425,10 +427,9 @@ export function UnifiedPlanGrid({
                   unassignedShiftByDate.get(dk)?.shift_type?.color ??
                   undefined
 
-                const isConflictTarget =
-                  dragConflictMap != null &&
-                  !!(dragConflictMap.get(row.doctor.id)?.has(dk)) &&
-                  cell.text === ''
+                const isDoctorConflictOnDay = dragConflictMap != null && !!(dragConflictMap.get(row.doctor.id)?.has(dk))
+                const isConflictTarget = isDoctorConflictOnDay && cell.text === ''
+                const isDragAbsenceBlocked = isDoctorConflictOnDay && cell.absenceId != null
 
                 const cellKey = `${row.rotation.id}-${dk}`
                 const isSelected = selectedCellKeys?.has(cellKey) ?? false
@@ -452,13 +453,14 @@ export function UnifiedPlanGrid({
                     isHoveredCol={effectiveHoverDay === dk}
                     shiftId={cellShiftId}
                     isConflictTarget={isConflictTarget}
+                    isDragAbsenceBlocked={isDragAbsenceBlocked}
                     shiftAssigned={shift != null && shift.doctor_id != null}
                     isPinned={shift?.is_pinned ?? false}
                     isLocked={shift?.is_locked ?? false}
                     isSelected={isSelected || mouseSelectKeys.has(cellKey)}
                     isHighlightedRow={isRowHighlighted}
                     isDragDimmed={dragDimDays !== undefined && dragDimDays.has(dk)}
-                    isDragHighlighted={dragDimDays !== undefined && !dragDimDays.has(dk)}
+                    isDragHighlighted={dragHighlightDays !== undefined && dragHighlightDays.has(dk)}
                     onMouseDown={() => {
                       setMouseSelectState({
                         rotationId: row.rotation.id,

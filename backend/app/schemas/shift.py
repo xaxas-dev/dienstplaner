@@ -21,6 +21,16 @@ class ShiftBase(BaseModel):
 class ShiftCreate(ShiftBase): ...
 
 
+class ShiftPlanCreate(BaseModel):
+    """Body für POST /api/plans/{id}/shifts — plan_id kommt aus dem Pfad."""
+
+    shift_type_id: int
+    shift_date: date
+    doctor_id: int | None = None
+    is_pinned: bool = False
+    notes: str | None = None
+
+
 class ShiftUpdate(BaseModel):
     # Alle Felder optional. Im Service MUSS model_dump(exclude_unset=True) verwendet werden:
     # - Feld fehlt im Request → unverändert lassen

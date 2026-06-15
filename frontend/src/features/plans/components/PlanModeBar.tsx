@@ -23,6 +23,8 @@ export function parseShiftTypeDragId(id: string): number | null {
   return Number.isFinite(n) ? n : null
 }
 
+export const NACHTWOCHE_DRAG_ID = 'nachtwoche'
+
 export const ABSENCE_DRAG_ID_PREFIX = 'absence-'
 
 const VALID_ABSENCE_TYPES: AbsenceType[] = [
@@ -132,30 +134,19 @@ export function PlanModeBar({
           />
         ))}
 
+        {mode === 'besetzung' && (
+          <>
+            <span className="text-line-2 mx-0.5">|</span>
+            <NachtwocheDraggableChip nachtShiftType={nachtShiftType} onClick={onNachtwocheClick} />
+          </>
+        )}
+
         <span className="text-line-2 mx-0.5">|</span>
         <span className="text-[10px] text-ink-3 uppercase tracking-[0.07em]">Abwesenheiten</span>
 
         {VALID_ABSENCE_TYPES.map((type) => (
           <AbsenceDraggableChip key={type} absenceType={type} color={absenceColors?.[type]} />
         ))}
-
-        {mode === 'besetzung' && (
-          <>
-            <span className="text-line-2 mx-0.5">|</span>
-            <button
-              type="button"
-              onClick={onNachtwocheClick}
-              className="inline-flex items-center gap-1.5 px-2.5 py-[3px] rounded-full text-[11px] font-medium border transition-colors"
-              style={nachtShiftType?.color
-                ? { background: nachtShiftType.color + '80', color: '#1f2937', borderColor: nachtShiftType.color + 'a0' }
-                : { background: 'var(--card)', color: 'var(--ink-2)', borderColor: 'var(--line)' }
-              }
-            >
-              <MoonStar className="size-3" />
-              Nachtwoche
-            </button>
-          </>
-        )}
 
         {filterGroups.length > 0 && (
           <>
@@ -251,6 +242,32 @@ function ShiftTypeDraggableChip({ shiftType, dimmed }: { shiftType: ShiftType; d
       style={chipStyle}
     >
       {shiftType.short_name}
+    </div>
+  )
+}
+
+function NachtwocheDraggableChip({ nachtShiftType, onClick }: { nachtShiftType: ShiftType | undefined; onClick: () => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: NACHTWOCHE_DRAG_ID,
+    data: { nachtwoche: true },
+  })
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center gap-1.5 px-2.5 py-[3px] rounded-full text-[11px] font-medium border transition-colors cursor-grab active:cursor-grabbing select-none',
+        isDragging && 'opacity-40',
+      )}
+      style={nachtShiftType?.color
+        ? { background: nachtShiftType.color + '80', color: '#1f2937', borderColor: nachtShiftType.color + 'a0' }
+        : { background: 'var(--card)', color: 'var(--ink-2)', borderColor: 'var(--line)' }
+      }
+    >
+      <MoonStar className="size-3" />
+      Nachtwoche
     </div>
   )
 }

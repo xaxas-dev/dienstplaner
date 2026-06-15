@@ -35,6 +35,7 @@ interface UnifiedShiftCellProps {
   isHighlightedRow?: boolean
   isDragDimmed?: boolean
   isDragHighlighted?: boolean
+  isDragAbsenceBlocked?: boolean
   absenceId?: number
   absenceType?: AbsenceType | null
   absenceColors?: Record<AbsenceType, string>
@@ -75,6 +76,7 @@ export function UnifiedShiftCell({
   isHighlightedRow,
   isDragDimmed,
   isDragHighlighted,
+  isDragAbsenceBlocked,
   absenceId,
   absenceType,
   absenceColors,
@@ -157,6 +159,7 @@ export function UnifiedShiftCell({
   return (
     <div
       ref={setNodeRef}
+      data-grid-cell=""
       onMouseEnter={onMouseEnter}
       onMouseDown={onMouseDown}
       {...(shiftId !== undefined ? { 'data-shift-id': String(shiftId) } : {})}
@@ -169,22 +172,20 @@ export function UnifiedShiftCell({
         isConflictTarget && 'bg-red-50/70 ring-1 ring-inset ring-red-400/50',
         isSelected && 'ring-2 ring-inset ring-accent',
         dimmed && 'opacity-30 grayscale',
-        isDragDimmed && 'opacity-30 grayscale',
+        isDragDimmed && !text && 'opacity-30 grayscale',
+        isDragAbsenceBlocked && 'opacity-40 grayscale',
         isDragHighlighted && 'ring-1 ring-inset ring-emerald-400/60',
       )}
       style={{ backgroundColor: isConflictTarget || isSelected ? undefined : bg }}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >
-      {/* Locked-Overlay */}
-      {isLocked && text && (
-        <div className="absolute inset-0 flex items-center justify-center bg-zinc-200">
-          <Lock
-            data-testid="lock-icon"
-            className="absolute top-0.5 left-0.5 size-2.5 text-zinc-400"
-          />
-          <span className="text-zinc-500 text-[11px] font-medium leading-none">{text}</span>
-        </div>
+      {/* Lock-Indikator */}
+      {isLocked && (
+        <Lock
+          data-testid="lock-icon"
+          className="absolute top-0.5 left-0.5 size-2.5 text-zinc-400/70 z-[2]"
+        />
       )}
 
       {/* Crosshair-Highlight */}
@@ -195,8 +196,8 @@ export function UnifiedShiftCell({
         />
       )}
 
-      {/* Weekend-Overlay — dezente Einfärbung Sa/So */}
-      {isWeekend && !isConflictTarget && !isSelected && (
+      {/* Weekend-Overlay — dezente Einfärbung Sa/So (nur leere Zellen) */}
+      {isWeekend && !isConflictTarget && !isSelected && !shiftAssigned && absenceId === undefined && (
         <div
           className="absolute inset-0 pointer-events-none"
           style={{ backgroundColor: 'rgba(243, 236, 216, 0.45)' }}

@@ -1331,7 +1331,7 @@ export interface components {
         /** OpenShift */
         OpenShift: {
             /** Shift Id */
-            shift_id: number;
+            shift_id: number | null;
             /**
              * Shift Date
              * Format: date
