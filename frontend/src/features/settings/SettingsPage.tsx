@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { CommandBar } from '@/components/dp/CommandBar'
 import { useSettings, useUpdateSetting, type AppSettingResponse } from '@/lib/useSettings'
-import { useAppSettings } from '@/stores/useAppSettings'
+import { useAppSettings, DEFAULT_SPRINGER_COLOR } from '@/stores/useAppSettings'
 
 function SettingRow({ setting }: { setting: AppSettingResponse }) {
   const [value, setValue] = useState(setting.value)
@@ -96,7 +96,7 @@ export function SettingsPage() {
                   aria-label="Springer-Farbe"
                 />
                 <button
-                  onClick={() => setSpringerColor('#d1fae5')}
+                  onClick={() => setSpringerColor(DEFAULT_SPRINGER_COLOR)}
                   className="text-xs text-ink-3 hover:text-ink transition"
                 >
                   Reset
