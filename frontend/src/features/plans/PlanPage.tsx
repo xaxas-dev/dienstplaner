@@ -62,7 +62,7 @@ import { useShiftTypes } from '@/features/shift-types/useShiftTypes'
 import { UnifiedPlanGrid } from './components/UnifiedPlanGrid'
 import { parseShiftTypeDragId, parseAbsenceDragId, NACHTWOCHE_DRAG_ID, SPRINGER_DRAG_ID } from './components/PlanModeBar'
 import { SpringerPopover } from './components/SpringerPopover'
-import { usePlanSpringerAssignments, useDeleteSpringerAssignment } from './useSpringerAssignments'
+import { usePlanSpringerAssignments, useCreateSpringerAssignment, useDeleteSpringerAssignment } from './useSpringerAssignments'
 import { PlanSidebar } from './components/PlanSidebar'
 import type { SidebarTab } from './components/PlanSidebar'
 import { DoctorAssignPopover } from './components/DoctorAssignPopover'
@@ -204,6 +204,7 @@ export function PlanPage() {
 
   const { data: springerAssignments = [] } = usePlanSpringerAssignments(isNaN(id) ? null : id)
   const { mutate: deleteSpringer } = useDeleteSpringerAssignment(isNaN(id) ? 0 : id)
+  const createSpringerAssignment = useCreateSpringerAssignment()
 
   const springerByKey = useMemo(() => {
     const map = new Map<string, typeof springerAssignments[0]>()
@@ -609,6 +610,19 @@ export function PlanPage() {
       )
     }
     if (skipped > 0) toast.info(`${skipped} Zelle(n) übersprungen — keine Zuweisung oder gepinnt`)
+    setSelectedCells([])
+    setMultiPopoverOpen(false)
+  }
+
+  function handleMultiSpringerAssign(departmentId: number) {
+    for (const cell of selectedCells) {
+      createSpringerAssignment.mutate({
+        planId: id,
+        shiftDate: cell.dayKey,
+        doctorId: cell.doctorId,
+        targetDepartmentId: departmentId,
+      })
+    }
     setSelectedCells([])
     setMultiPopoverOpen(false)
   }
@@ -1217,6 +1231,8 @@ export function PlanPage() {
           onSelectShiftType={handleMultiAssign}
           onRemoveAll={handleMultiRemove}
           onClose={handleCloseMultiPopover}
+          departments={departments}
+          onAssignSpringer={handleMultiSpringerAssign}
         />
       )}
 
