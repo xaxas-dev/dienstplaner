@@ -77,7 +77,8 @@ def test_code_defaults(db: Session) -> None:
     assert codes["N*"].shift_type_short_name == "N"
     assert codes["N*"].shift_type_id is not None
 
-    assert codes["EA"].default_action == CodeDefaultAction.UNMATCHED
+    assert codes["EA"].default_action == CodeDefaultAction.ABSENCE
+    assert codes["EA"].absence_type == "EINARBEITUNG"
 
 
 def test_code_shift_warning_when_no_shift_type(db: Session) -> None:

@@ -27,11 +27,13 @@ from app.services.import_parse_service import ParsedSheet
 
 FUZZY_THRESHOLD = 85
 
-# Default-Verhalten für bekannte Codes. Alles andere → unmatched.
+# Default-Verhalten für bekannte Codes. Alles andere → SONSTIGES mit Rohwert als Notiz.
 DEFAULT_CODE_MAP: dict[str, dict] = {
-    "U":  {"action": CodeDefaultAction.ABSENCE, "absence_type": AbsenceType.URLAUB},
-    "EZ": {"action": CodeDefaultAction.ABSENCE, "absence_type": AbsenceType.ELTERNZEIT},
-    "N*": {"action": CodeDefaultAction.SHIFT,   "shift_short_name": "N"},
+    "U":      {"action": CodeDefaultAction.ABSENCE, "absence_type": AbsenceType.URLAUB},
+    "EZ":     {"action": CodeDefaultAction.ABSENCE, "absence_type": AbsenceType.ELTERNZEIT},
+    "EA":     {"action": CodeDefaultAction.ABSENCE, "absence_type": AbsenceType.EINARBEITUNG},
+    "INA-EA": {"action": CodeDefaultAction.ABSENCE, "absence_type": AbsenceType.EINARBEITUNG_INA},
+    "N*":     {"action": CodeDefaultAction.SHIFT,   "shift_short_name": "N"},
 }
 
 # Regex: "(70%)"-Suffix vom Namen abtrennen.
@@ -199,10 +201,11 @@ def analyze_import(db: Session, parsed: ParsedSheet) -> ImportAnalysis:
                 code_entries.append(
                     CodeEntry(
                         raw=raw,
-                        default_action=CodeDefaultAction.UNMATCHED,
-                        absence_type=None,
+                        default_action=CodeDefaultAction.ABSENCE,
+                        absence_type=AbsenceType.SONSTIGES,
                         shift_type_id=None,
                         shift_type_short_name=None,
+                        default_note=raw,
                     )
                 )
             continue

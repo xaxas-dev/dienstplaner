@@ -62,6 +62,7 @@ class CodeEntry(BaseModel):
     shift_type_short_name: str | None
     department_id: int | None = None
     department_short_name: str | None = None
+    default_note: str | None = None
 
 
 class ImportMonth(BaseModel):
