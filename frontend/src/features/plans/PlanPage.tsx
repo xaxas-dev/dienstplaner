@@ -1197,21 +1197,49 @@ export function PlanPage() {
         )}
       </div>
 
-      {activeCell && (
-        <DoctorAssignPopover
-          planId={id}
-          doctorId={activeCell.doctorId}
-          day={activeCell.day}
-          currentShift={shifts.find((s) => s.id === activeCell.shiftId) ?? null}
-          openShiftsForDay={shifts.filter(
-            (s) =>
-              s.shift_date === activeCell.day &&
-              (s.doctor_id === null || s.doctor_id === undefined),
-          )}
-          anchorPosition={cellClickPosition ?? undefined}
-          onClose={() => { setActiveCell(null); setCellClickPosition(null) }}
-        />
-      )}
+      {(() => {
+        const activeCellSpringer = activeCell
+          ? (springerByKey.get(`${activeCell.doctorId}-${activeCell.day}`) ?? null)
+          : null
+        const activeCellDeptId = activeCell
+          ? rotations.find((r) => r.id === activeCell.rotationId)?.department_id
+          : undefined
+        return activeCell && (
+          <DoctorAssignPopover
+            planId={id}
+            doctorId={activeCell.doctorId}
+            day={activeCell.day}
+            currentShift={shifts.find((s) => s.id === activeCell.shiftId) ?? null}
+            openShiftsForDay={shifts.filter(
+              (s) =>
+                s.shift_date === activeCell.day &&
+                (s.doctor_id === null || s.doctor_id === undefined),
+            )}
+            anchorPosition={cellClickPosition ?? undefined}
+            onClose={() => { setActiveCell(null); setCellClickPosition(null) }}
+            departments={departments}
+            currentSpringerAssignment={activeCellSpringer}
+            currentDepartmentId={activeCellDeptId}
+            onAssignSpringer={(deptId) => {
+              if (!activeCell) return
+              createSpringerAssignment.mutate(
+                {
+                  planId: id,
+                  shiftDate: activeCell.day,
+                  doctorId: activeCell.doctorId,
+                  targetDepartmentId: deptId,
+                },
+                { onSuccess: () => { setActiveCell(null); setCellClickPosition(null) } },
+              )
+            }}
+            onRemoveSpringer={(assignmentId) => {
+              deleteSpringer(assignmentId, {
+                onSuccess: () => { setActiveCell(null); setCellClickPosition(null) },
+              })
+            }}
+          />
+        )
+      })()}
 
       {activeAbsenceCell && (
         <AbsenceAssignPopover
