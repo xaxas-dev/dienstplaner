@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input'
 import { useAssignShift } from '../useAssignShift'
 import { useDoctors } from '@/features/doctors/useDoctors'
 import { useAvailabilityForDate } from '../useAvailabilityForDate'
-import type { ShiftWithDetails } from '@/lib/types'
+import { useAppSettings } from '@/stores/useAppSettings'
+import type { Department, ShiftWithDetails, SpringerAssignment } from '@/lib/types'
 
 interface Props {
   planId: number
@@ -15,12 +16,20 @@ interface Props {
   openShiftsForDay: ShiftWithDetails[]
   anchorPosition?: { x: number; y: number }
   onClose: () => void
+  departments: Department[]
+  currentSpringerAssignment?: SpringerAssignment | null
+  currentDepartmentId?: number
+  onAssignSpringer: (departmentId: number) => void
+  onRemoveSpringer: (assignmentId: number) => void
 }
 
 export function DoctorAssignPopover({
   planId, doctorId, day, currentShift, openShiftsForDay, anchorPosition, onClose,
+  departments, currentSpringerAssignment, currentDepartmentId,
+  onAssignSpringer, onRemoveSpringer,
 }: Props) {
   const { mutate, isPending } = useAssignShift(planId)
+  const { springerColor } = useAppSettings()
   const { data: doctors = [] } = useDoctors()
   const [search, setSearch] = useState('')
   const cardRef = useRef<HTMLDivElement>(null)
@@ -96,6 +105,42 @@ export function DoctorAssignPopover({
           </div>
         </div>
       )}
+
+      {/* Springer */}
+      <div className="space-y-1.5">
+        <p className="text-xs text-ink-3 font-medium">Als Springer einteilen</p>
+        {currentSpringerAssignment ? (
+          <div className="flex items-center gap-2">
+            <span
+              className="px-2.5 py-1 rounded-full text-xs font-bold text-ink border border-line"
+              style={{ backgroundColor: springerColor }}
+            >
+              {currentSpringerAssignment.target_department.short_name}
+            </span>
+            <button
+              onClick={() => onRemoveSpringer(currentSpringerAssignment.id)}
+              className="text-xs text-warn-ink hover:underline"
+            >
+              Entfernen
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {departments
+              .filter((d) => d.active && d.id !== currentDepartmentId)
+              .map((d) => (
+                <button
+                  key={d.id}
+                  disabled={isPending}
+                  onClick={() => onAssignSpringer(d.id)}
+                  className="px-2.5 py-1 rounded-full text-xs font-bold bg-paper border border-line hover:border-accent transition"
+                >
+                  {d.short_name}
+                </button>
+              ))}
+          </div>
+        )}
+      </div>
 
       {/* Anderen Arzt zuweisen (nur bei besetzter Zelle) */}
       {currentShift && (
