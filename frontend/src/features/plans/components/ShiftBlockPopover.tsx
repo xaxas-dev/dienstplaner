@@ -82,17 +82,16 @@ export function ShiftBlockPopover({
         {activeDepts.length > 0 && (
           <div className="space-y-1.5">
             <p className="text-xs text-ink-3 font-medium">Als Springer einteilen</p>
-            <div className="flex flex-wrap gap-1.5">
+            <select
+              className="w-full h-7 text-xs border border-line rounded-md bg-paper px-2 text-ink"
+              defaultValue=""
+              onChange={(e) => { if (e.target.value) onAssignSpringer(Number(e.target.value)) }}
+            >
+              <option value="" disabled>Bereich wählen…</option>
               {activeDepts.map((d) => (
-                <button
-                  key={d.id}
-                  onClick={() => onAssignSpringer(d.id)}
-                  className="px-2.5 py-1 rounded-full text-xs font-bold bg-paper border border-line hover:border-accent transition"
-                >
-                  {d.short_name}
-                </button>
+                <option key={d.id} value={d.id}>{d.short_name}</option>
               ))}
-            </div>
+            </select>
           </div>
         )}
 

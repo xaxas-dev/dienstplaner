@@ -137,18 +137,20 @@ export function UnifiedShiftCell({
       onDoubleClickRemoveAbsence?.(absenceId)
       return
     }
-    // Springer-Delete — immer Vorrang vor Shift (inkl. Split-Cell)
+    // Shift-Delete hat Vorrang (Zusatzdienst zuerst bei geteilter Zelle)
+    if (shiftAssigned) {
+      if (isPinned) {
+        toast.info('Gepinnte Schicht — erst entpinnen')
+        return
+      }
+      onDoubleClickRemove?.()
+      return
+    }
+    // Springer-Delete (nur wenn kein regulärer Shift)
     if (springerAssignmentId !== undefined) {
       onDoubleClickRemoveSpringer?.(springerAssignmentId)
       return
     }
-    // Shift-Delete
-    if (!shiftAssigned) return
-    if (isPinned) {
-      toast.info('Gepinnte Schicht — erst entpinnen')
-      return
-    }
-    onDoubleClickRemove?.()
   }
 
   const bereichColor = getDepartmentColor(department)
@@ -251,20 +253,20 @@ export function UnifiedShiftCell({
       {springerDeptShortName && text ? (
         <div className="absolute inset-0 flex flex-col pointer-events-none select-none">
           <div
-            className="flex-1 flex items-center justify-center text-[10px] font-bold leading-none text-ink"
+            className="flex-1 flex items-center justify-center text-[10px] font-normal leading-none text-ink"
             style={{ backgroundColor: springerColor }}
           >
             {springerDeptShortName}
           </div>
           <div
-            className="flex-1 flex items-center justify-center text-[11px] font-bold leading-none"
+            className="flex-1 flex items-center justify-center text-[11px] font-medium leading-none"
             style={{ background: shiftTypeColorMuted(shiftTypeColor) }}
           >
             {text}
           </div>
         </div>
       ) : springerDeptShortName ? (
-        <span className="text-[11px] font-bold leading-none pointer-events-none select-none text-ink">
+        <span className="text-[11px] font-normal leading-none pointer-events-none select-none text-ink">
           {springerDeptShortName}
         </span>
       ) : (

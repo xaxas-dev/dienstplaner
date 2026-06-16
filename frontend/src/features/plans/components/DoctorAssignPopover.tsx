@@ -125,20 +125,19 @@ export function DoctorAssignPopover({
             </button>
           </div>
         ) : (
-          <div className="flex flex-wrap gap-1.5">
+          <select
+            className="w-full h-7 text-xs border border-line rounded-md bg-paper px-2 text-ink disabled:opacity-50"
+            defaultValue=""
+            disabled={isPending}
+            onChange={(e) => { if (e.target.value) onAssignSpringer(Number(e.target.value)) }}
+          >
+            <option value="" disabled>Bereich wählen…</option>
             {departments
               .filter((d) => d.active && d.id !== currentDepartmentId)
               .map((d) => (
-                <button
-                  key={d.id}
-                  disabled={isPending}
-                  onClick={() => onAssignSpringer(d.id)}
-                  className="px-2.5 py-1 rounded-full text-xs font-bold bg-paper border border-line hover:border-accent transition"
-                >
-                  {d.short_name}
-                </button>
+                <option key={d.id} value={d.id}>{d.short_name}</option>
               ))}
-          </div>
+          </select>
         )}
       </div>
 
