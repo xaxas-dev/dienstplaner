@@ -187,7 +187,7 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
     plan_year = plan.valid_from.year
     plan_month = plan.valid_from.month
 
-    absence_days: dict[tuple[int, str], list[date]] = defaultdict(list)
+    absence_days: dict[tuple[int, str, str | None], list[date]] = defaultdict(list)
     shift_entries: list[dict] = []
     shift_seen: set[tuple[int, date]] = set()  # (shift_type_id, shift_date) für UNIQUE
     springer_entries: list[tuple[int, int, date]] = []  # (doctor_id, dept_id, shift_date)
@@ -207,7 +207,8 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
                 warnings.append(f"Ungültiger Tag {day_num} im Monat — übersprungen")
                 continue
             if res_code.action == "absence":
-                absence_days[(doctor_id, res_code.absence_type)].append(shift_date)
+                notes_key = code if res_code.absence_type == "SONSTIGES" else None
+                absence_days[(doctor_id, res_code.absence_type, notes_key)].append(shift_date)
             elif res_code.action in ("shift", "create_shift"):
                 st_id = resolved_st_ids.get(code)
                 if st_id is None:
@@ -239,7 +240,7 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
 
     # 9. Abwesenheits-Ranges anlegen (konsekutive Tage → ein Datensatz)
     created_absences = 0
-    for (doctor_id, absence_type_str), days in absence_days.items():
+    for (doctor_id, absence_type_str, notes_val), days in absence_days.items():
         sorted_days = sorted(set(days))
         ranges: list[tuple[date, date]] = []
         start = prev = sorted_days[0]
@@ -251,15 +252,14 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
                 start = prev = d
         ranges.append((start, prev))
         for valid_from, valid_to in ranges:
-            absence_repo.create_absence(
-                db,
-                doctor_id,
-                {
-                    "absence_type": absence_type_str,
-                    "valid_from": valid_from,
-                    "valid_to": valid_to,
-                },
-            )
+            absence_data: dict = {
+                "absence_type": absence_type_str,
+                "valid_from": valid_from,
+                "valid_to": valid_to,
+            }
+            if notes_val:
+                absence_data["notes"] = notes_val
+            absence_repo.create_absence(db, doctor_id, absence_data)
             created_absences += 1
 
     # 10. Schichten bulk-anlegen
