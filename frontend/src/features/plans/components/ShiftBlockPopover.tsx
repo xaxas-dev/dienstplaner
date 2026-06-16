@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { ShiftType } from '@/lib/types'
+import type { Department, ShiftType } from '@/lib/types'
 
 interface ShiftBlockPopoverProps {
   selectedCount: number
@@ -7,6 +7,8 @@ interface ShiftBlockPopoverProps {
   onSelectShiftType: (shiftTypeId: number) => void
   onRemoveAll: () => void
   onClose: () => void
+  departments: Department[]
+  onAssignSpringer: (departmentId: number) => void
 }
 
 export function ShiftBlockPopover({
@@ -15,6 +17,8 @@ export function ShiftBlockPopover({
   onSelectShiftType,
   onRemoveAll,
   onClose,
+  departments,
+  onAssignSpringer,
 }: ShiftBlockPopoverProps) {
   const cardRef = useRef<HTMLDivElement>(null)
 
@@ -40,6 +44,8 @@ export function ShiftBlockPopover({
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onClose, shiftTypes, onSelectShiftType])
+
+  const activeDepts = departments.filter((d) => d.active)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -72,6 +78,23 @@ export function ShiftBlockPopover({
             <p className="text-xs text-ink-3">Keine Schichttypen verfügbar.</p>
           )}
         </div>
+
+        {activeDepts.length > 0 && (
+          <div className="space-y-1.5">
+            <p className="text-xs text-ink-3 font-medium">Als Springer einteilen</p>
+            <select
+              className="w-full h-7 text-xs border border-line rounded-md bg-paper px-2 text-ink"
+              defaultValue=""
+              onChange={(e) => { if (e.target.value) onAssignSpringer(Number(e.target.value)) }}
+            >
+              <option value="" disabled>Bereich wählen…</option>
+              {activeDepts.map((d) => (
+                <option key={d.id} value={d.id}>{d.short_name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <button
           onClick={onRemoveAll}
           className="w-full text-xs text-warn-ink hover:bg-warn-bg py-1 rounded-md transition"

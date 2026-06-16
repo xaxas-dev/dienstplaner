@@ -11,7 +11,7 @@ import type { RotationRow } from '../unifiedGridUtils'
 import { getWishHint, getWishBadge } from '../wishGridUtils'
 import { BereichHeaderRow, makePlaceholderDropId, makeRotationMemberDropId } from './BereichHeaderRow'
 import { UnifiedShiftCell } from './UnifiedShiftCell'
-import type { AbsenceType, Department, Doctor, RotationAssignmentWithDetails, ShiftWithDetails, Absence, TarifWarning, Wish, ShiftType } from '@/lib/types'
+import type { AbsenceType, Department, Doctor, RotationAssignmentWithDetails, ShiftWithDetails, Absence, TarifWarning, Wish, ShiftType, SpringerAssignment } from '@/lib/types'
 
 const WEEKDAY_ABBR = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 
@@ -47,6 +47,8 @@ interface UnifiedPlanGridProps {
   onWishCreate?: (doctorId: number, date: string) => void
   onDoctorClick?: (doctorId: number) => void
   absenceColors?: Record<AbsenceType, string>
+  springerByKey?: Map<string, SpringerAssignment>
+  onDoubleClickRemoveSpringer?: (assignmentId: number) => void
 }
 
 
@@ -184,6 +186,8 @@ export function UnifiedPlanGrid({
   onWishCreate,
   onDoctorClick,
   absenceColors,
+  springerByKey,
+  onDoubleClickRemoveSpringer,
 }: UnifiedPlanGridProps) {
   const [hoverRow, setHoverRow] = useState<string | null>(null)
   const [hoverDay, setHoverDay] = useState<string | null>(null)
@@ -411,6 +415,7 @@ export function UnifiedPlanGrid({
               {dayKeys.map((dk) => {
                 const cell = resolveCell(row, dk, shifts, absences)
                 const shift = shiftIndex.get(`${row.doctor.id}-${dk}`)
+                const springerEntry = springerByKey?.get(`${row.doctor.id}-${dk}`)
                 const hasConflict = (shift?.conflicts.length ?? 0) > 0
                 const hasTarifWarning = shift ? (tarifWarningsByShift[shift.id]?.length ?? 0) > 0 : false
                 const day = days[dayKeys.indexOf(dk)]
@@ -502,6 +507,9 @@ export function UnifiedPlanGrid({
                       : undefined}
                     doctorId={row.doctor.id}
                     onWishCreate={onWishCreate}
+                    springerDeptShortName={springerEntry?.target_department?.short_name ?? undefined}
+                    springerAssignmentId={springerEntry?.id}
+                    onDoubleClickRemoveSpringer={onDoubleClickRemoveSpringer}
                   />
                 )
               })}

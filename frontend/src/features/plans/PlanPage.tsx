@@ -60,7 +60,9 @@ import { useDoctors } from '@/features/doctors/useDoctors'
 import { useDepartments } from '@/features/departments/useDepartments'
 import { useShiftTypes } from '@/features/shift-types/useShiftTypes'
 import { UnifiedPlanGrid } from './components/UnifiedPlanGrid'
-import { parseShiftTypeDragId, parseAbsenceDragId, NACHTWOCHE_DRAG_ID } from './components/PlanModeBar'
+import { parseShiftTypeDragId, parseAbsenceDragId, NACHTWOCHE_DRAG_ID, SPRINGER_DRAG_ID } from './components/PlanModeBar'
+import { SpringerPopover } from './components/SpringerPopover'
+import { usePlanSpringerAssignments, useCreateSpringerAssignment, useDeleteSpringerAssignment } from './useSpringerAssignments'
 import { PlanSidebar } from './components/PlanSidebar'
 import type { SidebarTab } from './components/PlanSidebar'
 import { DoctorAssignPopover } from './components/DoctorAssignPopover'
@@ -169,6 +171,11 @@ export function PlanPage() {
   } | null>(null)
   const [showWishes, setShowWishes] = useState(true)
   const [showImportDialog, setShowImportDialog] = useState(false)
+  const [springerPopover, setSpringerPopover] = useState<{
+    doctorId: number
+    dayKey: string
+    currentDepartmentId: number
+  } | null>(null)
   const rawMode = searchParams.get('mode')
   const mode: 'besetzung' | 'ina' = rawMode === 'ina' ? 'ina' : 'besetzung'
   function setMode(newMode: 'besetzung' | 'ina') {
@@ -194,6 +201,18 @@ export function PlanPage() {
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<number | null>(null)
 
   const deleteAbsence = useDeleteAbsence(id)
+
+  const { data: springerAssignments = [] } = usePlanSpringerAssignments(isNaN(id) ? null : id)
+  const { mutate: deleteSpringer } = useDeleteSpringerAssignment(isNaN(id) ? 0 : id)
+  const createSpringerAssignment = useCreateSpringerAssignment()
+
+  const springerByKey = useMemo(() => {
+    const map = new Map<string, typeof springerAssignments[0]>()
+    for (const sa of springerAssignments) {
+      map.set(`${sa.doctor_id}-${sa.shift_date}`, sa)
+    }
+    return map
+  }, [springerAssignments])
 
   const ABSENCE_TYPE_LABELS: Record<AbsenceType, string> = {
     URLAUB:       'Urlaub',
@@ -595,6 +614,19 @@ export function PlanPage() {
     setMultiPopoverOpen(false)
   }
 
+  function handleMultiSpringerAssign(departmentId: number) {
+    for (const cell of selectedCells) {
+      createSpringerAssignment.mutate({
+        planId: id,
+        shiftDate: cell.dayKey,
+        doctorId: cell.doctorId,
+        targetDepartmentId: departmentId,
+      })
+    }
+    setSelectedCells([])
+    setMultiPopoverOpen(false)
+  }
+
   function handleCloseMultiPopover() {
     setMultiPopoverOpen(false)
     setSelectedCells([])
@@ -750,6 +782,24 @@ export function PlanPage() {
       }
       dropSucceededRef.current = true
       setLockedWeekDialogOpen(true)
+      return
+    }
+
+    // ── Springer → Cell-Drop ──────────────────────────────────────────────────
+    if (activeId === SPRINGER_DRAG_ID) {
+      const cellMatch = overId.match(/^cell-(\d+)-(\d{4}-\d{2}-\d{2})$/)
+      if (cellMatch) {
+        const rotationId = Number(cellMatch[1])
+        const dayKey = cellMatch[2]
+        const rotation = rotations.find((r) => r.id === rotationId)
+        if (rotation) {
+          setSpringerPopover({
+            doctorId: rotation.doctor_id,
+            dayKey,
+            currentDepartmentId: rotation.department_id,
+          })
+        }
+      }
       return
     }
 
@@ -1074,6 +1124,8 @@ export function PlanPage() {
                 if (!rightOpen) setRightOpen(true)
               }}
               absenceColors={absenceColors}
+              springerByKey={springerByKey}
+              onDoubleClickRemoveSpringer={(assignmentId) => deleteSpringer(assignmentId)}
             />
           )}
         </div>
@@ -1145,21 +1197,49 @@ export function PlanPage() {
         )}
       </div>
 
-      {activeCell && (
-        <DoctorAssignPopover
-          planId={id}
-          doctorId={activeCell.doctorId}
-          day={activeCell.day}
-          currentShift={shifts.find((s) => s.id === activeCell.shiftId) ?? null}
-          openShiftsForDay={shifts.filter(
-            (s) =>
-              s.shift_date === activeCell.day &&
-              (s.doctor_id === null || s.doctor_id === undefined),
-          )}
-          anchorPosition={cellClickPosition ?? undefined}
-          onClose={() => { setActiveCell(null); setCellClickPosition(null) }}
-        />
-      )}
+      {(() => {
+        const activeCellSpringer = activeCell
+          ? (springerByKey.get(`${activeCell.doctorId}-${activeCell.day}`) ?? null)
+          : null
+        const activeCellDeptId = activeCell
+          ? rotations.find((r) => r.id === activeCell.rotationId)?.department_id
+          : undefined
+        return activeCell && (
+          <DoctorAssignPopover
+            planId={id}
+            doctorId={activeCell.doctorId}
+            day={activeCell.day}
+            currentShift={shifts.find((s) => s.id === activeCell.shiftId) ?? null}
+            openShiftsForDay={shifts.filter(
+              (s) =>
+                s.shift_date === activeCell.day &&
+                (s.doctor_id === null || s.doctor_id === undefined),
+            )}
+            anchorPosition={cellClickPosition ?? undefined}
+            onClose={() => { setActiveCell(null); setCellClickPosition(null) }}
+            departments={departments}
+            currentSpringerAssignment={activeCellSpringer}
+            currentDepartmentId={activeCellDeptId}
+            onAssignSpringer={(deptId) => {
+              if (!activeCell) return
+              createSpringerAssignment.mutate(
+                {
+                  planId: id,
+                  shiftDate: activeCell.day,
+                  doctorId: activeCell.doctorId,
+                  targetDepartmentId: deptId,
+                },
+                { onSuccess: () => { setActiveCell(null); setCellClickPosition(null) } },
+              )
+            }}
+            onRemoveSpringer={(assignmentId) => {
+              deleteSpringer(assignmentId, {
+                onSuccess: () => { setActiveCell(null); setCellClickPosition(null) },
+              })
+            }}
+          />
+        )
+      })()}
 
       {activeAbsenceCell && (
         <AbsenceAssignPopover
@@ -1179,6 +1259,8 @@ export function PlanPage() {
           onSelectShiftType={handleMultiAssign}
           onRemoveAll={handleMultiRemove}
           onClose={handleCloseMultiPopover}
+          departments={departments}
+          onAssignSpringer={handleMultiSpringerAssign}
         />
       )}
 
@@ -1201,6 +1283,16 @@ export function PlanPage() {
         ) : null
       })()}
     </div>
+      {springerPopover && (
+        <SpringerPopover
+          planId={id}
+          doctorId={springerPopover.doctorId}
+          dayKey={springerPopover.dayKey}
+          currentDepartmentId={springerPopover.currentDepartmentId}
+          departments={departments}
+          onClose={() => setSpringerPopover(null)}
+        />
+      )}
       <DragOverlay modifiers={[overlayModifier]} dropAnimation={dropSucceededRef.current ? null : undefined}>
         {activeDragDoctor && (
           <DoctorDragOverlayToken

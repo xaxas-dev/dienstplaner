@@ -235,3 +235,16 @@ export interface WishUpdate {
   priority?: number | null
   notes?: string | null
 }
+
+// SpringerAssignment (Springer-Zuweisung) — manuell, OpenAPI-Generator läuft nicht auf Feature-Branches
+export interface SpringerAssignment {
+  id: number
+  plan_id: number
+  shift_date: string        // ISO 8601, z.B. "2026-01-15"
+  doctor_id: number
+  target_department_id: number
+  target_department: Department
+  notes?: string | null
+  created_at: string
+  updated_at: string
+}

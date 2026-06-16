@@ -82,6 +82,7 @@ export function SettingsPage() {
                 aria-label="Solver aktivieren"
               />
             </div>
+
           </div>
 
           <div className="rounded-2xl bg-card border border-line p-5">

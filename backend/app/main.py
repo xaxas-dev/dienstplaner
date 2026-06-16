@@ -18,6 +18,7 @@ from app.api.imports import router as imports_router
 from app.api.wishes import doctor_wishes_router, plan_wishes_router, wishes_router
 from app.api.ina_exclusions import router as ina_exclusions_router
 from app.api.plan_shifts import router as plan_shifts_router
+from app.api.springer_assignments import plan_springer_router, springer_router as springer_assignments_router
 from app.api.plan_versions import router as plan_versions_router
 from app.api.plans import router as plans_router
 from app.api.qualifications import router as qualifications_router
@@ -56,6 +57,8 @@ app.include_router(plans_router, prefix="/api")
 app.include_router(plan_versions_router, prefix="/api")
 app.include_router(plan_shifts_router, prefix="/api")
 app.include_router(shifts_router, prefix="/api")
+app.include_router(plan_springer_router, prefix="/api")
+app.include_router(springer_assignments_router, prefix="/api")
 app.include_router(plan_rotations_router, prefix="/api")
 app.include_router(rotations_router, prefix="/api")
 app.include_router(ina_exclusions_router, prefix="/api")

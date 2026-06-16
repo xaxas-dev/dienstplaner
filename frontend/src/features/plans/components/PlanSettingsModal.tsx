@@ -12,7 +12,7 @@ import {
 } from '../useConstraintOverrides'
 import { usePlan } from '../usePlans'
 import { useUpdatePlan } from '../useUpdatePlan'
-import { useAppSettings, DEFAULT_ABSENCE_COLORS } from '@/stores/useAppSettings'
+import { useAppSettings, DEFAULT_ABSENCE_COLORS, DEFAULT_SPRINGER_COLOR } from '@/stores/useAppSettings'
 import type { AbsenceType, ConstraintOverride } from '@/lib/types'
 
 const REGULATORISCH_HART = [
@@ -74,7 +74,7 @@ export function PlanSettingsModal({ planId, open, onOpenChange }: Props) {
 
   const isPending = createMutation.isPending || deleteMutation.isPending
 
-  const { absenceColors, setAbsenceColor } = useAppSettings()
+  const { absenceColors, setAbsenceColor, springerColor, setSpringerColor } = useAppSettings()
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -142,6 +142,38 @@ export function PlanSettingsModal({ planId, open, onOpenChange }: Props) {
                   </div>
                 )
               })}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[13px] font-medium mb-2">Springer-Farbe</p>
+            <div className="flex items-center justify-between rounded-lg border border-border px-4 py-2.5">
+              <div className="flex items-center gap-2.5">
+                <span
+                  className="w-4 h-4 rounded-full border border-border/60 shrink-0"
+                  style={{ background: springerColor }}
+                />
+                <Label className="text-sm">Hintergrundfarbe im Grid</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={springerColor}
+                  onChange={(e) => setSpringerColor(e.target.value)}
+                  className="w-7 h-7 rounded cursor-pointer border border-border bg-transparent p-0.5"
+                  aria-label="Springer-Farbe"
+                />
+                {springerColor !== DEFAULT_SPRINGER_COLOR && (
+                  <button
+                    type="button"
+                    onClick={() => setSpringerColor(DEFAULT_SPRINGER_COLOR)}
+                    className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                    title="Zurücksetzen"
+                  >
+                    ↺
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

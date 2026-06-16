@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { useAppSettings } from '@/stores/useAppSettings'
 import { useDroppable } from '@dnd-kit/core'
 import { Lock, Star } from 'lucide-react'
 import { toast } from 'sonner'
@@ -50,6 +51,9 @@ interface UnifiedShiftCellProps {
   wishBadge?: string | null
   doctorId?: number
   onWishCreate?: (doctorId: number, date: string) => void
+  springerDeptShortName?: string
+  springerAssignmentId?: number
+  onDoubleClickRemoveSpringer?: (assignmentId: number) => void
 }
 
 export function UnifiedShiftCell({
@@ -91,8 +95,12 @@ export function UnifiedShiftCell({
   wishBadge,
   doctorId,
   onWishCreate,
+  springerDeptShortName,
+  springerAssignmentId,
+  onDoubleClickRemoveSpringer,
 }: UnifiedShiftCellProps) {
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { springerColor } = useAppSettings()
 
   const { setNodeRef, isOver } = useDroppable({
     id: makeCellDropId(rotationId, dayKey),
@@ -105,7 +113,8 @@ export function UnifiedShiftCell({
     const clickPos = { x: e.clientX, y: e.clientY }
     const needsDoubleClickDelay =
       (onDoubleClickRemove && shiftAssigned) ||
-      (onDoubleClickRemoveAbsence && absenceId !== undefined)
+      (onDoubleClickRemoveAbsence && absenceId !== undefined) ||
+      (onDoubleClickRemoveSpringer !== undefined && springerAssignmentId !== undefined)
 
     if (needsDoubleClickDelay) {
       if (clickTimerRef.current) {
@@ -123,17 +132,25 @@ export function UnifiedShiftCell({
       clearTimeout(clickTimerRef.current)
       clickTimerRef.current = null
     }
-    // Absence-Delete hat Vorrang vor Shift-Delete
+    // Absence-Delete hat Vorrang
     if (absenceId !== undefined) {
       onDoubleClickRemoveAbsence?.(absenceId)
       return
     }
-    if (!shiftAssigned) return
-    if (isPinned) {
-      toast.info('Gepinnte Schicht — erst entpinnen')
+    // Shift-Delete hat Vorrang (Zusatzdienst zuerst bei geteilter Zelle)
+    if (shiftAssigned) {
+      if (isPinned) {
+        toast.info('Gepinnte Schicht — erst entpinnen')
+        return
+      }
+      onDoubleClickRemove?.()
       return
     }
-    onDoubleClickRemove?.()
+    // Springer-Delete (nur wenn kein regulärer Shift)
+    if (springerAssignmentId !== undefined) {
+      onDoubleClickRemoveSpringer?.(springerAssignmentId)
+      return
+    }
   }
 
   const bereichColor = getDepartmentColor(department)
@@ -146,6 +163,10 @@ export function UnifiedShiftCell({
   // Absence cells use configured absence type color. Assigned shifts use shift type color.
   // Empty rotation slots use neutral gray. Out-of-rotation stays faint dept color.
   const bg = (() => {
+    // Split-Mode: beide Hälften übernehmen ihr eigenes Bg
+    if (springerDeptShortName && text) return 'transparent'
+    // Nur Springer (kein regulärer Shift)
+    if (springerDeptShortName && !text) return springerColor
     if (absenceId !== undefined) {
       const absColor = absenceType && absenceColors?.[absenceType]
       if (absColor) return inRotation ? absColor + '80' : absColor + '40'
@@ -228,16 +249,38 @@ export function UnifiedShiftCell({
         />
       )}
 
-      {text && (
-        <span
-          className={cn(
-            'relative z-[1]',
-            isWeekend ? 'text-gray-600' : 'text-gray-800',
-            !inRotation && 'opacity-50',
-          )}
-        >
-          {text}
+      {/* Split-Cell: Springer oben, Shift unten */}
+      {springerDeptShortName && text ? (
+        <div className="absolute inset-0 flex flex-col pointer-events-none select-none">
+          <div
+            className="flex-1 flex items-center justify-center text-[10px] font-normal leading-none text-ink"
+            style={{ backgroundColor: springerColor }}
+          >
+            {springerDeptShortName}
+          </div>
+          <div
+            className="flex-1 flex items-center justify-center text-[11px] font-medium leading-none"
+            style={{ background: shiftTypeColorMuted(shiftTypeColor) }}
+          >
+            {text}
+          </div>
+        </div>
+      ) : springerDeptShortName ? (
+        <span className="text-[11px] font-normal leading-none pointer-events-none select-none text-ink">
+          {springerDeptShortName}
         </span>
+      ) : (
+        text && (
+          <span
+            className={cn(
+              'relative z-[1]',
+              isWeekend ? 'text-gray-600' : 'text-gray-800',
+              !inRotation && 'opacity-50',
+            )}
+          >
+            {text}
+          </span>
+        )
       )}
 
       {/* Tarif-Dot (Sand, oben links) */}

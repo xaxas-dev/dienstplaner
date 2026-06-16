@@ -69,6 +69,14 @@ beforeEach(() => {
   }
 })
 
+const defaultSpringerProps = {
+  departments: [],
+  currentSpringerAssignment: null,
+  currentDepartmentId: undefined,
+  onAssignSpringer: vi.fn(),
+  onRemoveSpringer: vi.fn(),
+}
+
 describe('DoctorAssignPopover', () => {
   it('zeigt offene Schichttypen zur Auswahl', () => {
     render(
@@ -78,6 +86,7 @@ describe('DoctorAssignPopover', () => {
           currentShift={null}
           openShiftsForDay={[makeOpenShift(1, 'F'), makeOpenShift(2, 'N')]}
           onClose={vi.fn()}
+          {...defaultSpringerProps}
         />
       </Wrapper>
     )
@@ -94,6 +103,7 @@ describe('DoctorAssignPopover', () => {
           currentShift={null}
           openShiftsForDay={[makeOpenShift(1, 'F')]}
           onClose={vi.fn()}
+          {...defaultSpringerProps}
         />
       </Wrapper>
     )
@@ -113,6 +123,7 @@ describe('DoctorAssignPopover', () => {
           currentShift={occupied}
           openShiftsForDay={[]}
           onClose={vi.fn()}
+          {...defaultSpringerProps}
         />
       </Wrapper>
     )
@@ -129,6 +140,7 @@ describe('DoctorAssignPopover', () => {
           currentShift={occupied}
           openShiftsForDay={[]}
           onClose={vi.fn()}
+          {...defaultSpringerProps}
         />
       </Wrapper>
     )
@@ -148,6 +160,7 @@ describe('DoctorAssignPopover', () => {
           planId={1} doctorId={1} day="2026-05-15"
           currentShift={null} openShiftsForDay={[]}
           onClose={onClose}
+          {...defaultSpringerProps}
         />
       </Wrapper>
     )
@@ -164,6 +177,7 @@ describe('DoctorAssignPopover', () => {
           planId={1} doctorId={1} day="2026-05-15"
           currentShift={null} openShiftsForDay={[]}
           onClose={onClose}
+          {...defaultSpringerProps}
         />
       </Wrapper>
     )
@@ -183,6 +197,7 @@ describe('DoctorAssignPopover', () => {
             currentShift={occupied}
             openShiftsForDay={[]}
             onClose={vi.fn()}
+            {...defaultSpringerProps}
           />
         </Wrapper>
       )
@@ -202,6 +217,7 @@ describe('DoctorAssignPopover', () => {
             currentShift={occupied}
             openShiftsForDay={[]}
             onClose={vi.fn()}
+            {...defaultSpringerProps}
           />
         </Wrapper>
       )
@@ -221,6 +237,7 @@ describe('DoctorAssignPopover', () => {
             currentShift={occupied}
             openShiftsForDay={[]}
             onClose={vi.fn()}
+            {...defaultSpringerProps}
           />
         </Wrapper>
       )
@@ -241,6 +258,7 @@ describe('DoctorAssignPopover', () => {
             currentShift={occupied}
             openShiftsForDay={[]}
             onClose={vi.fn()}
+            {...defaultSpringerProps}
           />
         </Wrapper>
       )
@@ -264,6 +282,7 @@ describe('DoctorAssignPopover', () => {
             currentShift={occupied}
             openShiftsForDay={[]}
             onClose={vi.fn()}
+            {...defaultSpringerProps}
           />
         </Wrapper>
       )
