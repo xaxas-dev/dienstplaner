@@ -39,6 +39,9 @@ const ABSENCE_TYPE_VALUES = [
   'ELTERNZEIT',
   'MUTTERSCHUTZ',
   'SONSTIGES',
+  'EINARBEITUNG',
+  'EINARBEITUNG_INA',
+  'UNBESETZT',
 ] as const
 
 const ABSENCE_TYPE_LABELS: Record<AbsenceType, string> = {
@@ -48,6 +51,9 @@ const ABSENCE_TYPE_LABELS: Record<AbsenceType, string> = {
   ELTERNZEIT: 'Elternzeit',
   MUTTERSCHUTZ: 'Mutterschutz',
   SONSTIGES: 'Sonstiges',
+  EINARBEITUNG: 'Einarbeitung',
+  EINARBEITUNG_INA: 'Einarbeitung INA',
+  UNBESETZT: 'Station unbesetzt',
 }
 
 const schema = z

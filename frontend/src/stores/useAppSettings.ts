@@ -3,12 +3,15 @@ import { persist } from 'zustand/middleware'
 import type { AbsenceType } from '@/lib/types'
 
 export const DEFAULT_ABSENCE_COLORS: Record<AbsenceType, string> = {
-  URLAUB:       '#BBF7D0',
-  KRANKHEIT:    '#FCA5A5',
-  FORTBILDUNG:  '#C4B5FD',
-  ELTERNZEIT:   '#BAE6FD',
-  MUTTERSCHUTZ: '#FBCFE8',
-  SONSTIGES:    '#E5E7EB',
+  URLAUB:           '#BBF7D0',
+  KRANKHEIT:        '#FCA5A5',
+  FORTBILDUNG:      '#C4B5FD',
+  ELTERNZEIT:       '#BAE6FD',
+  MUTTERSCHUTZ:     '#FBCFE8',
+  SONSTIGES:        '#E5E7EB',
+  EINARBEITUNG:     '#FDE68A',
+  EINARBEITUNG_INA: '#FCD34D',
+  UNBESETZT:        '#D1D5DB',
 }
 
 export const DEFAULT_SPRINGER_COLOR = '#d1fae5'

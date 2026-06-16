@@ -7,12 +7,15 @@ import { planAbsenceKeys } from '../usePlanAbsences'
 import type { AbsenceType, Absence } from '@/lib/types'
 
 const ABSENCE_LABELS: Record<AbsenceType, string> = {
-  URLAUB:       'U — Urlaub',
-  KRANKHEIT:    'K — Krankheit',
-  FORTBILDUNG:  'FB — Fortbildung',
-  ELTERNZEIT:   'EZ — Elternzeit',
-  MUTTERSCHUTZ: 'MuSchu — Mutterschutz',
-  SONSTIGES:    'DIV — Sonstiges',
+  URLAUB:           'U — Urlaub',
+  KRANKHEIT:        'K — Krankheit',
+  FORTBILDUNG:      'FB — Fortbildung',
+  ELTERNZEIT:       'EZ — Elternzeit',
+  MUTTERSCHUTZ:     'MuSchu — Mutterschutz',
+  SONSTIGES:        'DIV — Sonstiges',
+  EINARBEITUNG:     'EA — Einarbeitung',
+  EINARBEITUNG_INA: 'INA-EA — Einarbeitung INA',
+  UNBESETZT:        'Station unbesetzt',
 }
 
 interface AbsenceAssignPopoverProps {

@@ -34,6 +34,7 @@ export interface CodeEntry {
   shift_type_short_name: string | null
   department_id: number | null
   department_short_name: string | null
+  default_note: string | null
 }
 
 export interface ImportMonth {

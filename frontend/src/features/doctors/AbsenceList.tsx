@@ -25,6 +25,9 @@ const ABSENCE_TYPE_LABELS: Record<AbsenceType, string> = {
   ELTERNZEIT: 'Elternzeit',
   MUTTERSCHUTZ: 'Mutterschutz',
   SONSTIGES: 'Sonstiges',
+  EINARBEITUNG: 'Einarbeitung',
+  EINARBEITUNG_INA: 'Einarbeitung INA',
+  UNBESETZT: 'Station unbesetzt',
 }
 
 const ABSENCE_TYPE_VARIANTS: Record<AbsenceType, 'default' | 'secondary' | 'outline'> = {
@@ -34,6 +37,9 @@ const ABSENCE_TYPE_VARIANTS: Record<AbsenceType, 'default' | 'secondary' | 'outl
   ELTERNZEIT: 'secondary',
   MUTTERSCHUTZ: 'secondary',
   SONSTIGES: 'outline',
+  EINARBEITUNG: 'outline',
+  EINARBEITUNG_INA: 'outline',
+  UNBESETZT: 'secondary',
 }
 
 interface AbsenceListProps {

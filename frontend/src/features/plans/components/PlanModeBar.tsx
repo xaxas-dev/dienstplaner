@@ -30,7 +30,10 @@ export const ABSENCE_DRAG_ID_PREFIX = 'absence-'
 
 const VALID_ABSENCE_TYPES: AbsenceType[] = [
   'URLAUB', 'KRANKHEIT', 'FORTBILDUNG', 'ELTERNZEIT', 'MUTTERSCHUTZ', 'SONSTIGES',
+  'EINARBEITUNG', 'EINARBEITUNG_INA', 'UNBESETZT',
 ]
+
+const BESETZUNG_ONLY_ABSENCE_TYPES = new Set<AbsenceType>(['EINARBEITUNG', 'EINARBEITUNG_INA', 'UNBESETZT'])
 
 export function makeAbsenceDragId(type: AbsenceType): string {
   return `${ABSENCE_DRAG_ID_PREFIX}${type}`
@@ -43,12 +46,15 @@ export function parseAbsenceDragId(id: string): AbsenceType | null {
 }
 
 const ABSENCE_CHIP_META: Record<AbsenceType, { short: string; full: string }> = {
-  URLAUB:       { short: 'U',      full: 'Urlaub' },
-  KRANKHEIT:    { short: 'K',      full: 'Krankheit' },
-  FORTBILDUNG:  { short: 'FB',     full: 'Fortbildung' },
-  ELTERNZEIT:   { short: 'EZ',     full: 'Elternzeit' },
-  MUTTERSCHUTZ: { short: 'MuSchu', full: 'Mutterschutz' },
-  SONSTIGES:    { short: 'DIV',    full: 'Sonstiges' },
+  URLAUB:           { short: 'U',       full: 'Urlaub' },
+  KRANKHEIT:        { short: 'K',       full: 'Krankheit' },
+  FORTBILDUNG:      { short: 'FB',      full: 'Fortbildung' },
+  ELTERNZEIT:       { short: 'EZ',      full: 'Elternzeit' },
+  MUTTERSCHUTZ:     { short: 'MuSchu',  full: 'Mutterschutz' },
+  SONSTIGES:        { short: 'DIV',     full: 'Sonstiges' },
+  EINARBEITUNG:     { short: 'EA',      full: 'Einarbeitung' },
+  EINARBEITUNG_INA: { short: 'INA-EA',  full: 'Einarbeitung INA' },
+  UNBESETZT:        { short: '╳',       full: 'Station unbesetzt' },
 }
 
 // ─── Segments ─────────────────────────────────────────────────────────────────
@@ -148,7 +154,9 @@ export function PlanModeBar({
         <span className="text-line-2 mx-0.5">|</span>
         <span className="text-[10px] text-ink-3 uppercase tracking-[0.07em]">Abwesenheiten</span>
 
-        {VALID_ABSENCE_TYPES.map((type) => (
+        {VALID_ABSENCE_TYPES.filter(
+          (type) => mode === 'besetzung' || !BESETZUNG_ONLY_ABSENCE_TYPES.has(type)
+        ).map((type) => (
           <AbsenceDraggableChip key={type} absenceType={type} color={absenceColors?.[type]} />
         ))}
 

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { ConflictCard } from './ConflictCard'
 import { REGULATORISCH_HART_IDS } from '@/lib/types'
 import type { components } from '@/lib/api-types'
-import type { TarifWarning, ConstraintOverride, Doctor, ShiftType, Wish, Department, RotationAssignmentWithDetails } from '@/lib/types'
+import type { TarifWarning, ConstraintOverride, Doctor, ShiftType, Wish, Department, RotationAssignmentWithDetails, Absence, AbsenceType } from '@/lib/types'
 import { getDepartmentColor } from '@/lib/bereichColors'
 import type { FairnessStat } from '../fairnessUtils'
 
@@ -49,6 +49,7 @@ export interface PlanSidebarProps {
   onTabChange: (tab: SidebarTab) => void
   // Details
   shift?: ShiftWithDetails | null
+  absence?: Absence | null
   onCloseShift?: () => void
   tarifWarnings?: TarifWarning[]
   shiftOverrides?: ConstraintOverride[]
@@ -82,6 +83,18 @@ export interface PlanSidebarProps {
 
 const DAY_ABBR = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 
+const ABSENCE_TYPE_LABELS: Record<AbsenceType, string> = {
+  URLAUB: 'Urlaub',
+  KRANKHEIT: 'Krankheit',
+  FORTBILDUNG: 'Fortbildung',
+  ELTERNZEIT: 'Elternzeit',
+  MUTTERSCHUTZ: 'Mutterschutz',
+  SONSTIGES: 'Sonstiges (DIV)',
+  EINARBEITUNG: 'Einarbeitung',
+  EINARBEITUNG_INA: 'Einarbeitung INA',
+  UNBESETZT: 'Station unbesetzt',
+}
+
 function wishLabel(w: Wish, shiftTypes: ShiftType[]): string {
   if (w.wish_type === 'AVOID_DAY') return 'kein Dienst'
   const st = w.shift_type_id ? shiftTypes.find((s) => s.id === w.shift_type_id) : null
@@ -114,7 +127,7 @@ function ampelClasses(count: number, avg: number): { text: string; bar: string }
 export function PlanSidebar({
   shifts, planFrom, planTo, openCount, conflictCount, onConflictBadgeClick,
   mode, activeTab, onTabChange,
-  shift, onCloseShift, tarifWarnings, shiftOverrides = [], onCreateOverride, onDeleteOverride,
+  shift, absence, onCloseShift, tarifWarnings, shiftOverrides = [], onCreateOverride, onDeleteOverride,
   selectedDoctorId, doctors = [], shiftTypes = [], wishes = [], planMonth,
   showWishes, onToggleWishes,
   fairnessStats, fairnessGroups,
@@ -374,6 +387,18 @@ export function PlanSidebar({
                       : ''}
                   </p>
                 </div>
+              </div>
+            )}
+
+            {/* Abwesenheits-Karte */}
+            {absence && (
+              <div className="rounded-lg border border-line bg-paper p-3 space-y-1.5">
+                <p className="text-[10px] text-ink-3 uppercase tracking-[0.08em] font-medium">Abwesenheit</p>
+                <p className="text-[14px] font-medium text-ink">{ABSENCE_TYPE_LABELS[absence.absence_type as AbsenceType] ?? absence.absence_type}</p>
+                <p className="text-[12px] text-ink-2">{absence.valid_from} – {absence.valid_to}</p>
+                {absence.notes && (
+                  <p className="text-[12px] text-ink-3 italic">{absence.notes}</p>
+                )}
               </div>
             )}
 

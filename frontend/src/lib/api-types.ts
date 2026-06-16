@@ -737,7 +737,7 @@ export interface components {
          * AbsenceType
          * @enum {string}
          */
-        AbsenceType: "URLAUB" | "KRANKHEIT" | "FORTBILDUNG" | "ELTERNZEIT" | "MUTTERSCHUTZ" | "SONSTIGES";
+        AbsenceType: "URLAUB" | "KRANKHEIT" | "FORTBILDUNG" | "ELTERNZEIT" | "MUTTERSCHUTZ" | "SONSTIGES" | "EINARBEITUNG" | "EINARBEITUNG_INA" | "UNBESETZT";
         /** AbsenceUpdate */
         AbsenceUpdate: {
             absence_type?: components["schemas"]["AbsenceType"] | null;

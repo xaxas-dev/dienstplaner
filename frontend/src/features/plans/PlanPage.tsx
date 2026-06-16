@@ -123,6 +123,7 @@ export function PlanPage() {
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null)
   const [cellClickPosition, setCellClickPosition] = useState<{ x: number; y: number } | null>(null)
   const [contextShift, setContextShift] = useState<ShiftWithDetails | null>(null)
+  const [contextAbsence, setContextAbsence] = useState<import('@/lib/types').Absence | null>(null)
   const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null)
   const [activeRotationCell, setActiveRotationCell] = useState<{
     departmentId: number
@@ -215,12 +216,15 @@ export function PlanPage() {
   }, [springerAssignments])
 
   const ABSENCE_TYPE_LABELS: Record<AbsenceType, string> = {
-    URLAUB:       'Urlaub',
-    KRANKHEIT:    'Krankheit',
-    FORTBILDUNG:  'Fortbildung',
-    ELTERNZEIT:   'Elternzeit',
-    MUTTERSCHUTZ: 'Mutterschutz',
-    SONSTIGES:    'Sonstiges',
+    URLAUB:           'Urlaub',
+    KRANKHEIT:        'Krankheit',
+    FORTBILDUNG:      'Fortbildung',
+    ELTERNZEIT:       'Elternzeit',
+    MUTTERSCHUTZ:     'Mutterschutz',
+    SONSTIGES:        'Sonstiges',
+    EINARBEITUNG:     'Einarbeitung',
+    EINARBEITUNG_INA: 'Einarbeitung INA',
+    UNBESETZT:        'Station unbesetzt',
   }
 
   const { data: plan } = usePlan(id)
@@ -546,6 +550,7 @@ export function PlanPage() {
     shiftId: number | null,
     shiftKey: boolean,
     clickPos: { x: number; y: number },
+    absenceId: number | null = null,
   ) {
     if (shiftKey) {
       // Shift+Klick: Zelle zur Mehrfach-Auswahl hinzufügen / entfernen
@@ -564,6 +569,7 @@ export function PlanPage() {
     }
 
     setContextShift(null)
+    setContextAbsence(absenceId != null ? (absences.find((a) => a.id === absenceId) ?? null) : null)
     setSelectedDepartmentId(null)
     setActiveCell({ rotationId, doctorId, day, shiftId })
     setCellClickPosition(clickPos)
@@ -1154,6 +1160,7 @@ export function PlanPage() {
                 activeTab={sidebarTab}
                 onTabChange={setSidebarTab}
                 shift={contextShift ?? undefined}
+                absence={contextAbsence ?? undefined}
                 onCloseShift={contextShift ? () => setContextShift(null) : undefined}
                 tarifWarnings={contextShift ? tarifWarningsByShift[contextShift.id] : undefined}
                 shiftOverrides={

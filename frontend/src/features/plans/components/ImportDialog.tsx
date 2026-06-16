@@ -209,8 +209,14 @@ interface CodeRowProps {
 
 const ABSENCE_OPTIONS: { value: string; label: string }[] = [
   { value: 'URLAUB', label: 'Als Abwesenheit: URLAUB' },
-  { value: 'ELTERNZEIT', label: 'Als Abwesenheit: ELTERNZEIT' },
   { value: 'KRANKHEIT', label: 'Als Abwesenheit: KRANKHEIT' },
+  { value: 'FORTBILDUNG', label: 'Als Abwesenheit: FORTBILDUNG' },
+  { value: 'ELTERNZEIT', label: 'Als Abwesenheit: ELTERNZEIT' },
+  { value: 'MUTTERSCHUTZ', label: 'Als Abwesenheit: MUTTERSCHUTZ' },
+  { value: 'EINARBEITUNG', label: 'Als Abwesenheit: EA (Einarbeitung)' },
+  { value: 'EINARBEITUNG_INA', label: 'Als Abwesenheit: INA-EA (Einarbeitung INA)' },
+  { value: 'UNBESETZT', label: 'Station unbesetzt' },
+  { value: 'SONSTIGES', label: 'Als Abwesenheit: DIV (Sonstiges)' },
 ]
 
 function CodeRow({ item, resolution, shiftTypes, onChange }: CodeRowProps) {
@@ -305,6 +311,12 @@ function CodeRow({ item, resolution, shiftTypes, onChange }: CodeRowProps) {
             }
             className="flex-1 h-7 px-2 text-xs rounded border border-line bg-card text-ink"
           />
+        </div>
+      )}
+
+      {item.default_note && (
+        <div className="pl-[4.75rem] text-[10px] text-ink-3">
+          Notiz: <span className="font-mono">{item.default_note}</span>
         </div>
       )}
     </div>

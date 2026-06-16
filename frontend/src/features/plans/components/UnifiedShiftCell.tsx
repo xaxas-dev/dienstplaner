@@ -283,6 +283,17 @@ export function UnifiedShiftCell({
         )
       )}
 
+      {/* UNBESETZT — diagonales Kreuz über die gesamte Zelle */}
+      {absenceType === 'UNBESETZT' && (
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none z-[1]"
+          preserveAspectRatio="none"
+        >
+          <line x1="0" y1="0" x2="100%" y2="100%" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.35" />
+          <line x1="100%" y1="0" x2="0" y2="100%" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.35" />
+        </svg>
+      )}
+
       {/* Tarif-Dot (Sand, oben links) */}
       {hasTarifWarning && !isLocked && (
         <button

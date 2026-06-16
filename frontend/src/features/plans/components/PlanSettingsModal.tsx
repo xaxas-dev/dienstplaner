@@ -29,10 +29,14 @@ const ABSENCE_TYPE_LABELS: Record<AbsenceType, string> = {
   ELTERNZEIT: 'Elternzeit',
   MUTTERSCHUTZ: 'Mutterschutz',
   SONSTIGES: 'Sonstiges',
+  EINARBEITUNG: 'Einarbeitung',
+  EINARBEITUNG_INA: 'Einarbeitung INA',
+  UNBESETZT: 'Station unbesetzt',
 }
 
 const ABSENCE_TYPES: AbsenceType[] = [
   'URLAUB', 'KRANKHEIT', 'FORTBILDUNG', 'ELTERNZEIT', 'MUTTERSCHUTZ', 'SONSTIGES',
+  'EINARBEITUNG', 'EINARBEITUNG_INA', 'UNBESETZT',
 ]
 
 interface Props {
