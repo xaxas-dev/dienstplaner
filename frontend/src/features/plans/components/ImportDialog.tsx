@@ -234,6 +234,11 @@ function CodeRow({ item, resolution, shiftTypes, onChange }: CodeRowProps) {
       if (!isNaN(id)) onChange({ action: 'shift', shift_type_id: id })
       return
     }
+    if (val.startsWith('springer:')) {
+      const id = parseInt(val.slice('springer:'.length), 10)
+      if (!isNaN(id)) onChange({ action: 'springer', department_id: id })
+      return
+    }
   }
 
   const currentValue = (() => {
@@ -241,6 +246,7 @@ function CodeRow({ item, resolution, shiftTypes, onChange }: CodeRowProps) {
     if (resolution.action === 'absence') return `absence:${resolution.absence_type}`
     if (resolution.action === 'shift') return `shift:${resolution.shift_type_id}`
     if (resolution.action === 'create_shift') return '__create_shift__'
+    if (resolution.action === 'springer') return `springer:${resolution.department_id}`
     return '__ignore__'
   })()
 
@@ -259,6 +265,11 @@ function CodeRow({ item, resolution, shiftTypes, onChange }: CodeRowProps) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="__ignore__">Ignorieren</SelectItem>
+            {item.department_id != null && (
+              <SelectItem value={`springer:${item.department_id}`}>
+                Als Springer: {item.department_short_name ?? item.raw}
+              </SelectItem>
+            )}
             {ABSENCE_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={`absence:${opt.value}`}>
                 {opt.label}
@@ -373,6 +384,8 @@ export function ImportDialog({ open, onOpenChange, planId }: ImportDialogProps) 
         codes[c.raw] = { action: 'absence', absence_type: c.absence_type }
       } else if (c.default_action === 'shift' && c.shift_type_id != null) {
         codes[c.raw] = { action: 'shift', shift_type_id: c.shift_type_id }
+      } else if (c.default_action === 'springer' && c.department_id != null) {
+        codes[c.raw] = { action: 'springer', department_id: c.department_id }
       } else {
         codes[c.raw] = { action: 'ignore' }
       }

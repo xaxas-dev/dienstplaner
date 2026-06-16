@@ -26,6 +26,8 @@ from app.repositories import absence_repository as absence_repo
 from app.repositories import department_repository as dept_repo
 from app.repositories import doctor_repository as doctor_repo
 from app.repositories import employment_period_repository as ep_repo
+from app.repositories import springer_repository as springer_repo
+from app.schemas.springer_assignment import SpringerAssignmentCreate
 
 def _upsert_employment_period(
     db: Session,
@@ -188,6 +190,8 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
     absence_days: dict[tuple[int, str], list[date]] = defaultdict(list)
     shift_entries: list[dict] = []
     shift_seen: set[tuple[int, date]] = set()  # (shift_type_id, shift_date) für UNIQUE
+    springer_entries: list[tuple[int, int, date]] = []  # (doctor_id, dept_id, shift_date)
+    springer_seen: set[tuple[int, date]] = set()  # (doctor_id, shift_date) — UNIQUE per Constraint
 
     for row in parsed.rows:
         doctor_id = doctor_id_map.get(row.raw_name)
@@ -223,6 +227,15 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
                         "doctor_id": doctor_id,
                     }
                 )
+            elif res_code.action == "springer":
+                key_sa = (doctor_id, shift_date)
+                if key_sa in springer_seen:
+                    warnings.append(
+                        f"Springer-Kollision: Arzt {doctor_id} am {shift_date} — übersprungen"
+                    )
+                    continue
+                springer_seen.add(key_sa)
+                springer_entries.append((doctor_id, res_code.department_id, shift_date))
 
     # 9. Abwesenheits-Ranges anlegen (konsekutive Tage → ein Datensatz)
     created_absences = 0
@@ -257,6 +270,20 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
         db.flush()
         created_shifts = len(shift_entries)
 
+    # 11. Springer-Zuweisungen anlegen (upsert — überschreibt bestehende)
+    created_springer = 0
+    for doctor_id, dept_id, shift_date in springer_entries:
+        springer_repo.upsert(
+            db,
+            plan.id,
+            SpringerAssignmentCreate(
+                shift_date=shift_date,
+                doctor_id=doctor_id,
+                target_department_id=dept_id,
+            ),
+        )
+        created_springer += 1
+
     db.commit()
 
     return ImportResult(
@@ -268,5 +295,6 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
         created_rotations=created_rotations,
         created_absences=created_absences,
         created_shifts=created_shifts,
+        created_springer_assignments=created_springer,
         warnings=warnings,
     )

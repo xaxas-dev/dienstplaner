@@ -25,6 +25,7 @@ class EntityDefaultAction(enum.StrEnum):
 class CodeDefaultAction(enum.StrEnum):
     ABSENCE = "absence"
     SHIFT = "shift"
+    SPRINGER = "springer"
     IGNORE = "ignore"
     UNMATCHED = "unmatched"
 
@@ -59,6 +60,8 @@ class CodeEntry(BaseModel):
     absence_type: str | None
     shift_type_id: int | None
     shift_type_short_name: str | None
+    department_id: int | None = None
+    department_short_name: str | None = None
 
 
 class ImportMonth(BaseModel):
@@ -157,12 +160,21 @@ class CodeResolutionCreateShift(BaseModel):
     name: str
 
 
+class CodeResolutionSpringer(BaseModel):
+    action: Literal["springer"]
+    department_id: int
+
+
 class CodeResolutionIgnore(BaseModel):
     action: Literal["ignore"]
 
 
 CodeResolution = Annotated[
-    CodeResolutionAbsence | CodeResolutionShift | CodeResolutionCreateShift | CodeResolutionIgnore,
+    CodeResolutionAbsence
+    | CodeResolutionShift
+    | CodeResolutionCreateShift
+    | CodeResolutionSpringer
+    | CodeResolutionIgnore,
     Field(discriminator="action"),
 ]
 
@@ -184,4 +196,5 @@ class ImportResult(BaseModel):
     created_rotations: int
     created_absences: int = 0
     created_shifts: int = 0
+    created_springer_assignments: int = 0
     warnings: list[str]

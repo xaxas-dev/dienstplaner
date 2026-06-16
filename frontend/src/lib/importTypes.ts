@@ -1,5 +1,5 @@
 export type MatchStatus = 'exact' | 'fuzzy' | 'new' | 'unmatched'
-export type CodeDefaultAction = 'absence' | 'shift' | 'ignore' | 'unmatched'
+export type CodeDefaultAction = 'absence' | 'shift' | 'springer' | 'ignore' | 'unmatched'
 export type EntityDefaultAction = 'map' | 'create' | 'skip'
 
 export interface MatchCandidate {
@@ -32,6 +32,8 @@ export interface CodeEntry {
   absence_type: string | null
   shift_type_id: number | null
   shift_type_short_name: string | null
+  department_id: number | null
+  department_short_name: string | null
 }
 
 export interface ImportMonth {
@@ -60,6 +62,7 @@ export type CodeResolution =
   | { action: 'absence'; absence_type: string }
   | { action: 'shift'; shift_type_id: number }
   | { action: 'create_shift'; short_name: string; name: string }
+  | { action: 'springer'; department_id: number }
   | { action: 'ignore' }
 
 export interface CommitResolutions {
@@ -69,4 +72,17 @@ export interface CommitResolutions {
   department_resolutions: Record<string, EntityResolution>
   doctor_resolutions: Record<string, EntityResolution & { percentage?: number }>
   code_resolutions: Record<string, CodeResolution>
+}
+
+export interface ImportResult {
+  plan_id: number
+  plan_name: string
+  created_departments: number
+  created_doctors: number
+  created_employment_periods: number
+  created_rotations: number
+  created_absences: number
+  created_shifts: number
+  created_springer_assignments: number
+  warnings: string[]
 }

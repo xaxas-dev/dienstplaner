@@ -99,6 +99,18 @@ def analyze_import(db: Session, parsed: ParsedSheet) -> ImportAnalysis:
     shift_types = db.query(ShiftType).filter(ShiftType.active.is_(True)).all()
     st_by_short = {st.short_name: st for st in shift_types}
 
+    # Kürzel → Bereichs-ID für Springer-Erkennung (case-insensitiv).
+    dept_short_name_to_id: dict[str, int] = {
+        d.short_name.strip().lower(): d.id
+        for d in departments
+        if d.short_name
+    }
+    dept_short_name_display: dict[str, str] = {
+        d.short_name.strip().lower(): d.short_name
+        for d in departments
+        if d.short_name
+    }
+
     dept_names: list[tuple[int, str]] = []
     for d in departments:
         dept_names.append((d.id, d.name))
@@ -169,15 +181,30 @@ def analyze_import(db: Session, parsed: ParsedSheet) -> ImportAnalysis:
     for raw in distinct_codes:
         mapping = DEFAULT_CODE_MAP.get(raw)
         if mapping is None:
-            code_entries.append(
-                CodeEntry(
-                    raw=raw,
-                    default_action=CodeDefaultAction.UNMATCHED,
-                    absence_type=None,
-                    shift_type_id=None,
-                    shift_type_short_name=None,
+            # Prüfen ob Code exakt einem Bereichs-Kürzel entspricht → Springer.
+            dept_id = dept_short_name_to_id.get(raw.strip().lower())
+            if dept_id is not None:
+                code_entries.append(
+                    CodeEntry(
+                        raw=raw,
+                        default_action=CodeDefaultAction.SPRINGER,
+                        absence_type=None,
+                        shift_type_id=None,
+                        shift_type_short_name=None,
+                        department_id=dept_id,
+                        department_short_name=dept_short_name_display.get(raw.strip().lower()),
+                    )
                 )
-            )
+            else:
+                code_entries.append(
+                    CodeEntry(
+                        raw=raw,
+                        default_action=CodeDefaultAction.UNMATCHED,
+                        absence_type=None,
+                        shift_type_id=None,
+                        shift_type_short_name=None,
+                    )
+                )
             continue
 
         action = mapping["action"]

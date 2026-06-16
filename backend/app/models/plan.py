@@ -49,3 +49,6 @@ class Plan(Base):
     rotation_assignments: Mapped[list["RotationAssignment"]] = relationship(  # noqa: F821
         "RotationAssignment", back_populates="plan", cascade="all, delete-orphan"
     )
+    springer_assignments: Mapped[list["SpringerAssignment"]] = relationship(  # noqa: F821
+        "SpringerAssignment", cascade="all, delete-orphan"
+    )
