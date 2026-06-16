@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { useAppSettings } from '@/stores/useAppSettings'
 import { useDroppable } from '@dnd-kit/core'
 import { Lock, Star } from 'lucide-react'
 import { toast } from 'sonner'
@@ -99,6 +100,7 @@ export function UnifiedShiftCell({
   onDoubleClickRemoveSpringer,
 }: UnifiedShiftCellProps) {
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { springerColor } = useAppSettings()
 
   const { setNodeRef, isOver } = useDroppable({
     id: makeCellDropId(rotationId, dayKey),
@@ -162,7 +164,7 @@ export function UnifiedShiftCell({
     // Split-Mode: beide Hälften übernehmen ihr eigenes Bg
     if (springerDeptShortName && text) return 'transparent'
     // Nur Springer (kein regulärer Shift)
-    if (springerDeptShortName && !text) return '#d1fae5'  // emerald-100
+    if (springerDeptShortName && !text) return springerColor
     if (absenceId !== undefined) {
       const absColor = absenceType && absenceColors?.[absenceType]
       if (absColor) return inRotation ? absColor + '80' : absColor + '40'
@@ -248,7 +250,10 @@ export function UnifiedShiftCell({
       {/* Split-Cell: Springer oben, Shift unten */}
       {springerDeptShortName && text ? (
         <div className="absolute inset-0 flex flex-col pointer-events-none select-none">
-          <div className="flex-1 flex items-center justify-center bg-emerald-100 text-emerald-800 text-[10px] font-bold leading-none">
+          <div
+            className="flex-1 flex items-center justify-center text-[10px] font-bold leading-none text-ink"
+            style={{ backgroundColor: springerColor }}
+          >
             {springerDeptShortName}
           </div>
           <div
@@ -259,7 +264,7 @@ export function UnifiedShiftCell({
           </div>
         </div>
       ) : springerDeptShortName ? (
-        <span className="text-[11px] font-bold leading-none pointer-events-none select-none text-emerald-800">
+        <span className="text-[11px] font-bold leading-none pointer-events-none select-none text-ink">
           {springerDeptShortName}
         </span>
       ) : (
