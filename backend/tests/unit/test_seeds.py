@@ -145,7 +145,7 @@ def test_doctor_seed_is_idempotent_and_does_not_update_existing_seed_doctors(db)
 
     _seed_departments_for_doctor_seed(db)
     apply_seed(db)
-    first_doctor = db.query(Doctor).order_by(Doctor.name).first()
+    first_doctor = db.query(Doctor).order_by(Doctor.last_name, Doctor.first_name).first()
     first_doctor.short_name = "MANUAL"
     db.commit()
 

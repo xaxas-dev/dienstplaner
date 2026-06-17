@@ -24,7 +24,7 @@ def _make_plan(db: Session, name: str = "Testplan") -> Plan:
 
 
 def _make_doctor(db: Session, name: str = "Override-Testarzt") -> Doctor:
-    doc = Doctor(name=name)
+    doc = Doctor(last_name=name)
     db.add(doc)
     db.commit()
     db.refresh(doc)

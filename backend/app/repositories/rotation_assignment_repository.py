@@ -14,7 +14,7 @@ def list_rotations_for_plan(db: Session, plan_id: int) -> list[RotationAssignmen
             selectinload(RotationAssignment.doctor),
             selectinload(RotationAssignment.department),
         )
-        .order_by(asc(Doctor.name), asc(RotationAssignment.valid_from))
+        .order_by(asc(Doctor.last_name), asc(Doctor.first_name), asc(RotationAssignment.valid_from))
         .all()
     )
 

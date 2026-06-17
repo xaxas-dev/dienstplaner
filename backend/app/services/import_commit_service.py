@@ -119,7 +119,12 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
                 _upsert_employment_period(db, res.id, plan_start, res.percentage, _ep_counter)
         elif res.action == "create":
             parsed_name = raw_to_parsed_name.get(raw, _parse_name(raw))
-            doctor = doctor_repo.create_doctor(db, {"name": parsed_name})
+            parts = parsed_name.rsplit(" ", 1)
+            if len(parts) == 2:
+                fn, ln = parts[0], parts[1]
+            else:
+                fn, ln = "", parts[0]
+            doctor = doctor_repo.create_doctor(db, {"first_name": fn, "last_name": ln})
             created_doctors += 1
             if res.percentage is not None and plan_start is not None:
                 _upsert_employment_period(db, doctor.id, plan_start, res.percentage, _ep_counter)

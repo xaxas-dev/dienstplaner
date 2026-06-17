@@ -23,7 +23,7 @@ from app.services.exceptions import PlanNotFoundError
 # ---------------------------------------------------------------------------
 
 def _doctor(db: Session, name: str = "Max Muster") -> Doctor:
-    doc = Doctor(name=name, doctor_type=DoctorType.INTERNAL)
+    doc = Doctor(last_name=name, doctor_type=DoctorType.INTERNAL)
     db.add(doc)
     db.flush()
     return doc

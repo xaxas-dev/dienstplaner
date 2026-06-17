@@ -18,7 +18,7 @@ from app.models import (
 
 
 def test_doctor_create_and_query(db: Session) -> None:
-    doctor = Doctor(name="Max Mustermann", short_name="MM", doctor_type=DoctorType.INTERNAL)
+    doctor = Doctor(last_name="Max Mustermann", short_name="MM", doctor_type=DoctorType.INTERNAL)
     db.add(doctor)
     db.flush()
 
@@ -34,7 +34,7 @@ def test_doctor_create_and_query(db: Session) -> None:
 
 
 def test_employment_period_with_doctor(db: Session) -> None:
-    doctor = Doctor(name="Dr. Teilzeit")
+    doctor = Doctor(last_name="Dr. Teilzeit")
     db.add(doctor)
     db.flush()
 
@@ -70,7 +70,7 @@ def test_department_external_flag(db: Session) -> None:
 
 
 def test_qualification_many_to_many(db: Session) -> None:
-    doctor = Doctor(name="Dr. Qualifiziert")
+    doctor = Doctor(last_name="Dr. Qualifiziert")
     q1 = Qualification(name="EEG-Befundung Test")
     q2 = Qualification(name="Neurophysiologie Test")
     db.add_all([doctor, q1, q2])
@@ -108,7 +108,7 @@ def test_shift_type_unique_short_name(db: Session) -> None:
 
 
 def test_rule_override_global_vs_doctor(db: Session) -> None:
-    doctor = Doctor(name="Dr. Override")
+    doctor = Doctor(last_name="Dr. Override")
     db.add(doctor)
     db.flush()
 

@@ -63,7 +63,7 @@ def plan(db: Session) -> "Plan":
 
 @pytest.fixture
 def doctor_alice(db: Session) -> "Doctor":
-    d = Doctor(name="Dr. Alice", active=True)
+    d = Doctor(last_name="Dr. Alice", active=True)
     db.add(d)
     db.flush()
     return d
@@ -71,7 +71,7 @@ def doctor_alice(db: Session) -> "Doctor":
 
 @pytest.fixture
 def doctor_bob(db: Session) -> "Doctor":
-    d = Doctor(name="Dr. Bob", active=True)
+    d = Doctor(last_name="Dr. Bob", active=True)
     db.add(d)
     db.flush()
     return d

@@ -9,7 +9,7 @@ def _create_qual(client: TestClient, **kwargs) -> dict:
 
 
 def _create_doctor(client: TestClient, name: str = "Dr. Test") -> dict:
-    r = client.post("/api/doctors", json={"name": name})
+    r = client.post("/api/doctors", json={"last_name": name})
     assert r.status_code == 201, r.text
     return r.json()
 

@@ -5,7 +5,7 @@ from app.models import Doctor
 
 
 def _make_doctor(db: Session, name: str = "Abwesenheits-Testarzt") -> Doctor:
-    doc = Doctor(name=name)
+    doc = Doctor(last_name=name)
     db.add(doc)
     db.commit()
     db.refresh(doc)

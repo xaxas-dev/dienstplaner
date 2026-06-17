@@ -38,7 +38,7 @@ def _make_doctor(db: Session, *, name: str, short_name: str) -> Doctor:
     from app.models.doctor import DoctorType
 
     doc = Doctor(
-        name=name,
+        last_name=name,
         short_name=short_name,
         doctor_type=DoctorType.INTERNAL,
         active=True,

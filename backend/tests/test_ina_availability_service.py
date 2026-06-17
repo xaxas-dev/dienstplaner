@@ -19,7 +19,7 @@ SATURDAY = date(2026, 5, 9)
 
 
 def _make_doctor(db: Session, name: str = "Dr. Test") -> Doctor:
-    doc = Doctor(name=name)
+    doc = Doctor(last_name=name)
     db.add(doc)
     db.flush()
     return doc

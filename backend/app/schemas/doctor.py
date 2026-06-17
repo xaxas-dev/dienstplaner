@@ -10,7 +10,9 @@ from app.schemas.qualification import QualificationResponse
 
 
 class DoctorBase(BaseModel):
-    name: str = Field(max_length=200)
+    first_name: str = Field(default="", max_length=100)
+    last_name: str = Field(max_length=100)
+    salutation: str | None = None
     title: str | None = Field(default=None, max_length=50)
     short_name: str | None = Field(default=None, max_length=50)
     doctor_type: DoctorType = DoctorType.INTERNAL
@@ -26,7 +28,9 @@ class DoctorCreate(DoctorBase): ...
 
 
 class DoctorUpdate(BaseModel):
-    name: str | None = Field(default=None, max_length=200)
+    first_name: str | None = Field(default=None, max_length=100)
+    last_name: str | None = Field(default=None, max_length=100)
+    salutation: str | None = None
     title: str | None = Field(default=None, max_length=50)
     short_name: str | None = Field(default=None, max_length=50)
     doctor_type: DoctorType | None = None
@@ -44,6 +48,11 @@ class DoctorResponse(DoctorBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+    @computed_field
+    @property
+    def name(self) -> str:
+        return f"{self.first_name} {self.last_name}".strip()
 
     @computed_field
     @property

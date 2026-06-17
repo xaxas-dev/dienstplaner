@@ -6,7 +6,7 @@ from app.models.wish import Wish, WishType
 
 def _make_doctor(db):
     from app.models.doctor import Doctor, DoctorType
-    d = Doctor(name="Test Arzt", short_name="TA", doctor_type=DoctorType.INTERNAL, active=True)
+    d = Doctor(last_name="Test Arzt", short_name="TA", doctor_type=DoctorType.INTERNAL, active=True)
     db.add(d)
     db.commit()
     db.refresh(d)

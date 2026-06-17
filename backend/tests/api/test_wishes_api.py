@@ -3,7 +3,7 @@ import pytest
 
 def _make_doctor(client):
     resp = client.post("/api/doctors", json={
-        "name": "Dr. Test", "short_name": "DT",
+        "last_name": "Dr. Test", "short_name": "DT",
         "doctor_type": "INTERNAL", "active": True,
         "employment_periods": [{"valid_from": "2026-01-01", "fte_percentage": 100}],
     })

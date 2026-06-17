@@ -26,7 +26,7 @@ SATURDAY = date(2026, 5, 9)
 
 
 def _make_doctor(db: Session, name: str = "INA-Testarzt") -> Doctor:
-    doc = Doctor(name=name)
+    doc = Doctor(last_name=name)
     db.add(doc)
     db.commit()
     db.refresh(doc)

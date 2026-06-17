@@ -89,7 +89,7 @@ def test_periods_overlap_both_unbounded() -> None:
 def test_validate_overlap_no_conflict(db: Session) -> None:
     from app.models.doctor import Doctor
 
-    doctor = Doctor(name="Dr. Overlap Test 1")
+    doctor = Doctor(last_name="Overlap Test 1")
     db.add(doctor)
     db.flush()
 
@@ -108,7 +108,7 @@ def test_validate_overlap_no_conflict(db: Session) -> None:
 def test_validate_overlap_conflict_raises(db: Session) -> None:
     from app.models.doctor import Doctor
 
-    doctor = Doctor(name="Dr. Overlap Test 2")
+    doctor = Doctor(last_name="Overlap Test 2")
     db.add(doctor)
     db.flush()
 
@@ -128,7 +128,7 @@ def test_validate_overlap_conflict_raises(db: Session) -> None:
 def test_validate_overlap_exclude_self(db: Session) -> None:
     from app.models.doctor import Doctor
 
-    doctor = Doctor(name="Dr. Overlap Test 3")
+    doctor = Doctor(last_name="Overlap Test 3")
     db.add(doctor)
     db.flush()
 

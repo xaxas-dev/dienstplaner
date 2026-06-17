@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 
 
 def _create_doctor(client: TestClient, **kwargs) -> dict:
-    payload = {"name": "Test Arzt", **kwargs}
+    payload = {"last_name": "Test Arzt", **kwargs}
     r = client.post("/api/doctors", json=payload)
     assert r.status_code == 201, r.text
     return r.json()
@@ -35,10 +35,12 @@ def test_list_doctors_empty(client: TestClient) -> None:
 
 
 def test_create_doctor_minimal(client: TestClient) -> None:
-    r = client.post("/api/doctors", json={"name": "Dr. Minimal"})
+    r = client.post("/api/doctors", json={"last_name": "Minimal"})
     assert r.status_code == 201
     data = r.json()
-    assert data["name"] == "Dr. Minimal"
+    assert data["last_name"] == "Minimal"
+    assert data["first_name"] == ""
+    assert data["name"] == "Minimal"          # computed field
     assert data["active"] is True
     assert data["rank"] is None
     assert data["doctor_type"] == "INTERNAL"
@@ -46,7 +48,9 @@ def test_create_doctor_minimal(client: TestClient) -> None:
 
 def test_create_doctor_full(client: TestClient) -> None:
     payload = {
-        "name": "Dr. Vollständig",
+        "first_name": "Anna",
+        "last_name": "Vollständig",
+        "salutation": "Frau",
         "title": "Dr.",
         "short_name": "VV",
         "doctor_type": "INTERNAL",
@@ -57,16 +61,19 @@ def test_create_doctor_full(client: TestClient) -> None:
     r = client.post("/api/doctors", json=payload)
     assert r.status_code == 201
     data = r.json()
+    assert data["first_name"] == "Anna"
+    assert data["last_name"] == "Vollständig"
+    assert data["salutation"] == "Frau"
+    assert data["name"] == "Anna Vollständig"  # computed field
     assert data["title"] == "Dr."
     assert data["short_name"] == "VV"
-    assert data["weiterbildungsjahr"] is None  # kein entry_date → null
-    assert data["notes"] == "Test-Notiz"
+    assert data["weiterbildungsjahr"] is None
 
 
 def test_create_doctor_facharzt(client: TestClient) -> None:
     r = client.post(
         "/api/doctors",
-        json={"name": "Dr. Facharzt", "rank": "FACHARZT"},
+        json={"last_name": "Facharzt", "rank": "FACHARZT"},
     )
     assert r.status_code == 201
     assert r.json()["rank"] == "FACHARZT"
@@ -74,7 +81,7 @@ def test_create_doctor_facharzt(client: TestClient) -> None:
 
 
 def test_get_doctor_with_relations(client: TestClient) -> None:
-    doctor = _create_doctor(client, name="Dr. Relations")
+    doctor = _create_doctor(client, last_name="Relations")
     did = doctor["id"]
 
     q1 = _create_qualification(client, "EEG-Befundung")
@@ -108,7 +115,7 @@ def test_get_doctor_404(client: TestClient) -> None:
 
 
 def test_update_doctor_partial(client: TestClient) -> None:
-    doctor = _create_doctor(client, name="Dr. Update", short_name="DU")
+    doctor = _create_doctor(client, last_name="Update", short_name="DU")
     did = doctor["id"]
 
     r = client.patch(f"/api/doctors/{did}", json={"notes": "Neue Notiz", "title": "PD"})
@@ -120,7 +127,7 @@ def test_update_doctor_partial(client: TestClient) -> None:
 
 
 def test_update_doctor_allows_clearing_title(client: TestClient) -> None:
-    doctor = _create_doctor(client, name="Anna Titel", title="Prof.")
+    doctor = _create_doctor(client, last_name="Titel", title="Prof.")
     did = doctor["id"]
 
     r = client.patch(f"/api/doctors/{did}", json={"title": None})
@@ -128,8 +135,16 @@ def test_update_doctor_allows_clearing_title(client: TestClient) -> None:
     assert r.json()["title"] is None
 
 
+def test_create_doctor_salutation(client: TestClient) -> None:
+    r = client.post("/api/doctors", json={"first_name": "Max", "last_name": "Berger", "salutation": "Herr"})
+    assert r.status_code == 201
+    data = r.json()
+    assert data["salutation"] == "Herr"
+    assert data["name"] == "Max Berger"
+
+
 def test_delete_doctor_cascades(client: TestClient) -> None:
-    doctor = _create_doctor(client, name="Dr. Lösch")
+    doctor = _create_doctor(client, last_name="Lösch")
     did = doctor["id"]
 
     client.post(
@@ -147,7 +162,7 @@ def test_delete_doctor_cascades(client: TestClient) -> None:
 
 
 def test_create_employment_period_overlap(client: TestClient) -> None:
-    doctor = _create_doctor(client, name="Dr. Overlap")
+    doctor = _create_doctor(client, last_name="Overlap")
     did = doctor["id"]
 
     r1 = client.post(
@@ -165,7 +180,7 @@ def test_create_employment_period_overlap(client: TestClient) -> None:
 
 
 def test_create_employment_period_unbefristet(client: TestClient) -> None:
-    doctor = _create_doctor(client, name="Dr. Unbefristet")
+    doctor = _create_doctor(client, last_name="Unbefristet")
     did = doctor["id"]
 
     r = client.post(
@@ -177,7 +192,7 @@ def test_create_employment_period_unbefristet(client: TestClient) -> None:
 
 
 def test_add_and_remove_qualification(client: TestClient) -> None:
-    doctor = _create_doctor(client, name="Dr. Quali")
+    doctor = _create_doctor(client, last_name="Quali")
     did = doctor["id"]
     q = _create_qualification(client, "Botox")
 
@@ -196,7 +211,7 @@ def test_add_and_remove_qualification(client: TestClient) -> None:
 
 
 def test_add_qualification_duplicate(client: TestClient) -> None:
-    doctor = _create_doctor(client, name="Dr. Duplikat")
+    doctor = _create_doctor(client, last_name="Duplikat")
     did = doctor["id"]
     q = _create_qualification(client, "EEG Duplikat")
 
@@ -206,31 +221,31 @@ def test_add_qualification_duplicate(client: TestClient) -> None:
 
 
 def test_include_inactive_filter(client: TestClient) -> None:
-    _create_doctor(client, name="Dr. Aktiv", active=True)
-    _create_doctor(client, name="Dr. Inaktiv", active=False)
+    _create_doctor(client, last_name="Aktiv", active=True)
+    _create_doctor(client, last_name="Inaktiv", active=False)
 
     r = client.get("/api/doctors")
-    names = [d["name"] for d in r.json()]
-    assert "Dr. Aktiv" in names
-    assert "Dr. Inaktiv" not in names
+    last_names = [d["last_name"] for d in r.json()]
+    assert "Aktiv" in last_names
+    assert "Inaktiv" not in last_names
 
     r = client.get("/api/doctors?include_inactive=true")
-    names = [d["name"] for d in r.json()]
-    assert "Dr. Aktiv" in names
-    assert "Dr. Inaktiv" in names
+    last_names = [d["last_name"] for d in r.json()]
+    assert "Aktiv" in last_names
+    assert "Inaktiv" in last_names
 
 
 def test_doctor_weiterbildungsjahr_computed_facharzt(client: TestClient) -> None:
     r = client.post(
         "/api/doctors",
-        json={"name": "Dr. Facharzt WBJ", "rank": "FACHARZT", "entry_date": "2020-01-01"},
+        json={"last_name": "Facharzt WBJ", "rank": "FACHARZT", "entry_date": "2020-01-01"},
     )
     assert r.status_code == 201
     assert r.json()["weiterbildungsjahr"] is None
 
 
 def test_doctor_weiterbildungsjahr_computed_no_entry_date(client: TestClient) -> None:
-    r = client.post("/api/doctors", json={"name": "Dr. Kein Eintr."})
+    r = client.post("/api/doctors", json={"last_name": "Kein Eintr."})
     assert r.status_code == 201
     assert r.json()["weiterbildungsjahr"] is None
 
@@ -238,18 +253,18 @@ def test_doctor_weiterbildungsjahr_computed_no_entry_date(client: TestClient) ->
 def test_doctor_weiterbildungsjahr_computed_normal(client: TestClient) -> None:
     r = client.post(
         "/api/doctors",
-        json={"name": "Dr. WBJ3", "entry_date": "2024-05-01"},
+        json={"last_name": "WBJ3", "entry_date": "2024-05-01"},
     )
     assert r.status_code == 201
     wbj = r.json()["weiterbildungsjahr"]
-    # entry_date=2024-05-01, heute=2026-05-07 → ~2 Jahre → WBJ=3
+    # entry_date=2024-05-01, heute=2026-06-17 → ~2 Jahre → WBJ=3
     assert wbj == 3
 
 
 def test_doctor_weiterbildungsjahr_computed_future(client: TestClient) -> None:
     r = client.post(
         "/api/doctors",
-        json={"name": "Dr. Zukünftig", "entry_date": "2099-01-01"},
+        json={"last_name": "Zukünftig", "entry_date": "2099-01-01"},
     )
     assert r.status_code == 201
     assert r.json()["weiterbildungsjahr"] is None
@@ -257,7 +272,7 @@ def test_doctor_weiterbildungsjahr_computed_future(client: TestClient) -> None:
 
 def test_doctor_with_entry_dates(client: TestClient) -> None:
     payload = {
-        "name": "Dr. Eintrittsdaten",
+        "last_name": "Eintrittsdaten",
         "entry_date": "2020-03-01",
         "virtual_entry_date": "2019-09-01",
     }

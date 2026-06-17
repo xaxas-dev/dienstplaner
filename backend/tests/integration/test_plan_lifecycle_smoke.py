@@ -11,7 +11,7 @@ def test_plan_lifecycle_smoke(client: TestClient) -> None:
     # 1. Doctor anlegen
     r = client.post(
         "/api/doctors",
-        json={"name": "Smoke Doctor", "short_name": "SD"},
+        json={"last_name": "Smoke Doctor", "short_name": "SD"},
     )
     assert r.status_code == 201, r.text
     doctor_id = r.json()["id"]

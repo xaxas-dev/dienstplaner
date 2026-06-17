@@ -9,7 +9,7 @@ from app.services.exceptions import AbsenceNotFoundError, AbsenceValidationError
 
 
 def _make_doctor(db: Session, name: str = "Testarzt") -> Doctor:
-    doc = Doctor(name=name)
+    doc = Doctor(last_name=name)
     db.add(doc)
     db.commit()
     db.refresh(doc)

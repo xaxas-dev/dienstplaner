@@ -31,7 +31,7 @@ def _make_plan(db: Session) -> Plan:
 
 
 def _make_doctor(db: Session, name: str = "Dr. Test") -> Doctor:
-    d = Doctor(name=name)
+    d = Doctor(last_name=name)
     db.add(d)
     db.flush()
     return d

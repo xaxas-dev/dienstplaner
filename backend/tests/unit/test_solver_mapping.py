@@ -71,7 +71,7 @@ def plan(db: Session) -> "Plan":
 
 @pytest.fixture
 def doctor_alice(db: Session) -> "Doctor":
-    d = Doctor(name="Dr. Alice", active=True)
+    d = Doctor(last_name="Dr. Alice", active=True)
     db.add(d)
     db.flush()
     return d
@@ -79,7 +79,7 @@ def doctor_alice(db: Session) -> "Doctor":
 
 @pytest.fixture
 def doctor_bob(db: Session) -> "Doctor":
-    d = Doctor(name="Dr. Bob", active=True)
+    d = Doctor(last_name="Dr. Bob", active=True)
     db.add(d)
     db.flush()
     return d
@@ -225,7 +225,7 @@ def test_to_solver_inaktiver_arzt_nicht_im_wertebereich(
     db: Session, plan: "Plan"
 ) -> None:
     """Inaktive Ärzte erscheinen nicht im Werte-Bereich."""
-    inactive = Doctor(name="Dr. Inaktiv", active=False)
+    inactive = Doctor(last_name="Dr. Inaktiv", active=False)
     db.add(inactive)
     db.flush()
 

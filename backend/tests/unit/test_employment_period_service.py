@@ -18,7 +18,7 @@ from app.services.employment_period_service import get_fte_for_period
 
 @pytest.fixture
 def doctor(db: Session) -> Doctor:
-    d = Doctor(name="Dr. Test", active=True)
+    d = Doctor(last_name="Dr. Test", active=True)
     db.add(d)
     db.flush()
     return d

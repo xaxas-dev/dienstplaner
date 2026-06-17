@@ -177,7 +177,7 @@ def test_doctor_level_override_suppresses_warning(
     from app.services.constraint_override_service import OverrideSnapshot
 
     plan = _make_plan(db)
-    doctor = Doctor(name="Dr. Override-Test")
+    doctor = Doctor(last_name="Dr. Override-Test")
     db.add(doctor)
     db.flush()
 

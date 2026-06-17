@@ -113,7 +113,7 @@ def test_doctor_name_parsing(db: Session) -> None:
 
 
 def test_doctor_exact_match_uses_parsed_name(db: Session) -> None:
-    doctor = Doctor(name="Berger Johann")
+    doctor = Doctor(last_name="Berger Johann")
     db.add(doctor)
     db.commit()
 

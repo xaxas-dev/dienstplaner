@@ -193,7 +193,7 @@ def apply_seed(session) -> tuple[int, int, int]:
         name = _name_for_index(index)
         seed_doctors.append(
             {
-                "name": name,
+                "last_name": name,
                 "title": "Dr.",
                 "short_name": _short_name_for_name(name, used_short_names),
                 "doctor_type": (
@@ -213,7 +213,7 @@ def apply_seed(session) -> tuple[int, int, int]:
     doctors_by_name: dict[str, Doctor] = {}
 
     for index, doctor_data in enumerate(seed_doctors):
-        if doctor_data["name"] in existing_names:
+        if doctor_data["last_name"] in existing_names:
             skipped += 1
             continue
 
@@ -229,8 +229,8 @@ def apply_seed(session) -> tuple[int, int, int]:
 
     ina_indices = [index for index in range(target_total) if index != inactive_index][:2]
     ina_targets = [
-        (seed_doctors[ina_indices[0]]["name"], INAExclusionReason.EINARBEITUNG),
-        (seed_doctors[ina_indices[1]]["name"], INAExclusionReason.SONSTIGES),
+        (seed_doctors[ina_indices[0]]["last_name"], INAExclusionReason.EINARBEITUNG),
+        (seed_doctors[ina_indices[1]]["last_name"], INAExclusionReason.SONSTIGES),
     ]
     for name, reason in ina_targets:
         doctor = doctors_by_name.get(name)

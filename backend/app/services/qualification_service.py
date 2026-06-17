@@ -57,7 +57,7 @@ def delete_qualification_with_check(db: Session, qualification_id: int) -> None:
         from app.models.doctor import Doctor
 
         ids = [row[0] for row in doctor_names]
-        doctors = db.query(Doctor).filter(Doctor.id.in_(ids)).order_by(Doctor.name).all()
+        doctors = db.query(Doctor).filter(Doctor.id.in_(ids)).order_by(Doctor.last_name, Doctor.first_name).all()
         names = [d.name for d in doctors]
         raise QualificationInUseError(names)
 

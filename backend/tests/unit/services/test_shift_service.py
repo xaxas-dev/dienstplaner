@@ -62,7 +62,7 @@ def shift(db: Session, plan: Plan, shift_type: ShiftType) -> Shift:
 
 @pytest.fixture
 def active_doctor(db: Session) -> Doctor:
-    d = Doctor(name="Dr. Aktiv", active=True)
+    d = Doctor(last_name="Dr. Aktiv", active=True)
     db.add(d)
     db.flush()
     return d
@@ -70,7 +70,7 @@ def active_doctor(db: Session) -> Doctor:
 
 @pytest.fixture
 def inactive_doctor(db: Session) -> Doctor:
-    d = Doctor(name="Dr. Inaktiv", active=False)
+    d = Doctor(last_name="Dr. Inaktiv", active=False)
     db.add(d)
     db.flush()
     return d

@@ -28,7 +28,7 @@ def plan(db: Session) -> Plan:
 @pytest.fixture
 def doctor(db: Session) -> Doctor:
     d = Doctor(
-        name="Test Arzt",
+        last_name="Test Arzt",
         short_name="TA",
         doctor_type=DoctorType.INTERNAL,
         active=True,
@@ -118,13 +118,13 @@ def test_upsert_two_doctors_same_day(
     db: Session, plan: Plan, dept_a: Department, dept_b: Department
 ) -> None:
     doctor2 = Doctor(
-        name="Arzt B", short_name="AB", doctor_type=DoctorType.INTERNAL, active=True,
+        last_name="Arzt B", short_name="AB", doctor_type=DoctorType.INTERNAL, active=True,
         created_at=datetime.now(), updated_at=datetime.now(),
     )
     db.add(doctor2)
     db.flush()
     doctor3 = Doctor(
-        name="Arzt C", short_name="AC", doctor_type=DoctorType.INTERNAL, active=True,
+        last_name="Arzt C", short_name="AC", doctor_type=DoctorType.INTERNAL, active=True,
         created_at=datetime.now(), updated_at=datetime.now(),
     )
     db.add(doctor3)
@@ -176,7 +176,7 @@ def _make_plan(db: Session, name: str = "ApiTestPlan") -> Plan:
 
 def _make_doctor(client: TestClient) -> dict:
     r = client.post("/api/doctors", json={
-        "name": "API Arzt", "short_name": "AA", "active": True
+        "last_name": "API Arzt", "short_name": "AA", "active": True
     })
     assert r.status_code in (200, 201)
     return r.json()

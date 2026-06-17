@@ -294,7 +294,7 @@ def test_create_locked_week_returns_201(client, db):
     from app.models.shift_type import ShiftType
 
     plan = Plan(name="Test", valid_from=dt(2026, 6, 1), valid_to=dt(2026, 6, 30), status=PlanStatus.DRAFT)
-    doctor = Doctor(name="Test Arzt", short_name="TA", active=True)
+    doctor = Doctor(last_name="Test Arzt", short_name="TA", active=True)
     stype = ShiftType(name="Nacht", short_name="N", display_order=1, applies_on_weekend=True)
     db.add_all([plan, doctor, stype])
     db.commit()
@@ -325,7 +325,7 @@ def test_create_locked_week_422_on_non_sunday(client, db):
     from app.models.shift_type import ShiftType
 
     plan = Plan(name="Test2", valid_from=dt(2026, 6, 1), valid_to=dt(2026, 6, 30), status=PlanStatus.DRAFT)
-    doctor = Doctor(name="Test Arzt2", short_name="TA2", active=True)
+    doctor = Doctor(last_name="Test Arzt2", short_name="TA2", active=True)
     stype = ShiftType(name="Nacht2", short_name="N2", display_order=2, applies_on_weekend=True)
     db.add_all([plan, doctor, stype])
     db.commit()

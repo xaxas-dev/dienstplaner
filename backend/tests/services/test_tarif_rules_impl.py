@@ -32,7 +32,7 @@ def _make_plan(db: Session) -> Plan:
 def _make_doctor(
     db: Session, name: str = "Dr. Test", opt_out_bd_level: int | None = None
 ) -> Doctor:
-    d = Doctor(name=name, opt_out_bd_level=opt_out_bd_level)
+    d = Doctor(last_name=name, opt_out_bd_level=opt_out_bd_level)
     db.add(d)
     db.flush()
     return d

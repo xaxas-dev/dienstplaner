@@ -29,7 +29,14 @@ class Doctor(Base):
         DateTime, nullable=False, default=datetime.now, onupdate=datetime.now
     )
 
-    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    first_name: Mapped[str] = mapped_column(String(100), nullable=False, default="")
+    last_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    salutation: Mapped[str | None] = mapped_column(String(10), nullable=True)
+
+    @property
+    def name(self) -> str:
+        return f"{self.first_name} {self.last_name}".strip()
+
     title: Mapped[str | None] = mapped_column(String(50), nullable=True)
     short_name: Mapped[str | None] = mapped_column(String(50), nullable=True)
     doctor_type: Mapped[DoctorType] = mapped_column(

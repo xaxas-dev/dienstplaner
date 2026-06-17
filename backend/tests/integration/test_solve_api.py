@@ -47,7 +47,7 @@ def _seed_shift_types(client: TestClient) -> dict[str, int]:
 
 
 def _create_doctor(client: TestClient, name: str) -> dict:
-    r = client.post("/api/doctors", json={"name": name})
+    r = client.post("/api/doctors", json={"last_name": name})
     assert r.status_code == 201, r.text
     return r.json()
 

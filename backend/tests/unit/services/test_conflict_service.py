@@ -26,7 +26,7 @@ SHIFT_DATE = date(2026, 5, 4)  # Montag
 
 
 def _make_doctor(db: Session, name: str = "Dr. Test") -> Doctor:
-    doc = Doctor(name=name, active=True)
+    doc = Doctor(last_name=name, active=True)
     db.add(doc)
     db.flush()
     return doc

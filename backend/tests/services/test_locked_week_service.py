@@ -40,7 +40,7 @@ def plan(db: Session) -> Plan:
 @pytest.fixture
 def doctor(db: Session) -> Doctor:
     d = Doctor(
-        name="Anna Müller",
+        last_name="Anna Müller",
         short_name="AMü",
         active=True,
     )

@@ -26,7 +26,7 @@ from app.schemas.wish import WishCreate
 
 
 def _make_doctor(db: Session, name: str = "Dr. Test") -> Doctor:
-    doctor = Doctor(name=name)
+    doctor = Doctor(last_name=name)
     db.add(doctor)
     db.flush()
     return doctor

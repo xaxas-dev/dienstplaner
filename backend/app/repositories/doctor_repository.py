@@ -15,7 +15,7 @@ def list_doctors(db: Session, *, include_inactive: bool = False) -> list[Doctor]
     query = _with_relations(db.query(Doctor))
     if not include_inactive:
         query = query.filter(Doctor.active.is_(True))
-    return query.order_by(asc(Doctor.name)).all()
+    return query.order_by(asc(Doctor.last_name), asc(Doctor.first_name)).all()
 
 
 def get_doctor(db: Session, doctor_id: int) -> Doctor | None:
