@@ -40,6 +40,16 @@ export const useAppSettings = create<AppSettings>()(
       springerColor: DEFAULT_SPRINGER_COLOR,
       setSpringerColor: (springerColor) => set({ springerColor }),
     }),
-    { name: 'dp-app-settings' }
+    {
+      name: 'dp-app-settings',
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as Partial<AppSettings>),
+        absenceColors: {
+          ...DEFAULT_ABSENCE_COLORS,
+          ...((persisted as Partial<AppSettings>)?.absenceColors ?? {}),
+        },
+      }),
+    }
   )
 )

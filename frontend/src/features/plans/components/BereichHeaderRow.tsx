@@ -48,19 +48,19 @@ export function BereichHeaderRow({ department, rotationCount, onDepartmentClick,
 
   return (
     <div className="contents">
-      {/* Label-Cell: sticky, Drop-Target, group für Hover-Button */}
       <div
         ref={setNodeRef}
         className="group sticky left-0 z-10 flex items-center gap-2 px-3 py-1.5 border-b border-line"
         onClick={() => onDepartmentClick?.(department.id)}
         style={{
+          gridColumn: '1 / -1',
           borderLeft: `4px solid ${color}`,
           backgroundColor: bg,
           cursor: onDepartmentClick ? 'pointer' : undefined,
         }}
       >
-        <span className="text-xs font-semibold text-ink truncate leading-none flex-1">
-          {department.short_name ?? department.name}
+        <span className="text-xs font-semibold text-ink leading-none flex-1">
+          {department.name}{department.short_name ? ` (${department.short_name})` : ''}
         </span>
         {typeof rotationCount === 'number' && department.max_headcount != null && (
           <span className="text-[10px] text-ink-3 shrink-0 tabular-nums leading-none">
@@ -79,11 +79,6 @@ export function BereichHeaderRow({ department, rotationCount, onDepartmentClick,
           </button>
         )}
       </div>
-      {/* Spanning cell: füllt alle Tag-Spalten ohne interne Trennlinien */}
-      <div
-        className="border-b border-line"
-        style={{ gridColumn: '2 / -1', backgroundColor: bg }}
-      />
     </div>
   )
 }
