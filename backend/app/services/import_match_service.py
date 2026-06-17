@@ -33,6 +33,8 @@ DEFAULT_CODE_MAP: dict[str, dict] = {
     "EZ":     {"action": CodeDefaultAction.ABSENCE, "absence_type": AbsenceType.ELTERNZEIT},
     "EA":     {"action": CodeDefaultAction.ABSENCE, "absence_type": AbsenceType.EINARBEITUNG},
     "INA-EA": {"action": CodeDefaultAction.ABSENCE, "absence_type": AbsenceType.EINARBEITUNG_INA},
+    "x":      {"action": CodeDefaultAction.ABSENCE, "absence_type": AbsenceType.UNBESETZT},
+    "X":      {"action": CodeDefaultAction.ABSENCE, "absence_type": AbsenceType.UNBESETZT},
     "N*":     {"action": CodeDefaultAction.SHIFT,   "shift_short_name": "N"},
 }
 

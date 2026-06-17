@@ -85,9 +85,13 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
         if res.action == "map":
             dept_id_map[raw] = res.id
         elif res.action == "create":
-            dept = dept_repo.create_department(db, {"name": raw})
-            dept_id_map[raw] = dept.id
-            created_depts += 1
+            existing_dept = dept_repo.get_department_by_name(db, raw)
+            if existing_dept is not None:
+                dept_id_map[raw] = existing_dept.id
+            else:
+                dept = dept_repo.create_department(db, {"name": raw})
+                dept_id_map[raw] = dept.id
+                created_depts += 1
         # skip: vom Import ausgeschlossen
 
     # 4. Ärzte + Beschäftigungszeiträume auflösen

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from app.services.import_parse_service import ParseError
 from app.services.exceptions import (
     AbsenceNotFoundError,
     AbsenceValidationError,
@@ -34,6 +35,10 @@ from app.services.exceptions import (
 
 
 def register_error_handlers(app: FastAPI) -> None:
+    @app.exception_handler(ParseError)
+    async def parse_error(_: Request, exc: ParseError) -> JSONResponse:
+        return JSONResponse(status_code=422, content={"detail": str(exc)})
+
     @app.exception_handler(DoctorNotFoundError)
     async def doctor_not_found(_: Request, exc: DoctorNotFoundError) -> JSONResponse:
         return JSONResponse(status_code=404, content={"detail": str(exc)})

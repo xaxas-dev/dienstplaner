@@ -214,7 +214,7 @@ const ABSENCE_OPTIONS: { value: string; label: string }[] = [
   { value: 'ELTERNZEIT', label: 'Als Abwesenheit: ELTERNZEIT' },
   { value: 'MUTTERSCHUTZ', label: 'Als Abwesenheit: MUTTERSCHUTZ' },
   { value: 'EINARBEITUNG', label: 'Als Abwesenheit: EA (Einarbeitung)' },
-  { value: 'EINARBEITUNG_INA', label: 'Als Abwesenheit: INA-EA (Einarbeitung INA)' },
+  { value: 'EINARBEITUNG_INA', label: 'Als Abwesenheit: INA-EA' },
   { value: 'UNBESETZT', label: 'Station unbesetzt' },
   { value: 'SONSTIGES', label: 'Als Abwesenheit: DIV (Sonstiges)' },
 ]
@@ -314,7 +314,7 @@ function CodeRow({ item, resolution, shiftTypes, onChange }: CodeRowProps) {
         </div>
       )}
 
-      {item.default_note && (
+      {item.default_note && resolution.action === 'absence' && resolution.absence_type === 'SONSTIGES' && (
         <div className="pl-[4.75rem] text-[10px] text-ink-3">
           Notiz: <span className="font-mono">{item.default_note}</span>
         </div>
