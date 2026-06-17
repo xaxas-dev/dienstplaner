@@ -152,10 +152,7 @@ export function PlanModeBar({
         )}
 
         {mode === 'besetzung' && (
-          <>
-            <span className="text-line-2 mx-0.5">|</span>
-            <SpringerDraggableChip />
-          </>
+          <SpringerDraggableChip />
         )}
 
         <span className="text-line-2 mx-0.5">|</span>
