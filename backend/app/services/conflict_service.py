@@ -1,9 +1,8 @@
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import date
 
 from sqlalchemy.orm import Session
 
-from app.models.shift_type import ShiftType as ShiftTypeModel
 from app.repositories import plan_repository, shift_repository
 from app.schemas.conflict import ConflictType, OpenShift, PlanConflicts, ShiftConflict
 from app.services.exceptions import PlanNotFoundError
@@ -24,46 +23,16 @@ def detect_conflicts(db: Session, plan_id: int) -> PlanConflicts:
 
     occupied = [s for s in shifts if s.doctor_id is not None]
 
-    # Offene Dienste: Shift-Typen die im Plan bereits verwendet werden (mind. eine
-    # Arzt-Zuweisung), aber an anwendbaren Tagen im Plan-Zeitraum keine Abdeckung haben.
-    open_shifts: list[OpenShift] = []
-    used_st_ids = {s.shift_type_id for s in occupied}
-
-    if used_st_ids:
-        shift_types_in_plan = (
-            db.query(ShiftTypeModel)
-            .filter(ShiftTypeModel.id.in_(used_st_ids), ShiftTypeModel.active.is_(True))
-            .all()
+    # Offene Dienste: Shifts in der DB ohne Arzt-Zuweisung.
+    open_shifts: list[OpenShift] = [
+        OpenShift(
+            shift_id=s.id,
+            shift_date=s.shift_date,
+            shift_type_short_name=s.shift_type.short_name if s.shift_type else "",
         )
-        covered = {(s.shift_type_id, s.shift_date) for s in occupied}
-        null_shift_by_key: dict[tuple[int, date], object] = {
-            (s.shift_type_id, s.shift_date): s
-            for s in shifts
-            if s.doctor_id is None
-        }
-
-        delta = (plan.valid_to - plan.valid_from).days + 1
-        plan_dates = [plan.valid_from + timedelta(days=i) for i in range(delta)]
-
-        for st in shift_types_in_plan:
-            for d in plan_dates:
-                is_we = d.weekday() >= 5
-                applies = (is_we and st.applies_on_weekend) or (
-                    not is_we and st.applies_on_weekdays
-                )
-                if not applies:
-                    continue
-                key = (st.id, d)
-                if key in covered:
-                    continue
-                existing = null_shift_by_key.get(key)
-                open_shifts.append(
-                    OpenShift(
-                        shift_id=existing.id if existing else None,  # type: ignore[union-attr]
-                        shift_date=d,
-                        shift_type_short_name=st.short_name,
-                    )
-                )
+        for s in shifts
+        if s.doctor_id is None
+    ]
 
     conflicts: list[ShiftConflict] = []
 
