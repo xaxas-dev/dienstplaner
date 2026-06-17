@@ -145,6 +145,9 @@ export function PlanModeBar({
           <>
             <span className="text-line-2 mx-0.5">|</span>
             <NachtwocheDraggableChip nachtShiftType={nachtShiftType} onClick={onNachtwocheClick} />
+            {VALID_ABSENCE_TYPES.filter((type) => BESETZUNG_ONLY_ABSENCE_TYPES.has(type)).map((type) => (
+              <AbsenceDraggableChip key={type} absenceType={type} color={absenceColors?.[type]} />
+            ))}
           </>
         )}
 
@@ -154,9 +157,7 @@ export function PlanModeBar({
         <span className="text-line-2 mx-0.5">|</span>
         <span className="text-[10px] text-ink-3 uppercase tracking-[0.07em]">Abwesenheiten</span>
 
-        {VALID_ABSENCE_TYPES.filter(
-          (type) => mode === 'besetzung' || !BESETZUNG_ONLY_ABSENCE_TYPES.has(type)
-        ).map((type) => (
+        {VALID_ABSENCE_TYPES.filter((type) => !BESETZUNG_ONLY_ABSENCE_TYPES.has(type)).map((type) => (
           <AbsenceDraggableChip key={type} absenceType={type} color={absenceColors?.[type]} />
         ))}
 
