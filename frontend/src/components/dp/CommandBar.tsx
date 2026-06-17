@@ -20,7 +20,7 @@ interface FilterChip {
 }
 
 interface CommandBarProps {
-  title: string
+  title?: string
   titleAccent?: string
   titleNode?: React.ReactNode
   breadcrumb?: BreadcrumbItem[]

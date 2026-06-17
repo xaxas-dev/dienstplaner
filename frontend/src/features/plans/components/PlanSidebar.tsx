@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { ConflictCard } from './ConflictCard'
 import { REGULATORISCH_HART_IDS } from '@/lib/types'
 import type { components } from '@/lib/api-types'
-import type { TarifWarning, ConstraintOverride, Doctor, ShiftType, Wish, Department, RotationAssignmentWithDetails, Absence, AbsenceType } from '@/lib/types'
+import type { TarifWarning, ConstraintOverride, Doctor, ShiftType, Wish, Department, RotationAssignmentWithDetails, Absence, AbsenceType, SpringerAssignment } from '@/lib/types'
 import { getDepartmentColor } from '@/lib/bereichColors'
 import type { FairnessStat } from '../fairnessUtils'
 
@@ -50,6 +50,7 @@ export interface PlanSidebarProps {
   // Details
   shift?: ShiftWithDetails | null
   absence?: Absence | null
+  springer?: SpringerAssignment | null
   onCloseShift?: () => void
   tarifWarnings?: TarifWarning[]
   shiftOverrides?: ConstraintOverride[]
@@ -127,7 +128,7 @@ function ampelClasses(count: number, avg: number): { text: string; bar: string }
 export function PlanSidebar({
   shifts, planFrom, planTo, openCount, conflictCount, onConflictBadgeClick,
   mode, activeTab, onTabChange,
-  shift, absence, onCloseShift, tarifWarnings, shiftOverrides = [], onCreateOverride, onDeleteOverride,
+  shift, absence, springer, onCloseShift, tarifWarnings, shiftOverrides = [], onCreateOverride, onDeleteOverride,
   selectedDoctorId, doctors = [], shiftTypes = [], wishes = [], planMonth,
   showWishes, onToggleWishes,
   fairnessStats, fairnessGroups,
@@ -398,6 +399,67 @@ export function PlanSidebar({
                 <p className="text-[12px] text-ink-2">{absence.valid_from} – {absence.valid_to}</p>
                 {absence.notes && (
                   <p className="text-[12px] text-ink-3 italic">{absence.notes}</p>
+                )}
+              </div>
+            )}
+
+            {/* Springer-Karte */}
+            {springer && (
+              <div className="rounded-lg border border-line bg-paper p-3 space-y-1.5">
+                <p className="text-[10px] text-ink-3 uppercase tracking-[0.08em] font-medium">Springer</p>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="w-[26px] h-[26px] rounded-[7px] flex items-center justify-center font-semibold text-[12px] shrink-0 bg-emerald-100 text-emerald-800"
+                  >
+                    Sp
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-ink leading-tight truncate">
+                      {springer.target_department.name}
+                    </p>
+                    <p className="text-[11px] text-ink-2">{springer.shift_date}</p>
+                  </div>
+                </div>
+                {(() => {
+                  const doc = doctors.find((d) => d.id === springer.doctor_id)
+                  if (!doc) return null
+                  return (
+                    <p className="text-[12px] text-ink-2">
+                      {[doc.title, doc.name].filter(Boolean).join(' ')}
+                    </p>
+                  )
+                })()}
+                {springer.notes && (
+                  <p className="text-[12px] text-ink-3 italic">{springer.notes}</p>
+                )}
+              </div>
+            )}
+
+            {/* Dienst-Karte */}
+            {shift && (
+              <div className="rounded-lg border border-line bg-paper p-3 space-y-1.5">
+                <p className="text-[10px] text-ink-3 uppercase tracking-[0.08em] font-medium">Dienst</p>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="w-[26px] h-[26px] rounded-[7px] flex items-center justify-center font-semibold text-[12px] shrink-0"
+                    style={{ background: '#E8DCC4', color: '#26221C' }}
+                  >
+                    {shift.shift_type?.short_name ?? '?'}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-ink leading-tight truncate">
+                      {shift.shift_type?.name ?? shift.shift_type?.short_name ?? '—'}
+                    </p>
+                    <p className="text-[11px] text-ink-2">{shift.shift_date}</p>
+                  </div>
+                  {shift.is_pinned && (
+                    <span className="ml-auto shrink-0 text-[10px] font-medium bg-sand border border-warn-line text-ink rounded-full px-2 py-0.5">
+                      Gepinnt
+                    </span>
+                  )}
+                </div>
+                {shift.notes && (
+                  <p className="text-[12px] text-ink-3 italic">{shift.notes}</p>
                 )}
               </div>
             )}

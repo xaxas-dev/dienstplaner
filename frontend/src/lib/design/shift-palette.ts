@@ -48,7 +48,7 @@ export function colorForShiftType(args: {
   id?: number
   code?: string
   color?: string | null
-}): typeof SHIFT_PALETTE[ShiftColorToken] {
+}): { bg: string; fg: string; dot: string } {
   if (args.color) {
     return { bg: args.color + '33', fg: '#1f2937', dot: args.color }
   }

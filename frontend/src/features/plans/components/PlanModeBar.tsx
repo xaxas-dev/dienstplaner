@@ -60,7 +60,7 @@ const ABSENCE_CHIP_META: Record<AbsenceType, { short: string; full: string }> = 
 // ─── Segments ─────────────────────────────────────────────────────────────────
 const SEGMENTS = [
   { id: 'besetzung' as const, step: '1', label: 'Besetzung planen', sub: 'Stationen · Urlaub · Nachtwochen' },
-  { id: 'ina' as const, step: '2', label: 'INA planen', sub: 'V · T · N-Dienste setzen' },
+  { id: 'ina' as const, step: '2', label: 'INA-Dienste planen', sub: 'V · T · N-Dienste setzen' },
 ]
 
 export interface PlanModeBarProps {
@@ -151,8 +151,12 @@ export function PlanModeBar({
           </>
         )}
 
-        <span className="text-line-2 mx-0.5">|</span>
-        <SpringerDraggableChip />
+        {mode === 'besetzung' && (
+          <>
+            <span className="text-line-2 mx-0.5">|</span>
+            <SpringerDraggableChip />
+          </>
+        )}
 
         <span className="text-line-2 mx-0.5">|</span>
         <span className="text-[10px] text-ink-3 uppercase tracking-[0.07em]">Abwesenheiten</span>

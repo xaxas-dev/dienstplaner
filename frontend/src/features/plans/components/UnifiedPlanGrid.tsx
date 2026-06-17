@@ -31,7 +31,7 @@ interface UnifiedPlanGridProps {
   dragHighlightDays?: Set<string>
   selectedCellKeys?: Set<string>
   highlightedDoctorId?: number | null
-  onCellClick?: (rotationId: number, doctorId: number, dayKey: string, shiftId: number | null, shiftKey: boolean, clickPos: { x: number; y: number }, absenceId: number | null) => void
+  onCellClick?: (rotationId: number, doctorId: number, dayKey: string, shiftId: number | null, shiftKey: boolean, clickPos: { x: number; y: number }, absenceId: number | null, springerAssignmentId: number | null) => void
   onDoubleClickRemove?: (shiftId: number) => void
   onDoubleClickRemoveAbsence?: (absenceId: number) => void
   onDeleteRotation?: (rotationId: number) => void
@@ -486,7 +486,7 @@ export function UnifiedPlanGrid({
                         dragSelectFiredRef.current = false
                         return
                       }
-                      onCellClick?.(row.rotation.id, row.doctor.id, dk, shift?.id ?? null, shiftKey, clickPos, cell.absenceId ?? null)
+                      onCellClick?.(row.rotation.id, row.doctor.id, dk, shift?.id ?? null, shiftKey, clickPos, cell.absenceId ?? null, springerEntry?.id ?? null)
                     }}
                     absenceId={cell.absenceId ?? undefined}
                     absenceType={cell.absenceType}

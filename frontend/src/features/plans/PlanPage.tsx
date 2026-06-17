@@ -124,6 +124,7 @@ export function PlanPage() {
   const [cellClickPosition, setCellClickPosition] = useState<{ x: number; y: number } | null>(null)
   const [contextShift, setContextShift] = useState<ShiftWithDetails | null>(null)
   const [contextAbsence, setContextAbsence] = useState<import('@/lib/types').Absence | null>(null)
+  const [contextSpringer, setContextSpringer] = useState<import('@/lib/types').SpringerAssignment | null>(null)
   const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null)
   const [activeRotationCell, setActiveRotationCell] = useState<{
     departmentId: number
@@ -551,6 +552,7 @@ export function PlanPage() {
     shiftKey: boolean,
     clickPos: { x: number; y: number },
     absenceId: number | null = null,
+    springerAssignmentId: number | null = null,
   ) {
     if (shiftKey) {
       // Shift+Klick: Zelle zur Mehrfach-Auswahl hinzufügen / entfernen
@@ -568,8 +570,9 @@ export function PlanPage() {
       return
     }
 
-    setContextShift(null)
+    setContextShift(shiftId != null ? (shifts.find((s) => s.id === shiftId) ?? null) : null)
     setContextAbsence(absenceId != null ? (absences.find((a) => a.id === absenceId) ?? null) : null)
+    setContextSpringer(springerAssignmentId != null ? (springerAssignments.find((sa) => sa.id === springerAssignmentId) ?? null) : null)
     setSelectedDepartmentId(null)
     setActiveCell({ rotationId, doctorId, day, shiftId })
     setCellClickPosition(clickPos)
@@ -1161,6 +1164,7 @@ export function PlanPage() {
                 onTabChange={setSidebarTab}
                 shift={contextShift ?? undefined}
                 absence={contextAbsence ?? undefined}
+                springer={contextSpringer ?? undefined}
                 onCloseShift={contextShift ? () => setContextShift(null) : undefined}
                 tarifWarnings={contextShift ? tarifWarningsByShift[contextShift.id] : undefined}
                 shiftOverrides={
