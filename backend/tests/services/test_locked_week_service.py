@@ -111,8 +111,8 @@ def test_create_locked_week_raises_on_unknown_plan(db, doctor, shift_type_n):
         locked_week_service.create_locked_week(db, 99999, data)
 
 
-def test_create_locked_week_skips_existing_shifts(db, plan, doctor, shift_type_n):
-    """Bereits existierende Shifts werden übersprungen, nicht dupliziert."""
+def test_create_locked_week_updates_existing_shifts(db, plan, doctor, shift_type_n):
+    """Bereits existierende Shifts werden aktualisiert (is_locked + is_pinned), nicht dupliziert."""
     from app.models.shift import Shift
 
     # Shift für Sonntag vorab anlegen
@@ -124,6 +124,7 @@ def test_create_locked_week_skips_existing_shifts(db, plan, doctor, shift_type_n
     )
     db.add(existing)
     db.flush()
+    existing_id = existing.id
 
     data = LockedWeekCreate(
         doctor_id=doctor.id,
@@ -132,6 +133,10 @@ def test_create_locked_week_skips_existing_shifts(db, plan, doctor, shift_type_n
     )
     result = locked_week_service.create_locked_week(db, plan.id, data)
 
-    assert len(result.created) == 4  # Mo–Do neu
-    assert len(result.skipped) == 1
-    assert existing.id in result.skipped
+    assert len(result.created) == 5  # alle 5 Tage in created (So aktualisiert, Mo–Do neu)
+    assert len(result.skipped) == 0
+    ids = [s.id for s in result.created]
+    assert existing_id in ids
+    updated = next(s for s in result.created if s.id == existing_id)
+    assert updated.is_locked is True
+    assert updated.is_pinned is True
