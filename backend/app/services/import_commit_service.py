@@ -55,6 +55,7 @@ from app.repositories import rotation_assignment_repository as rotation_repo
 from app.schemas.excel_import import CommitResolutions, ImportResult
 from app.services.exceptions import PlanNotFoundError
 from app.services.import_parse_service import parse_besetzungsplan
+from app.services.plan_service import generate_missing_shift_slots
 
 _PERCENT_RE = re.compile(r"^(.*?)\s*\(\d+%\)\s*$")
 
@@ -273,6 +274,13 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
             db.add(Shift(**entry))
         db.flush()
         created_shifts = len(shift_entries)
+
+    # 10b. Fehlende Shift-Slots (doctor_id=None) für neuen Plan generieren.
+    # Beim Import via plan_repo.create_plan werden keine Slots vorerzeugt (kein
+    # create_plan_with_shifts). Ohne diese Slots zeigt das Popover beim Zell-Klick
+    # keine offenen Schichten, obwohl Typen für den Tag konfiguriert sind.
+    if target_plan.mode == "new":
+        generate_missing_shift_slots(db, plan, existing_keys=shift_seen)
 
     # 11. Springer-Zuweisungen anlegen (upsert — überschreibt bestehende)
     created_springer = 0

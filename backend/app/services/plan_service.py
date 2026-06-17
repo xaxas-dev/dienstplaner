@@ -156,6 +156,34 @@ def create_plan_with_shifts(
     return plan_repo.get_plan(db, plan.id)  # type: ignore[return-value]
 
 
+def generate_missing_shift_slots(
+    db: Session,
+    plan: Plan,
+    existing_keys: set[tuple[int, date]] | None = None,
+) -> int:
+    """Erzeugt fehlende Shift-Slots mit doctor_id=None für einen Plan.
+
+    Überspringt (shift_type_id, shift_date)-Paare, die bereits in
+    existing_keys enthalten sind (z.B. aus einem Import-Schritt gesetzt).
+    Gibt Anzahl neu erstellter Slots zurück.
+    """
+    shift_types = _get_applicable_shift_types(db, None)
+    if not shift_types:
+        return 0
+    holiday_dates = get_holiday_dates_for_period(db, plan.valid_from, plan.valid_to)
+    all_slots = _generate_shift_dicts(plan.id, plan.valid_from, plan.valid_to, shift_types, holiday_dates)
+    count = 0
+    for slot in all_slots:
+        key = (slot["shift_type_id"], slot["shift_date"])
+        if existing_keys and key in existing_keys:
+            continue
+        db.add(Shift(**slot))
+        count += 1
+    if count:
+        db.flush()
+    return count
+
+
 def clone_plan(db: Session, source_plan_id: int, new_plan_data: dict) -> tuple[Plan, int, int]:
     """Klont einen Plan. Gibt (neuer Plan, kopierte Rotationen, übersprungene) zurück."""
     source = plan_repo.get_plan(db, source_plan_id)

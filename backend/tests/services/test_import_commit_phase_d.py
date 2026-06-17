@@ -118,13 +118,11 @@ def test_shift_created_for_N_star_code(db):
     result = _commit(db, file_bytes, res)
 
     assert result.created_shifts == 1
-    shifts = db.query(Shift).all()
-    assert len(shifts) == 1
-    s = shifts[0]
+    assigned = [s for s in db.query(Shift).all() if s.doctor_id is not None]
+    assert len(assigned) == 1
+    s = assigned[0]
     assert s.shift_date == date(2026, 7, 10)
     assert s.shift_type_id == st.id
-    doctor_id = next(iter({sh.doctor_id for sh in shifts}))
-    assert s.doctor_id == doctor_id
 
 
 def test_shift_collision_warning(db):
@@ -150,7 +148,7 @@ def test_shift_collision_warning(db):
     result = _commit(db, file_bytes, res)
 
     assert result.created_shifts == 1
-    assert db.query(Shift).count() == 1
+    assert db.query(Shift).filter(Shift.doctor_id.isnot(None)).count() == 1
     collision_warnings = [w for w in result.warnings if "Kollision" in w]
     assert len(collision_warnings) == 1
 
@@ -172,10 +170,10 @@ def test_create_shift_type_on_commit(db):
     assert st is not None
     assert st.name == "Sonderdienst X1"
 
-    shifts = db.query(Shift).all()
-    assert len(shifts) == 1
-    assert shifts[0].shift_type_id == st.id
-    assert shifts[0].shift_date == date(2026, 7, 12)
+    assigned = [s for s in db.query(Shift).all() if s.doctor_id is not None]
+    assert len(assigned) == 1
+    assert assigned[0].shift_type_id == st.id
+    assert assigned[0].shift_date == date(2026, 7, 12)
 
 
 def test_ignore_code_creates_nothing(db):
