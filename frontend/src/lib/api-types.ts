@@ -452,6 +452,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plans/{plan_id}/shifts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Shifts */
+        get: operations["list_shifts_api_plans__plan_id__shifts_get"];
+        put?: never;
+        /** Create Plan Shift */
+        post: operations["create_plan_shift_api_plans__plan_id__shifts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plans/{plan_id}/locked-week": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Locked Week */
+        post: operations["create_locked_week_api_plans__plan_id__locked_week_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plans/{plan_id}/versions": {
         parameters: {
             query?: never;
@@ -487,23 +522,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/plans/{plan_id}/shifts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Shifts */
-        get: operations["list_shifts_api_plans__plan_id__shifts_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/shifts/{shift_id}": {
         parameters: {
             query?: never;
@@ -519,6 +537,41 @@ export interface paths {
         head?: never;
         /** Patch Shift */
         patch: operations["patch_shift_api_shifts__shift_id__patch"];
+        trace?: never;
+    };
+    "/api/plans/{plan_id}/springer-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Springer Assignments */
+        get: operations["list_springer_assignments_api_plans__plan_id__springer_assignments_get"];
+        put?: never;
+        /** Upsert Springer Assignment */
+        post: operations["upsert_springer_assignment_api_plans__plan_id__springer_assignments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/springer-assignments/{assignment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Springer Assignment */
+        delete: operations["delete_springer_assignment_api_springer_assignments__assignment_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/plans/{plan_id}/rotations": {
@@ -681,6 +734,214 @@ export interface paths {
         patch: operations["update_setting_api_settings__key__patch"];
         trace?: never;
     };
+    "/api/constraint-overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Constraint Overrides */
+        get: operations["list_constraint_overrides_api_constraint_overrides_get"];
+        put?: never;
+        /** Create Constraint Override */
+        post: operations["create_constraint_override_api_constraint_overrides_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/constraint-overrides/{override_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Constraint Override */
+        delete: operations["delete_constraint_override_api_constraint_overrides__override_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/doctors/{doctor_id}/constraint-overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Doctor Constraint Overrides */
+        get: operations["list_doctor_constraint_overrides_api_doctors__doctor_id__constraint_overrides_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/hardware-id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Hardware Id */
+        get: operations["get_hardware_id_api_system_hardware_id_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/holidays": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Holidays */
+        get: operations["list_holidays_api_holidays_get"];
+        put?: never;
+        /** Create Holiday */
+        post: operations["create_holiday_api_holidays_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/holidays/seed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Seed Holidays */
+        post: operations["seed_holidays_api_holidays_seed_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/holidays/{holiday_date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Holiday */
+        delete: operations["delete_holiday_api_holidays__holiday_date__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/besetzungsplan/analyze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Analyze Besetzungsplan */
+        post: operations["analyze_besetzungsplan_api_imports_besetzungsplan_analyze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/besetzungsplan/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Commit Besetzungsplan */
+        post: operations["commit_besetzungsplan_api_imports_besetzungsplan_commit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/doctors/{doctor_id}/wishes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Wishes */
+        get: operations["list_wishes_api_doctors__doctor_id__wishes_get"];
+        put?: never;
+        /** Create Wish */
+        post: operations["create_wish_api_doctors__doctor_id__wishes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/wishes/{wish_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Wish */
+        delete: operations["delete_wish_api_wishes__wish_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Wish */
+        patch: operations["update_wish_api_wishes__wish_id__patch"];
+        trace?: never;
+    };
+    "/api/plans/{plan_id}/wishes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Plan Wishes */
+        get: operations["list_plan_wishes_api_plans__plan_id__wishes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -799,6 +1060,18 @@ export interface components {
          * @enum {string}
          */
         AttentionSeverity: "info" | "warning" | "error";
+        /** Body_analyze_besetzungsplan_api_imports_besetzungsplan_analyze_post */
+        Body_analyze_besetzungsplan_api_imports_besetzungsplan_analyze_post: {
+            /** File */
+            file: string;
+        };
+        /** Body_commit_besetzungsplan_api_imports_besetzungsplan_commit_post */
+        Body_commit_besetzungsplan_api_imports_besetzungsplan_commit_post: {
+            /** File */
+            file: string;
+            /** Resolutions */
+            resolutions: string;
+        };
         /** CloneResult */
         CloneResult: {
             plan: components["schemas"]["PlanWithRelations"];
@@ -808,12 +1081,117 @@ export interface components {
             rotations_skipped: number;
         };
         /**
+         * CodeDefaultAction
+         * @enum {string}
+         */
+        CodeDefaultAction: "absence" | "shift" | "springer" | "ignore" | "unmatched";
+        /** CodeEntry */
+        CodeEntry: {
+            /** Raw */
+            raw: string;
+            default_action: components["schemas"]["CodeDefaultAction"];
+            /** Absence Type */
+            absence_type: string | null;
+            /** Shift Type Id */
+            shift_type_id: number | null;
+            /** Shift Type Short Name */
+            shift_type_short_name: string | null;
+            /** Department Id */
+            department_id?: number | null;
+            /** Department Short Name */
+            department_short_name?: string | null;
+            /** Default Note */
+            default_note?: string | null;
+        };
+        /**
          * ConflictType
          * @enum {string}
          */
         ConflictType: "not_available" | "double_booked";
+        /** ConstraintOverrideCreateA */
+        ConstraintOverrideCreateA: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            level: "A";
+            /** Constraint Id */
+            constraint_id: string;
+            /** Plan Id */
+            plan_id: number;
+            /** Reason */
+            reason?: string | null;
+        };
+        /** ConstraintOverrideCreateB */
+        ConstraintOverrideCreateB: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            level: "B";
+            /** Constraint Id */
+            constraint_id: string;
+            /** Doctor Id */
+            doctor_id: number;
+            /**
+             * Valid From
+             * Format: date
+             */
+            valid_from: string;
+            /** Valid To */
+            valid_to?: string | null;
+            /** Reason */
+            reason?: string | null;
+        };
+        /** ConstraintOverrideCreateC */
+        ConstraintOverrideCreateC: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            level: "C";
+            /** Constraint Id */
+            constraint_id: string;
+            /** Shift Id */
+            shift_id: number;
+            /** Reason */
+            reason?: string | null;
+        };
+        /** ConstraintOverrideResponse */
+        ConstraintOverrideResponse: {
+            /** Id */
+            id: number;
+            /** Level */
+            level: string;
+            /** Constraint Id */
+            constraint_id: string;
+            /** Plan Id */
+            plan_id: number | null;
+            /** Doctor Id */
+            doctor_id: number | null;
+            /** Shift Id */
+            shift_id: number | null;
+            /** Valid From */
+            valid_from: string | null;
+            /** Valid To */
+            valid_to: string | null;
+            /** Reason */
+            reason: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** CoverageBar */
         CoverageBar: {
+            /** Department Id */
+            department_id: number;
             /** Department Name */
             department_name: string;
             /** Filled */
@@ -900,6 +1278,17 @@ export interface components {
             notes?: string | null;
             /** Color */
             color?: string | null;
+        };
+        /** DepartmentMatch */
+        DepartmentMatch: {
+            /** Raw */
+            raw: string;
+            match_status: components["schemas"]["MatchStatus"];
+            /** Matched Id */
+            matched_id: number | null;
+            /** Candidates */
+            candidates: components["schemas"]["MatchCandidate"][];
+            default_action: components["schemas"]["EntityDefaultAction"];
         };
         /** DepartmentResponse */
         DepartmentResponse: {
@@ -994,8 +1383,11 @@ export interface components {
         };
         /** DoctorCreate */
         DoctorCreate: {
-            /** First Name */
-            first_name?: string;
+            /**
+             * First Name
+             * @default
+             */
+            first_name: string;
             /** Last Name */
             last_name: string;
             /** Salutation */
@@ -1006,8 +1398,7 @@ export interface components {
             short_name?: string | null;
             /** @default INTERNAL */
             doctor_type: components["schemas"]["DoctorType"];
-            /** Rank */
-            rank?: string | null;
+            rank?: components["schemas"]["DoctorRank"] | null;
             /**
              * Active
              * @default true
@@ -1030,6 +1421,21 @@ export interface components {
             name: string;
             /** Initials */
             initials: string;
+        };
+        /** DoctorMatch */
+        DoctorMatch: {
+            /** Raw */
+            raw: string;
+            match_status: components["schemas"]["MatchStatus"];
+            /** Matched Id */
+            matched_id: number | null;
+            /** Candidates */
+            candidates: components["schemas"]["MatchCandidate"][];
+            default_action: components["schemas"]["EntityDefaultAction"];
+            /** Parsed Name */
+            parsed_name: string;
+            /** Percentage */
+            percentage: number | null;
         };
         /**
          * DoctorQualificationBody
@@ -1062,18 +1468,29 @@ export interface components {
              */
             updated_at: string;
         };
+        /**
+         * DoctorRank
+         * @enum {string}
+         */
+        DoctorRank: "ASSISTENT" | "FACHARZT" | "FUNKTIONSOBERARZT" | "OBERARZT" | "CHEFARZT";
         /** DoctorResponse */
         DoctorResponse: {
-            /** Name */
-            name: string;
+            /**
+             * First Name
+             * @default
+             */
+            first_name: string;
+            /** Last Name */
+            last_name: string;
+            /** Salutation */
+            salutation?: string | null;
             /** Title */
             title?: string | null;
             /** Short Name */
             short_name?: string | null;
             /** @default INTERNAL */
             doctor_type: components["schemas"]["DoctorType"];
-            /** Rank */
-            rank?: string | null;
+            rank?: components["schemas"]["DoctorRank"] | null;
             /**
              * Active
              * @default true
@@ -1099,6 +1516,8 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            /** Name */
+            readonly name: string;
             /** Weiterbildungsjahr */
             readonly weiterbildungsjahr: number | null;
         };
@@ -1120,8 +1539,7 @@ export interface components {
             /** Short Name */
             short_name?: string | null;
             doctor_type?: components["schemas"]["DoctorType"] | null;
-            /** Rank */
-            rank?: string | null;
+            rank?: components["schemas"]["DoctorRank"] | null;
             /** Active */
             active?: boolean | null;
             /** Entry Date */
@@ -1135,22 +1553,22 @@ export interface components {
         };
         /** DoctorWithRelations */
         DoctorWithRelations: {
-            /** First Name */
+            /**
+             * First Name
+             * @default
+             */
             first_name: string;
             /** Last Name */
             last_name: string;
             /** Salutation */
             salutation?: string | null;
-            /** Name (computed: first_name + last_name) */
-            name: string;
             /** Title */
             title?: string | null;
             /** Short Name */
             short_name?: string | null;
             /** @default INTERNAL */
             doctor_type: components["schemas"]["DoctorType"];
-            /** Rank */
-            rank?: string | null;
+            rank?: components["schemas"]["DoctorRank"] | null;
             /**
              * Active
              * @default true
@@ -1186,6 +1604,8 @@ export interface components {
              * @default []
              */
             qualifications: components["schemas"]["QualificationResponse"][];
+            /** Name */
+            readonly name: string;
             /** Weiterbildungsjahr */
             readonly weiterbildungsjahr: number | null;
         };
@@ -1256,6 +1676,11 @@ export interface components {
             /** Notes */
             notes?: string | null;
         };
+        /**
+         * EntityDefaultAction
+         * @enum {string}
+         */
+        EntityDefaultAction: "map" | "create" | "skip";
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1268,6 +1693,37 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** HolidayCreate */
+        HolidayCreate: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Name */
+            name: string;
+        };
+        /** HolidayResponse */
+        HolidayResponse: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Name */
+            name: string;
+            source: components["schemas"]["HolidaySource"];
+        };
+        /** HolidaySeedRequest */
+        HolidaySeedRequest: {
+            /** Year */
+            year: number;
+        };
+        /**
+         * HolidaySource
+         * @enum {string}
+         */
+        HolidaySource: "AUTO" | "MANUAL";
         /** INAAvailabilityEntry */
         INAAvailabilityEntry: {
             /** Available */
@@ -1342,6 +1798,102 @@ export interface components {
             /** Notes */
             notes?: string | null;
         };
+        /** ImportAnalysis */
+        ImportAnalysis: {
+            month: components["schemas"]["ImportMonth"];
+            /** Departments */
+            departments: components["schemas"]["DepartmentMatch"][];
+            /** Doctors */
+            doctors: components["schemas"]["DoctorMatch"][];
+            /** Codes */
+            codes: components["schemas"]["CodeEntry"][];
+            /** Warnings */
+            warnings: string[];
+        };
+        /** ImportMonth */
+        ImportMonth: {
+            /** Sheet Name */
+            sheet_name: string;
+            /** Year */
+            year: number;
+            /** Month */
+            month: number;
+            /**
+             * Valid From
+             * Format: date
+             */
+            valid_from: string;
+            /**
+             * Valid To
+             * Format: date
+             */
+            valid_to: string;
+        };
+        /** ImportResult */
+        ImportResult: {
+            /** Plan Id */
+            plan_id: number;
+            /** Plan Name */
+            plan_name: string;
+            /** Created Departments */
+            created_departments: number;
+            /** Created Doctors */
+            created_doctors: number;
+            /** Created Employment Periods */
+            created_employment_periods: number;
+            /** Created Rotations */
+            created_rotations: number;
+            /**
+             * Created Absences
+             * @default 0
+             */
+            created_absences: number;
+            /**
+             * Created Shifts
+             * @default 0
+             */
+            created_shifts: number;
+            /**
+             * Created Springer Assignments
+             * @default 0
+             */
+            created_springer_assignments: number;
+            /** Warnings */
+            warnings: string[];
+        };
+        /** LockedWeekCreate */
+        LockedWeekCreate: {
+            /** Doctor Id */
+            doctor_id: number;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /** Shift Type Id */
+            shift_type_id: number;
+        };
+        /** LockedWeekResult */
+        LockedWeekResult: {
+            /** Created */
+            created: components["schemas"]["ShiftResponse"][];
+            /** Skipped */
+            skipped: number[];
+        };
+        /** MatchCandidate */
+        MatchCandidate: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Score */
+            score: number;
+        };
+        /**
+         * MatchStatus
+         * @enum {string}
+         */
+        MatchStatus: "exact" | "fuzzy" | "new" | "unmatched";
         /** OpenShift */
         OpenShift: {
             /** Shift Id */
@@ -1407,6 +1959,11 @@ export interface components {
             status: components["schemas"]["PlanStatus"];
             /** Notes */
             notes?: string | null;
+            /**
+             * Besetzung Locked
+             * @default false
+             */
+            besetzung_locked: boolean;
             /** Shift Type Ids */
             shift_type_ids?: number[] | null;
         };
@@ -1428,7 +1985,10 @@ export interface components {
             status: components["schemas"]["PlanStatus"];
             /** Notes */
             notes?: string | null;
-            /** Besetzung Locked */
+            /**
+             * Besetzung Locked
+             * @default false
+             */
             besetzung_locked: boolean;
             /** Id */
             id: number;
@@ -1514,8 +2074,11 @@ export interface components {
             status: components["schemas"]["PlanStatus"];
             /** Notes */
             notes?: string | null;
-            /** Besetzung Locked */
-            besetzung_locked?: boolean | null;
+            /**
+             * Besetzung Locked
+             * @default false
+             */
+            besetzung_locked: boolean;
             /** Id */
             id: number;
             /**
@@ -1797,6 +2360,28 @@ export interface components {
             /** Shift Type Short Name */
             shift_type_short_name: string;
         };
+        /**
+         * ShiftPlanCreate
+         * @description Body für POST /api/plans/{id}/shifts — plan_id kommt aus dem Pfad.
+         */
+        ShiftPlanCreate: {
+            /** Shift Type Id */
+            shift_type_id: number;
+            /**
+             * Shift Date
+             * Format: date
+             */
+            shift_date: string;
+            /** Doctor Id */
+            doctor_id?: number | null;
+            /**
+             * Is Pinned
+             * @default false
+             */
+            is_pinned: boolean;
+            /** Notes */
+            notes?: string | null;
+        };
         /** ShiftResponse */
         ShiftResponse: {
             /** Plan Id */
@@ -1815,11 +2400,6 @@ export interface components {
              * @default false
              */
             is_pinned: boolean;
-            /**
-             * Is Locked
-             * @default false
-             */
-            is_locked: boolean;
             /** Notes */
             notes?: string | null;
             /** Id */
@@ -1834,6 +2414,11 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            /**
+             * Is Locked
+             * @default false
+             */
+            is_locked: boolean;
         };
         /** ShiftTypeCreate */
         ShiftTypeCreate: {
@@ -1985,11 +2570,6 @@ export interface components {
              * @default false
              */
             is_pinned: boolean;
-            /**
-             * Is Locked
-             * @default false
-             */
-            is_locked: boolean;
             /** Notes */
             notes?: string | null;
             /** Id */
@@ -2004,6 +2584,11 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            /**
+             * Is Locked
+             * @default false
+             */
+            is_locked: boolean;
             shift_type?: components["schemas"]["ShiftTypeResponse"] | null;
             doctor?: components["schemas"]["DoctorResponse"] | null;
             /**
@@ -2024,6 +2609,49 @@ export interface components {
             soft_score: number;
             /** Feasible */
             feasible: boolean;
+        };
+        /** SpringerAssignmentCreate */
+        SpringerAssignmentCreate: {
+            /**
+             * Shift Date
+             * Format: date
+             */
+            shift_date: string;
+            /** Doctor Id */
+            doctor_id: number;
+            /** Target Department Id */
+            target_department_id: number;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** SpringerAssignmentResponse */
+        SpringerAssignmentResponse: {
+            /** Id */
+            id: number;
+            /** Plan Id */
+            plan_id: number;
+            /**
+             * Shift Date
+             * Format: date
+             */
+            shift_date: string;
+            /** Doctor Id */
+            doctor_id: number;
+            /** Target Department Id */
+            target_department_id: number;
+            target_department: components["schemas"]["DepartmentResponse"];
+            /** Notes */
+            notes?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /**
          * TarifSeverity
@@ -2062,24 +2690,75 @@ export interface components {
             /** Comment */
             comment?: string | null;
         };
-        /** LockedWeekCreate */
-        LockedWeekCreate: {
+        /**
+         * WishCreateBody
+         * @description Request body for POST /api/doctors/{id}/wishes — doctor_id wird aus URL-Pfad injiziert.
+         */
+        WishCreateBody: {
+            /** Wish Date */
+            wish_date?: string | null;
+            /** Day Of Week */
+            day_of_week?: number | null;
+            wish_type: components["schemas"]["WishType"];
+            /** Shift Type Id */
+            shift_type_id?: number | null;
+            /**
+             * Priority
+             * @default 1
+             */
+            priority: number;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** WishResponse */
+        WishResponse: {
             /** Doctor Id */
             doctor_id: number;
-            /**
-             * Start Date
-             * Format: date
-             */
-            start_date: string;
+            /** Wish Date */
+            wish_date?: string | null;
+            /** Day Of Week */
+            day_of_week?: number | null;
+            wish_type: components["schemas"]["WishType"];
             /** Shift Type Id */
-            shift_type_id: number;
+            shift_type_id?: number | null;
+            /**
+             * Priority
+             * @default 1
+             */
+            priority: number;
+            /** Notes */
+            notes?: string | null;
+            /** Id */
+            id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
-        /** LockedWeekResult */
-        LockedWeekResult: {
-            /** Created */
-            created: unknown[];
-            /** Skipped */
-            skipped: number[];
+        /**
+         * WishType
+         * @enum {string}
+         */
+        WishType: "AVOID_DAY" | "AVOID_SHIFT" | "REQUIRE_SHIFT";
+        /** WishUpdate */
+        WishUpdate: {
+            /** Wish Date */
+            wish_date?: string | null;
+            /** Day Of Week */
+            day_of_week?: number | null;
+            wish_type?: components["schemas"]["WishType"] | null;
+            /** Shift Type Id */
+            shift_type_id?: number | null;
+            /** Priority */
+            priority?: number | null;
+            /** Notes */
+            notes?: string | null;
         };
     };
     responses: never;
@@ -3525,6 +4204,107 @@ export interface operations {
             };
         };
     };
+    list_shifts_api_plans__plan_id__shifts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftWithDetails"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_plan_shift_api_plans__plan_id__shifts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShiftPlanCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftWithDetails"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_locked_week_api_plans__plan_id__locked_week_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LockedWeekCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LockedWeekResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_versions_api_plans__plan_id__versions_get: {
         parameters: {
             query?: never;
@@ -3623,37 +4403,6 @@ export interface operations {
             };
         };
     };
-    list_shifts_api_plans__plan_id__shifts_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                plan_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ShiftWithDetails"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     patch_shift_api_shifts__shift_id__patch: {
         parameters: {
             query?: never;
@@ -3677,6 +4426,101 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ShiftWithDetails"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_springer_assignments_api_plans__plan_id__springer_assignments_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpringerAssignmentResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upsert_springer_assignment_api_plans__plan_id__springer_assignments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpringerAssignmentCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpringerAssignmentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_springer_assignment_api_springer_assignments__assignment_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -4183,6 +5027,507 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AppSettingResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_constraint_overrides_api_constraint_overrides_get: {
+        parameters: {
+            query?: {
+                plan_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConstraintOverrideResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_constraint_override_api_constraint_overrides_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConstraintOverrideCreateA"] | components["schemas"]["ConstraintOverrideCreateB"] | components["schemas"]["ConstraintOverrideCreateC"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConstraintOverrideResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_constraint_override_api_constraint_overrides__override_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                override_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_doctor_constraint_overrides_api_doctors__doctor_id__constraint_overrides_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doctor_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConstraintOverrideResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_hardware_id_api_system_hardware_id_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    list_holidays_api_holidays_get: {
+        parameters: {
+            query: {
+                year: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HolidayResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_holiday_api_holidays_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HolidayCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HolidayResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    seed_holidays_api_holidays_seed_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HolidaySeedRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_holiday_api_holidays__holiday_date__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                holiday_date: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analyze_besetzungsplan_api_imports_besetzungsplan_analyze_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_analyze_besetzungsplan_api_imports_besetzungsplan_analyze_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportAnalysis"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commit_besetzungsplan_api_imports_besetzungsplan_commit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_commit_besetzungsplan_api_imports_besetzungsplan_commit_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_wishes_api_doctors__doctor_id__wishes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doctor_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WishResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_wish_api_doctors__doctor_id__wishes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doctor_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WishCreateBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WishResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_wish_api_wishes__wish_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wish_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_wish_api_wishes__wish_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wish_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WishUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WishResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_plan_wishes_api_plans__plan_id__wishes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WishResponse"][];
                 };
             };
             /** @description Validation Error */

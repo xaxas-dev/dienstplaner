@@ -42,7 +42,7 @@ export function PlanCreateDialog({ open, onClose }: Props) {
     const planName = name.trim() || `${MONTHS[m - 1]} ${y}`
 
     mutate(
-      { name: planName, valid_from: validFrom, valid_to: validTo, status: 'DRAFT' },
+      { name: planName, valid_from: validFrom, valid_to: validTo, status: 'DRAFT', besetzung_locked: false },
       {
         onSuccess: (plan) => {
           toast.success(`Plan "${planName}" erstellt`)

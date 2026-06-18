@@ -34,7 +34,7 @@ const schema = z.object({
   title: z.string().max(50, 'Maximal 50 Zeichen').nullable().optional(),
   short_name: z.string().max(50, 'Maximal 50 Zeichen').nullable().optional(),
   doctor_type: z.enum(['INTERNAL', 'EXTERNAL']),
-  rank: z.string().nullable().optional(),
+  rank: z.enum(['ASSISTENT', 'FACHARZT', 'FUNKTIONSOBERARZT', 'OBERARZT', 'CHEFARZT']).nullable().optional(),
   active: z.boolean(),
   entry_date: z.string().nullable().optional(),
   virtual_entry_date: z.string().nullable().optional(),
