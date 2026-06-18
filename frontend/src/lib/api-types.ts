@@ -994,8 +994,12 @@ export interface components {
         };
         /** DoctorCreate */
         DoctorCreate: {
-            /** Name */
-            name: string;
+            /** First Name */
+            first_name?: string;
+            /** Last Name */
+            last_name: string;
+            /** Salutation */
+            salutation?: string | null;
             /** Title */
             title?: string | null;
             /** Short Name */
@@ -1105,8 +1109,12 @@ export interface components {
         DoctorType: "INTERNAL" | "EXTERNAL";
         /** DoctorUpdate */
         DoctorUpdate: {
-            /** Name */
-            name?: string | null;
+            /** First Name */
+            first_name?: string | null;
+            /** Last Name */
+            last_name?: string | null;
+            /** Salutation */
+            salutation?: string | null;
             /** Title */
             title?: string | null;
             /** Short Name */
@@ -1127,7 +1135,13 @@ export interface components {
         };
         /** DoctorWithRelations */
         DoctorWithRelations: {
-            /** Name */
+            /** First Name */
+            first_name: string;
+            /** Last Name */
+            last_name: string;
+            /** Salutation */
+            salutation?: string | null;
+            /** Name (computed: first_name + last_name) */
             name: string;
             /** Title */
             title?: string | null;

@@ -57,6 +57,8 @@ function makeRotation(overrides: Partial<RotationAssignmentWithDetails>): Rotati
 function makeDoctor(overrides: Partial<Doctor>): Doctor {
   return {
     id: 1,
+    first_name: 'Anna',
+    last_name: 'Müller',
     name: 'Müller, Anna',
     short_name: 'AM',
     doctor_type: 'INTERNAL',

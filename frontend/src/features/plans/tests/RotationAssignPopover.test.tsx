@@ -22,6 +22,8 @@ vi.mock('../usePlanRotations', () => ({
 const mockDoctors: Doctor[] = [
   {
     id: 1,
+    first_name: 'Test',
+    last_name: 'Test',
     name: 'Dr. Test',
     short_name: 'DT',
     doctor_type: 'INTERNAL',
@@ -38,6 +40,8 @@ const mockDoctors: Doctor[] = [
   },
   {
     id: 2,
+    first_name: 'Zwei',
+    last_name: 'Zwei',
     name: 'Dr. Zwei',
     short_name: 'DZ',
     doctor_type: 'INTERNAL',

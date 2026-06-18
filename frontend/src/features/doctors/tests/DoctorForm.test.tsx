@@ -17,6 +17,8 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 
 const mockDoctor: Doctor = {
   id: 1,
+  first_name: 'Anna',
+  last_name: 'Mustermann',
   name: 'Anna Mustermann',
   title: 'Dr.',
   short_name: 'MM',
@@ -48,7 +50,7 @@ describe('DoctorForm – Validierung', () => {
     const submitBtn = screen.getByRole('button', { name: /speichern/i })
     await user.click(submitBtn)
     await waitFor(() => {
-      expect(screen.getByText('Name ist erforderlich')).toBeInTheDocument()
+      expect(screen.getByText('Nachname ist erforderlich')).toBeInTheDocument()
     })
   })
 })
@@ -60,7 +62,7 @@ describe('DoctorForm – Felder', () => {
         <DoctorForm />
       </Wrapper>,
     )
-    expect(screen.getByPlaceholderText(/Anna Berger/i)).toHaveValue('')
+    expect(screen.getByPlaceholderText(/Berger/i)).toHaveValue('')
     expect(screen.getByLabelText(/titel/i)).toBeInTheDocument()
   })
 
@@ -70,8 +72,8 @@ describe('DoctorForm – Felder', () => {
         <DoctorForm doctor={mockDoctor} />
       </Wrapper>,
     )
-    expect(screen.getByDisplayValue('Anna Mustermann')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Dr.')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Anna')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Mustermann')).toBeInTheDocument()
     expect(screen.getByDisplayValue('MM')).toBeInTheDocument()
   })
 

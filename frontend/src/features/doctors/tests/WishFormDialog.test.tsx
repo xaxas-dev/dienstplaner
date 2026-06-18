@@ -27,10 +27,10 @@ vi.mock('@/features/command-palette/useCommandPalette', () => ({
 
 const defaultProps = { open: true, onOpenChange: vi.fn(), doctorId: 1 }
 const doctors = [
-  { id: 1, name: 'Dr. Anna Müller', short_name: 'AMü', active: true,
+  { id: 1, first_name: 'Anna', last_name: 'Müller', name: 'Dr. Anna Müller', short_name: 'AMü', active: true,
     doctor_type: 'INTERNAL' as const, rank: null, weiterbildungsjahr: null,
     employment_periods: [], qualifications: [], created_at: '', updated_at: '' },
-  { id: 2, name: 'Dr. Bernd Keller', short_name: 'BK', active: true,
+  { id: 2, first_name: 'Bernd', last_name: 'Keller', name: 'Dr. Bernd Keller', short_name: 'BK', active: true,
     doctor_type: 'INTERNAL' as const, rank: null, weiterbildungsjahr: null,
     employment_periods: [], qualifications: [], created_at: '', updated_at: '' },
 ]

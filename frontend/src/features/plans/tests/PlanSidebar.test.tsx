@@ -185,7 +185,7 @@ describe('Wünsche-Tab — Wunsch erfassen Button', () => {
     mode: 'ina' as const,
     activeTab: 'wuensche' as const,
     doctors: [
-      { id: 1, name: 'Dr. Anna Müller', short_name: 'AMü', active: true,
+      { id: 1, first_name: 'Anna', last_name: 'Müller', name: 'Dr. Anna Müller', short_name: 'AMü', active: true,
         doctor_type: 'INTERNAL' as const, rank: null, weiterbildungsjahr: null,
         employment_periods: [], qualifications: [], created_at: '', updated_at: '' },
     ],
@@ -219,7 +219,7 @@ describe('Details-Tab — Department-Details', () => {
     doctor: null, department: dept, created_at: '', updated_at: '',
   }
   const doctor = {
-    id: 1, name: 'Dr. Anna Müller', short_name: 'AMü', active: true,
+    id: 1, first_name: 'Anna', last_name: 'Müller', name: 'Dr. Anna Müller', short_name: 'AMü', active: true,
     doctor_type: 'INTERNAL' as const, rank: null, weiterbildungsjahr: null,
     employment_periods: [{ id: 1, doctor_id: 1, employment_percentage: 75, valid_from: '2026-01-01', valid_to: null, created_at: '', updated_at: '' }],
     qualifications: [], created_at: '', updated_at: '',

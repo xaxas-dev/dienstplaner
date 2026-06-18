@@ -28,7 +28,9 @@ import { useCreateDoctor, useUpdateDoctor } from './useDoctors'
 import type { Doctor } from '@/lib/types'
 
 const schema = z.object({
-  name: z.string().min(1, 'Name ist erforderlich').max(200, 'Maximal 200 Zeichen'),
+  salutation: z.string().nullable().optional(),
+  first_name: z.string().max(100, 'Maximal 100 Zeichen'),
+  last_name: z.string().min(1, 'Nachname ist erforderlich').max(100, 'Maximal 100 Zeichen'),
   title: z.string().max(50, 'Maximal 50 Zeichen').nullable().optional(),
   short_name: z.string().max(50, 'Maximal 50 Zeichen').nullable().optional(),
   doctor_type: z.enum(['INTERNAL', 'EXTERNAL']),
@@ -55,7 +57,9 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: doctor?.name ?? '',
+      salutation: doctor?.salutation ?? null,
+      first_name: doctor?.first_name ?? '',
+      last_name: doctor?.last_name ?? '',
       title: doctor?.title ?? null,
       short_name: doctor?.short_name ?? null,
       doctor_type: doctor?.doctor_type ?? 'INTERNAL',
@@ -72,7 +76,9 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
   useEffect(() => {
     if (doctor) {
       form.reset({
-        name: doctor.name,
+        salutation: doctor.salutation ?? null,
+        first_name: doctor.first_name ?? '',
+        last_name: doctor.last_name,
         title: doctor.title ?? null,
         short_name: doctor.short_name ?? null,
         doctor_type: doctor.doctor_type,
@@ -89,6 +95,8 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
   const onSubmit = (values: FormValues) => {
     const payload = {
       ...values,
+      first_name: values.first_name ?? '',
+      salutation: values.salutation || null,
       title: values.title || null,
       short_name: values.short_name || null,
       notes: values.notes || null,
@@ -133,15 +141,58 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={(e) => void form.handleSubmit(onSubmit)(e)} className="space-y-5">
-        {/* Name */}
+
+        {/* Anrede */}
         <FormField
           control={form.control}
-          name="name"
+          name="salutation"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name *</FormLabel>
+              <FormLabel>Anrede</FormLabel>
+              <Select
+                onValueChange={(v) => field.onChange(v === '__none__' ? null : v)}
+                value={field.value ?? '__none__'}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Keine Anrede" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="__none__">Keine Anrede</SelectItem>
+                  <SelectItem value="Herr">Herr</SelectItem>
+                  <SelectItem value="Frau">Frau</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Vorname */}
+        <FormField
+          control={form.control}
+          name="first_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Vorname</FormLabel>
               <FormControl>
-                <Input placeholder="Anna Berger" {...field} />
+                <Input placeholder="Anna" {...field} value={field.value ?? ''} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Nachname */}
+        <FormField
+          control={form.control}
+          name="last_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nachname *</FormLabel>
+              <FormControl>
+                <Input placeholder="Berger" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -168,8 +219,9 @@ export function DoctorForm({ doctor, onSuccess }: DoctorFormProps) {
                   <SelectItem value="__none__">Kein Titel</SelectItem>
                   <SelectItem value="Dr.">Dr.</SelectItem>
                   <SelectItem value="Prof.">Prof.</SelectItem>
-                  <SelectItem value="PD">PD</SelectItem>
                   <SelectItem value="Prof. Dr.">Prof. Dr.</SelectItem>
+                  <SelectItem value="PD">PD</SelectItem>
+                  <SelectItem value="PD Dr.">PD Dr.</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

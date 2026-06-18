@@ -17,7 +17,7 @@ vi.mock('../useAvailabilityForDate', () => ({
 
 const mockDoctors: Doctor[] = [
   {
-    id: 1, name: 'Müller, Anna', short_name: 'AM',
+    id: 1, first_name: 'Anna', last_name: 'Müller', name: 'Müller, Anna', short_name: 'AM',
     doctor_type: 'INTERNAL', rank: 'FACHARZT',
     active: true, weiterbildungsjahr: null,
     entry_date: null, virtual_entry_date: null, notes: null,

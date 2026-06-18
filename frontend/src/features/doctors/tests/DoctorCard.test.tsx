@@ -6,6 +6,8 @@ import type { Doctor } from '@/lib/types'
 
 const baseDoctor: Doctor = {
   id: 1,
+  first_name: 'Lena',
+  last_name: 'Hartmann',
   name: 'Lena Hartmann',
   short_name: 'LH',
   doctor_type: 'INTERNAL',
