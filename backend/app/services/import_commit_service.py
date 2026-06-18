@@ -60,11 +60,27 @@ from app.services.plan_service import generate_missing_shift_slots
 _PERCENT_RE = re.compile(r"^(.*?)\s*\(\d+%\)\s*$")
 
 
-def _parse_name(raw: str) -> str:
-    """Entfernt das '(NN%)'-Suffix aus einem Arzt-Namen."""
+def _strip_percentage(raw: str) -> str:
+    """Removes the '(NN%)' suffix from a raw doctor name."""
     stripped = raw.strip()
     m = _PERCENT_RE.match(stripped)
     return m.group(1).strip() if m else stripped
+
+
+def _split_name_parts(raw: str) -> tuple[str, str]:
+    """Returns (last_name, first_name). Strips percentage suffix first.
+
+    'Berger, Anna (70%)' → ('Berger', 'Anna')
+    'Berger Anna'        → ('Berger', 'Anna')
+    'Berger Anna Maria'  → ('Berger', 'Anna Maria')
+    'Berger'             → ('Berger', '')
+    """
+    clean = _strip_percentage(raw)
+    if "," in clean:
+        parts = [p.strip() for p in clean.split(",", 1)]
+        return parts[0], parts[1] if len(parts) > 1 else ""
+    parts = clean.split(" ", 1)
+    return parts[0], parts[1] if len(parts) > 1 else ""
 
 
 def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions) -> ImportResult:
@@ -74,12 +90,7 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
     parsed = parse_besetzungsplan(file_bytes)
     warnings.extend(parsed.warnings)
 
-    # 2. raw → geparster Name (für neu angelegte Ärzte)
-    raw_to_parsed_name: dict[str, str] = {
-        row.raw_name: _parse_name(row.raw_name) for row in parsed.rows
-    }
-
-    # 3. Bereiche auflösen
+    # 2. Bereiche auflösen
     dept_id_map: dict[str, int] = {}  # raw → department_id
     created_depts = 0
     for raw, res in resolutions.department_resolutions.items():
@@ -95,7 +106,7 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
                 created_depts += 1
         # skip: vom Import ausgeschlossen
 
-    # 4. Ärzte + Beschäftigungszeiträume auflösen
+    # 3. Ärzte + Beschäftigungszeiträume auflösen
     target_plan = resolutions.target_plan
 
     # plan_start wird für EmploymentPeriod-Erstellung benötigt — VOR Doctor-Loop.
@@ -118,13 +129,8 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
             if res.percentage is not None and plan_start is not None:
                 _upsert_employment_period(db, res.id, plan_start, res.percentage, _ep_counter)
         elif res.action == "create":
-            parsed_name = raw_to_parsed_name.get(raw, _parse_name(raw))
-            parts = parsed_name.rsplit(" ", 1)
-            if len(parts) == 2:
-                fn, ln = parts[0], parts[1]
-            else:
-                fn, ln = "", parts[0]
-            doctor = doctor_repo.create_doctor(db, {"first_name": fn, "last_name": ln})
+            last_name, first_name = _split_name_parts(raw)
+            doctor = doctor_repo.create_doctor(db, {"first_name": first_name, "last_name": last_name})
             created_doctors += 1
             if res.percentage is not None and plan_start is not None:
                 _upsert_employment_period(db, doctor.id, plan_start, res.percentage, _ep_counter)
@@ -132,7 +138,7 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
         # skip: vom Import ausgeschlossen
     created_eps = _ep_counter[0]
 
-    # 5. Plan anlegen oder laden.
+    # 4. Plan anlegen oder laden.
     # plan_repo.create_plan macht keinen internen Commit — alles bleibt in einer
     # gemeinsamen Transaktion (flush only, commit erst am Ende von commit_import).
     # Shift-Slots werden nicht automatisch generiert; Phase D übernimmt das.
@@ -149,7 +155,7 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
         # Bereits in Schritt 4 geladen — kein zweiter Query.
         plan = existing_plan
 
-    # 6. RotationAssignments — je eindeutigem (doctor, dept)-Paar genau eine.
+    # 5. RotationAssignments — je eindeutigem (doctor, dept)-Paar genau eine.
     seen_pairs: set[tuple[int, int]] = set()
     rotation_dicts: list[dict] = []
     for row in parsed.rows:
@@ -176,7 +182,7 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
         rotation_repo.bulk_create_rotations(db, rotation_dicts)
     created_rotations = len(rotation_dicts)
 
-    # 7. Code-Auflösungen: neue ShiftTypes anlegen + Schicht-Map aufbauen
+    # 6. Code-Auflösungen: neue ShiftTypes anlegen + Schicht-Map aufbauen
     code_res = resolutions.code_resolutions
     resolved_st_ids: dict[str, int] = {}  # code → shift_type_id
     for code, res in code_res.items():
@@ -193,7 +199,7 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
                 db.refresh(st)
                 resolved_st_ids[code] = st.id
 
-    # 8. Zellen iterieren: Abwesenheits-Tage und Schichten sammeln
+    # 7. Zellen iterieren: Abwesenheits-Tage und Schichten sammeln
     plan_year = plan.valid_from.year
     plan_month = plan.valid_from.month
 
@@ -248,7 +254,7 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
                 springer_seen.add(key_sa)
                 springer_entries.append((doctor_id, res_code.department_id, shift_date))
 
-    # 9. Abwesenheits-Ranges anlegen (konsekutive Tage → ein Datensatz)
+    # 8. Abwesenheits-Ranges anlegen (konsekutive Tage → ein Datensatz)
     created_absences = 0
     for (doctor_id, absence_type_str, notes_val), days in absence_days.items():
         sorted_days = sorted(set(days))
@@ -272,7 +278,7 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
             absence_repo.create_absence(db, doctor_id, absence_data)
             created_absences += 1
 
-    # 10. Schichten bulk-anlegen
+    # 9. Schichten bulk-anlegen
     created_shifts = 0
     if shift_entries:
         for entry in shift_entries:
@@ -280,14 +286,14 @@ def commit_import(db: Session, file_bytes: bytes, resolutions: CommitResolutions
         db.flush()
         created_shifts = len(shift_entries)
 
-    # 10b. Fehlende Shift-Slots (doctor_id=None) für neuen Plan generieren.
+    # 9b. Fehlende Shift-Slots (doctor_id=None) für neuen Plan generieren.
     # Beim Import via plan_repo.create_plan werden keine Slots vorerzeugt (kein
     # create_plan_with_shifts). Ohne diese Slots zeigt das Popover beim Zell-Klick
     # keine offenen Schichten, obwohl Typen für den Tag konfiguriert sind.
     if target_plan.mode == "new":
         generate_missing_shift_slots(db, plan, existing_keys=shift_seen)
 
-    # 11. Springer-Zuweisungen anlegen (upsert — überschreibt bestehende)
+    # 10. Springer-Zuweisungen anlegen (upsert — überschreibt bestehende)
     created_springer = 0
     for doctor_id, dept_id, shift_date in springer_entries:
         springer_repo.upsert(

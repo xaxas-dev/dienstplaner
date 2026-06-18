@@ -190,3 +190,28 @@ def test_ignore_code_creates_nothing(db):
     assert result.created_shifts == 0
     assert db.query(Absence).count() == 0
     assert db.query(Shift).count() == 0
+
+
+def test_normalize_raw_name_comma_separated():
+    from app.services.import_match_service import _normalize_raw_name
+    assert _normalize_raw_name("Berger, Anna") == "Berger Anna"
+    assert _normalize_raw_name("Berger, Anna (70%)") == "Berger, Anna (70%)"  # percentage not stripped here
+
+
+def test_normalize_raw_name_no_comma():
+    from app.services.import_match_service import _normalize_raw_name
+    assert _normalize_raw_name("Berger Anna") == "Berger Anna"
+    assert _normalize_raw_name("  Berger  Anna  ") == "Berger  Anna"  # strip outer only
+
+
+def test_split_name_parts_comma():
+    from app.services.import_commit_service import _split_name_parts
+    assert _split_name_parts("Berger, Anna") == ("Berger", "Anna")
+    assert _split_name_parts("Berger, Anna (70%)") == ("Berger", "Anna")
+
+
+def test_split_name_parts_no_comma():
+    from app.services.import_commit_service import _split_name_parts
+    assert _split_name_parts("Berger Anna") == ("Berger", "Anna")
+    assert _split_name_parts("Berger") == ("Berger", "")
+    assert _split_name_parts("Berger Anna Maria") == ("Berger", "Anna Maria")

@@ -50,6 +50,15 @@ def _strip_dept_prefix(raw: str) -> str:
 	return _DEPT_PREFIX_RE.sub('', raw).strip()
 
 
+def _normalize_raw_name(raw: str) -> str:
+    """Normalises 'Berger, Anna' → 'Berger Anna'. No-op when no comma or when a percentage suffix is present."""
+    stripped = raw.strip()
+    if "," in stripped and not _PERCENTAGE_RE.match(stripped):
+        parts = [p.strip() for p in stripped.split(",", 1)]
+        return " ".join(p for p in parts if p)
+    return stripped
+
+
 def _parse_name(raw: str) -> tuple[str, int | None]:
     """Trennt 'Berger Johann (70%)' → ('Berger Johann', 70)."""
     match = _PERCENTAGE_RE.match(raw)
@@ -120,7 +129,7 @@ def analyze_import(db: Session, parsed: ParsedSheet) -> ImportAnalysis:
         dept_names.append((d.id, d.name))
         if d.short_name:
             dept_names.append((d.id, d.short_name))
-    doctor_names = [(d.id, d.name) for d in doctors]
+    doctor_names = [(d.id, f"{d.last_name} {d.first_name}".strip()) for d in doctors]
 
     # --- Bereiche ---
     distinct_departments: list[str] = []
@@ -156,10 +165,9 @@ def analyze_import(db: Session, parsed: ParsedSheet) -> ImportAnalysis:
 
     doctor_matches: list[DoctorMatch] = []
     for raw in distinct_doctors:
-        parsed_name, percentage = _parse_name(raw)
-        status, matched_id, candidates, default_action = _match_against(
-            parsed_name, doctor_names
-        )
+        normalized_raw = _normalize_raw_name(raw)
+        parsed_name, percentage = _parse_name(normalized_raw)
+        status, matched_id, candidates, default_action = _match_against(parsed_name, doctor_names)
         doctor_matches.append(
             DoctorMatch(
                 raw=raw,
