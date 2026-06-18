@@ -51,12 +51,12 @@ def _strip_dept_prefix(raw: str) -> str:
 
 
 def _normalize_raw_name(raw: str) -> str:
-    """Normalises 'Berger, Anna' → 'Berger Anna'. No-op when no comma or when a percentage suffix is present."""
-    stripped = raw.strip()
-    if "," in stripped and not _PERCENTAGE_RE.match(stripped):
-        parts = [p.strip() for p in stripped.split(",", 1)]
+    """Normalises 'Berger, Anna' or 'Berger, Anna (70%)' → 'Berger Anna' / 'Berger Anna (70%)'."""
+    # Strip comma first, then return (percentage suffix stays for _parse_name to handle)
+    if "," in raw:
+        parts = [p.strip() for p in raw.split(",", 1)]
         return " ".join(p for p in parts if p)
-    return stripped
+    return raw.strip()
 
 
 def _parse_name(raw: str) -> tuple[str, int | None]:

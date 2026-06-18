@@ -195,7 +195,7 @@ def test_ignore_code_creates_nothing(db):
 def test_normalize_raw_name_comma_separated():
     from app.services.import_match_service import _normalize_raw_name
     assert _normalize_raw_name("Berger, Anna") == "Berger Anna"
-    assert _normalize_raw_name("Berger, Anna (70%)") == "Berger, Anna (70%)"  # percentage not stripped here
+    assert _normalize_raw_name("Berger, Anna (70%)") == "Berger Anna (70%)"  # comma normalised; percentage stays for _parse_name
 
 
 def test_normalize_raw_name_no_comma():

@@ -107,7 +107,7 @@ def test_doctor_name_parsing(db: Session) -> None:
     analysis = analyze_import(db, sheet)
 
     doc = analysis.doctors[0]
-    assert doc.parsed_name == "von der Gablentz, Janina"
+    assert doc.parsed_name == "von der Gablentz Janina"
     assert doc.percentage == 67
     assert doc.match_status == MatchStatus.NEW
 

@@ -207,20 +207,20 @@ def apply_seed(session) -> tuple[int, int, int]:
             }
         )
 
-    existing_names = {doctor.name for doctor in session.query(Doctor).all()}
+    existing_last_names = {doctor.last_name for doctor in session.query(Doctor).all()}
     inserted = 0
     skipped = 0
-    doctors_by_name: dict[str, Doctor] = {}
+    doctors_by_last_name: dict[str, Doctor] = {}
 
     for index, doctor_data in enumerate(seed_doctors):
-        if doctor_data["last_name"] in existing_names:
+        if doctor_data["last_name"] in existing_last_names:
             skipped += 1
             continue
 
         doctor = Doctor(**doctor_data)
         session.add(doctor)
         session.flush()
-        doctors_by_name[doctor.name] = doctor
+        doctors_by_last_name[doctor.last_name] = doctor
         for period in _employment_periods_for_doctor(
             doctor, index=index, today=today, part_time_indices=part_time_indices
         ):
@@ -233,7 +233,7 @@ def apply_seed(session) -> tuple[int, int, int]:
         (seed_doctors[ina_indices[1]]["last_name"], INAExclusionReason.SONSTIGES),
     ]
     for name, reason in ina_targets:
-        doctor = doctors_by_name.get(name)
+        doctor = doctors_by_last_name.get(name)
         if doctor is not None:
             session.add(_create_ina_exclusion(doctor, reason=reason, today=today))
 
