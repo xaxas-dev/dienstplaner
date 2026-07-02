@@ -106,9 +106,10 @@ describe('Tab-Navigation — INA-Modus', () => {
 })
 
 describe('Details Tab', () => {
-  it('zeigt Leer-Zustand wenn kein Arzt ausgewählt', () => {
+  it('zeigt leeren Details-Tab ohne Auswahl (keine Station-/Dienst-Sektion)', () => {
     render(<PlanSidebar {...baseProps} activeTab="details" />)
-    expect(screen.getByText(/Zelle klicken/i)).toBeInTheDocument()
+    expect(screen.queryByText('Station')).not.toBeInTheDocument()
+    expect(screen.queryByText('Dienst')).not.toBeInTheDocument()
   })
 
   it('zeigt Konflikt-Nachricht wenn Shift mit Konflikten übergeben', () => {

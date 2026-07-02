@@ -51,13 +51,13 @@ describe('Segmented Switch', () => {
   test('rendert beide Segmente', () => {
     render(<PlanModeBar {...base} />)
     expect(screen.getByText('Besetzung planen')).toBeInTheDocument()
-    expect(screen.getByText('INA planen')).toBeInTheDocument()
+    expect(screen.getByText('INA-Dienste planen')).toBeInTheDocument()
   })
 
   test('Klick auf INA ruft onModeChange("ina") auf', async () => {
     const user = userEvent.setup()
     render(<PlanModeBar {...base} />)
-    await user.click(screen.getByText('INA planen'))
+    await user.click(screen.getByText('INA-Dienste planen'))
     expect(base.onModeChange).toHaveBeenCalledWith('ina')
   })
 

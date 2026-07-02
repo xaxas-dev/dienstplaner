@@ -82,7 +82,7 @@ describe('ShiftBlockPopover — Springer', () => {
         onAssignSpringer={onAssignSpringer}
       />
     )
-    fireEvent.click(screen.getByText('STB'))
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: '2' } })
     expect(onAssignSpringer).toHaveBeenCalledWith(2)
   })
 })
