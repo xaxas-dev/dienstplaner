@@ -108,7 +108,7 @@ Details: docs/architecture.md
   Gruppen-Label (z.B. „Nacht", „Tag", „V"). Null = ShiftType immer sichtbar.
   Filter-State `activeFilterGroups: Set<string>` in `PlanPage` (Session-only, kein
   localStorage). Multi-Select: leer = Alle, sonst dim Zellen deren ShiftType-filter_group
-  nicht in der aktiven Menge. `ShiftTypeDragBar` leitet Gruppen-Chips dynamisch aus
+  nicht in der aktiven Menge. `PlanModeBar` leitet Gruppen-Chips dynamisch aus
   ShiftType-Daten ab: `[...new Set(shiftTypes.map(st => st.filter_group).filter(Boolean))].sort()`.
   ADR-093.
 - **Fairness-Zähler-Sidebar (M12-006):** `buildFairnessStats(shifts, rotations, doctors)`
@@ -116,7 +116,7 @@ Details: docs/architecture.md
   Gibt `{ stats: FairnessStat[], groups: string[] }` zurück. `FairnessStat` enthält
   `doctorId, doctorName, shortName, total, byGroup: Record<string, number>`.
   Nur Ärzte mit aktiver Rotation werden gezählt; Shifts ohne `filter_group` erscheinen nur in `total`.
-  `FairnessSidebar`-Komponente: Toggle via `showFairness`-State in `PlanPage` (Default `false`).
+  Anzeige im Fairness-Tab der `PlanSidebar`.
   `byGroup[g] ?? 0` bei Rendering verwenden (defensive Fallback). ADR-094.
 - **WE-vor/nach-Urlaub-Hinweis (M12-007):** `WeekendAroundVacationRule` in
   `backend/app/services/tarif_rules_impl.py` implementiert `TarifRule`-Protocol.
@@ -230,7 +230,7 @@ Details: docs/data-model.md, docs/constraints.md
 - Jeder Constraint braucht mindestens einen positiven und einen negativen Test
 - Shift hat UNIQUE-Constraint `(plan_id, shift_date, shift_type_id)`:
   bei mehreren Test-Shifts am selben Plan+Tag → verschiedene ShiftTypes verwenden
-- vitest für Frontend: Pflicht für komplexe Komponenten (PlanGrid, etc.)
+- vitest für Frontend: Pflicht für komplexe Komponenten (UnifiedPlanGrid, etc.)
 - Tests laufen lokal grün vor jedem Merge
 
 ### Git
@@ -273,8 +273,6 @@ Punkte nennt.
 - TanStack-Query-Hooks co-located in `features/plans/`: `usePlans`, `usePlanShifts`,
   `usePlanConflicts`, `useAssignShift`. Query-Key-Objekte (`planKeys`, `shiftQueryKeys`,
   `conflictQueryKeys`) exportieren, damit andere Consumer invalidieren können.
-- `planGridUtils.ts` ist eine pure Transformationsfunktion (kein React) — Grid-Logik
-  dort isolieren, nicht in PlanGrid.tsx einbetten. Macht sie voll testbar ohne Rendering.
 - `useAssignShift` invalidiert nach onSuccess beide Queries (shifts + conflicts):
   Konfliktberechnung ist server-seitig, kein optimistic update.
 - Click-outside-Handler: `useEffect + document.addEventListener('mousedown', ...)` statt
@@ -282,30 +280,21 @@ Punkte nennt.
   (`user.click(document.body)` traversiert nicht in den React-Component-Tree).
 - Stub-Komponenten während Entwicklung: `export function X(_props: unknown) { return null }`
   erlaubt TypeScript-Kompilierung bevor Abhängigkeiten fertig sind.
-- CSS-Grid-Zeilen in PlanGrid: `<Fragment key="row-{id}">` statt `<>` — bare Fragments
+- CSS-Grid-Zeilen im Plan-Grid: `<Fragment key="row-{id}">` statt `<>` — bare Fragments
   können keinen key tragen, was React-Warnings erzeugt.
-- Warn-Dot in ShiftCell: `e.stopPropagation()` im onClick des Dots trennt Dot-Klick
-  (→ ContextPanel) von Zell-Klick (→ DoctorAssignPopover).
-- Grid-Surface-Konvention (M2-006): PlanGrid lebt in einem
-  `rounded-2xl border border-line bg-card overflow-hidden`-Wrapper in PlanPage.tsx.
+- Grid-Surface-Konvention (M2-006): das Plan-Grid lebt in einem
+  `rounded-2xl border border-line bg-card`-Wrapper (heute in `UnifiedPlanGrid.tsx`).
   Sticky-Spalten müssen `bg-card` sein (nicht `bg-paper`) — sonst papierfarbene Naht
   beim Horizontal-Scroll. `bg-card` = Weiß via shadcn-Variable `hsl(var(--card))`,
   nicht der dp-Surface-Wert #FFFCF5 — das ist gewollt, keinen neuen Token einführen.
   Leere Zellen: solide `border-line` + `bg-paper/50` (kein `border-dashed`).
 
 ### Frontend — DnD-Pattern (M3-001)
-- **DnD nur in Bereiche-Ansicht:** Drag & Drop ist für Rotations-Zuweisung
-  (Arzt → Bereich). Dienste-Ansicht (Schicht-Zuweisung per Klick-Popover)
-  bleibt unverändert — DnD dort ist separater Folge-Milestone (ADR-053).
-- **Drop öffnet Popover, schreibt nicht direkt:** Drop auf RotationGrid-Zelle
-  setzt `preselectedDragDoctorId` und öffnet `RotationAssignPopover`.
-  User bestätigt `valid_from`/`valid_to`. Kein direkter DB-Write im
-  Drop-Handler (ADR-054).
-- **Drag-ID-Konvention:**
-  - Drag-Source: `doctor-{id}` — Helpers `makeDoctorDragId` /
-    `parseDoctorDragId` in `DoctorDragSource.tsx`
-  - Drop-Target: `rotation-{departmentId}-{yyyy-MM-dd}` — Helpers
-    `makeRotationDropId` / `parseRotationDropId` in `RotationGrid.tsx`
+- **Drop öffnet Popover, schreibt nicht direkt:** Doctor-Drop auf Bereich-Header
+  öffnet `RotationAssignPopover`. User bestätigt `valid_from`/`valid_to`.
+  Kein direkter DB-Write im Drop-Handler (ADR-054).
+- **Drag-ID-Konvention:** Drag-Source `doctor-{id}` — Helpers `makeDoctorDragId` /
+  `parseDoctorDragId` in `DoctorDragSource.tsx`. Weitere IDs: siehe M2-007.
 - **DragOverlay:** `DoctorDragOverlayToken` (in `DoctorDragSource.tsx`)
   rendert das gezogene Token am Cursor (`shadow-lg`). `activeDragDoctor`-State
   in PlanPage: gesetzt in `onDragStart`, gecleart in `onDragEnd`/`onDragCancel`.
@@ -314,9 +303,6 @@ Punkte nennt.
 - **Screenreader:** Deutsche Announcements in `DndContext.accessibility`
   nutzen `active.data.current.doctorName` und `over.data.current.departmentName`.
   Diese Felder werden in `useDraggable`/`useDroppable` als `data` mitgegeben.
-- **Tab-Style:** Aktiver Tab in PlanPage nutzt Underline
-  (`border-b-2 border-accent text-ink`), nicht Pill — Terracotta-Pill
-  kollidiert visuell mit Doctor-Avataren (ADR-055).
 
 ### Frontend — Availability-Pattern (M4-001)
 - **Hook `useDoctorAvailability`:** Lädt `GET /api/doctors/{id}/ina-availability?from=&to=`
@@ -324,12 +310,11 @@ Punkte nennt.
   `availabilityKeys` exportiert (analog CLAUDE.md-Hook-Konvention).
 - **Hook `useAvailabilityForDate`:** Nutzt `useQueries` für Mehrfach-Doctor-Lookup
   an einem Datum (DoctorAssignPopover). Teilt Query-Cache mit `useDoctorAvailability`.
-- **Visual-Hint bleibt weich:** Amber-Ring im RotationGrid (`ring-amber-400/60`)
-  und Amber-Dot im DoctorAssignPopover sind read-only. Kein Drop-Block, kein
-  Auswahl-Block (ADR-033). Tooltip zeigt `reasons`.
+- **Visual-Hint bleibt weich:** Amber-Dot im DoctorAssignPopover ist read-only.
+  Kein Drop-Block, kein Auswahl-Block (ADR-033). Tooltip zeigt `reasons`.
 - **Mutation-Invalidierung:** Absence-Mutationen invalidieren `absenceKeys[doctorId]`
   **und** `availabilityKeys` (da Absence eine der drei INA-Quellen ist).
-- **Kein neuer Design-Token** für Availability-Hints — Tailwind-Klassen `ring-amber-400/60`,
+- **Kein neuer Design-Token** für Availability-Hints — Tailwind-Klassen wie
   `bg-amber-400` direkt (konsistent mit bestehender Warning-Palette).
 
 ### Frontend — Tarif-Warnings-Pattern (M5-001)
@@ -337,17 +322,16 @@ Punkte nennt.
   Disabled wenn `planId === null`. Query-Key-Objekt `tarifWarningKeys` co-located in
   `features/plans/useTarifWarnings.ts` (analog `conflictQueryKeys`).
 - **Verteilung in PlanPage:** `tarifWarningsByShift: Record<number, TarifWarning[]>` wird
-  aus `tarifWarningsData.warnings` per `shift_id` aufgebaut und an PlanGrid übergeben.
+  aus `tarifWarningsData.warnings` per `shift_id` aufgebaut und an `UnifiedPlanGrid` übergeben.
   Plan-globale Warnings (shift_id === null) werden gefiltert — kein Cell-Marker.
 - **Sand-Dot bleibt weich (ADR-060):** Kein Schreibpfad-Eingriff, kein Drop-Block,
-  kein Auswahl-Block. Sand-Dot (§, `bg-sand border border-warn-line`) oben links am
-  ShiftCell — Konflikt-Dot (!, `bg-warn`) oben rechts bleibt unverändert (ADR-061).
+  kein Auswahl-Block. Sand-Dot (§, `bg-sand border border-warn-line`) oben links an
+  der `UnifiedShiftCell` (ADR-061).
 - **Cache-Invalidierung bei Shift-Mutation:** `useAssignShift` invalidiert nach
   `onSuccess` zusätzlich `tarifWarningKeys.byPlan(planId)` — konsistent mit
   ADR-043 (kein optimistic update). Mutation → Refetch shifts + conflicts + tarifWarnings.
-- **ContextPanel-Erweiterung:** Prop `tarifWarnings?: TarifWarning[]`; Sektion
-  „Tarif-Warnungen" unterhalb Konflikte; Severity-Chip (info=Sand, warning=warn-bg,
-  critical=warn) + rule_id + message pro Eintrag.
+- **PlanSidebar:** Prop `tarifWarnings?: TarifWarning[]`; Sektion
+  „Tarif-Warnungen" unterhalb Konflikte im gewählten Shift.
 - **Kein neuer Design-Token:** Sand-Token (`bg-sand`, ADR-031) und `warn`-Border
   (`border-warn-line`) wiederverwendet.
 
@@ -404,15 +388,6 @@ Punkte nennt.
 - **Pulse-Animation:** aktiv nur wenn `pulse={true}`. CSS-Keyframes in `frontend/src/index.css` (`[data-pulse] .dp-logo-bars [data-bar]`). `@media (prefers-reduced-motion: reduce)` deaktiviert Animation.
 - **Kein Plan-Generator-Store in Phase A:** `pulse` bleibt `false`. Phase B verdrahtet `isGenerating`.
 
-### Frontend — Plan-Grid-Affordance (M7-001)
-- **Layer-Priorität in ShiftCell:** filled → dragging → hover-target → idle-dot. Einfacher visueller `else-if`-Switch — keine komplexe State-Maschine.
-- **Hover-State auf PlanGrid-Level:** `useState<{row, col}|null>` — kein per-Zellen-State. `onMouseLeave` des Grid-Containers resettet. `onFocus` auf ShiftCell triggert denselben Crosshair für Keyboard-Nutzer.
-- **Ebene E (Drag-Modus) visuell bereit:** ShiftCell akzeptiert `dragState` und `dragPreviewDoctor` Props. DnD-Verdrahtung in Dienste-Ansicht folgt in Phase B (ADR-053 bleibt offen).
-- **Farben ohne neue Tokens:** `#D6CCB6` (Dot Werktag), `#CBC2AC` (Dot Wochenende), `#FAF0DC` (Row-Tint), `#FBE5D6` (Header-BG), `rgba(198,106,61,0.08)` (Crosshair-Zell-BG) — direkte Hex-Werte, kein neuer Token.
-- **`DragState` exportiert:** `export type DragState` in `ShiftCell.tsx` — Consumer können den Typ importieren ohne Doppeldefinition.
-- **ShiftCell-Größe:** `w-full h-full` (kein `aspect-square`) — passt zum RotationDropCell-Muster, kein Overflow bei breiten Spalten.
-- **Grid-Spaltenbreite:** `minmax(36px, 1fr)` in beiden Grids (PlanGrid + RotationGrid) — skaliert auf Containerbreite, scrollt ab < 36px.
-
 ### Frontend — Dashboard-Pattern (M7-002)
 - **`GET /api/plans/current`** liefert 200+Plan oder 204 (kein Plan für heute) — kein 404.
   Route muss in `plans.py` VOR `/{plan_id}` definiert sein (FastAPI matcht sonst gegen `plan_id="current"`).
@@ -448,11 +423,10 @@ Punkte nennt.
 - **Cell-Rendering-Priorität:** `resolveCell(row, dayKey, shifts, absences)` → Absence-Code vor Shift-Code vor leer. Absence-Code-Mapping in `absenceCode()`: URLAUB→U, KRANKHEIT→K, FORTBILDUNG→Fo, ELTERNZEIT→EZ, MUTTERSCHUTZ→MuSchu, SONSTIGES→DIV. `inRotation`-Flag steuert Hintergrundfarbe + Opacity.
 - **Bereichsfarbe:** `getDepartmentColor(department)` in `bereichColors.ts` — eigene Farbe wenn gesetzt, sonst `display_order % 8` auf 8-Farben-Fallback-Palette. `getDepartmentColorMuted(department)` gibt Hex + `'40'` (25% Alpha).
 - **DnD-ID-Konventionen (ergänzt M3-001-Konventionen):**
-  - Drag-Source ShiftType: `shift-{shiftTypeId}` — Helpers `makeShiftTypeDragId` / `parseShiftTypeDragId` in `ShiftTypeDragBar.tsx`
+  - Drag-Source ShiftType: `shift-{shiftTypeId}` — Helpers `makeShiftTypeDragId` / `parseShiftTypeDragId` in `PlanModeBar.tsx`
   - Drop-Target Bereich-Header: `rotation-header-{deptId}` — Helpers `makeBereichHeaderDropId` / `parseBereichHeaderDropId` in `BereichHeaderRow.tsx`
   - Drop-Target Tag-Zelle: `cell-{rotationId}-{yyyy-MM-dd}` — Helper `makeCellDropId` in `UnifiedShiftCell.tsx`; Parsen inline in `PlanPage` via Regex
 - **ShiftType-Drop-Auflösung:** Drop `shift-{id}` auf `cell-{rotationId}-{day}` → rotationId → doctor_id → Shift via `findShiftId(shifts, day, shiftTypeId)` → Toast (nicht verfügbar) / Toast (gepinnt) / confirm (Überschreiben) / PATCH. Keine harte Verfügbarkeitsprüfung (ADR-080).
-- **Fokus-V/N-Toggle:** `focusMode: 'alle' | 'vn'` als Session-State in `PlanPage`. `UnifiedShiftCell` dimmt Nicht-V/N-Zellen bei `focusMode === 'vn'`. `ShiftTypeDragBar` dimmt Nicht-V/N-Chips. Kein URL-Param.
 - **`GET /api/plans/{id}/absences`:** Liefert alle Abwesenheiten von Ärzten mit aktiver Rotation im Plan, deren Periode den Plan-Zeitraum überlappt. Hook `usePlanAbsences` mit Query-Key `planAbsenceKeys.byPlan(planId)`.
 - **`Department.color`:** Nullable Hex-String (`VARCHAR(9)`). Frontend: `<input type="color">` + Reset-Button in `DepartmentFormDialog`. Backend: in `DepartmentBase`, `DepartmentUpdate`, `DepartmentRead` als `color: str | None`.
 

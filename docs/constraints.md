@@ -40,14 +40,14 @@ Konflikte blockieren nichts (weiche Philosophie). Sie werden read-only über
 
 ## Rotations-Zuweisung via Drag & Drop (M3-001, Phase A)
 
-Ärzte können per Drag & Drop auf RotationGrid-Zellen gezogen werden.
-Der Drop schreibt **nicht direkt** in die DB — er öffnet den
+Ärzte können per Drag & Drop auf Bereich-Header im UnifiedPlanGrid
+gezogen werden. Der Drop schreibt **nicht direkt** in die DB — er öffnet den
 `RotationAssignPopover`, in dem der User `valid_from`/`valid_to` bestätigt
 (ADR-054). Kein Constraint-Check im Drop-Handler.
 
 Drag-Source: `doctor-{id}` (Helper `makeDoctorDragId`/`parseDoctorDragId`).
-Drop-Target: `rotation-{departmentId}-{yyyy-MM-dd}` (Helper
-`makeRotationDropId`/`parseRotationDropId`).
+Drop-Target: `rotation-header-{deptId}` (Helper
+`makeBereichHeaderDropId`/`parseBereichHeaderDropId` in `BereichHeaderRow.tsx`).
 
 `PointerSensor` mit `distance: 4` verhindert versehentliche Drags aus
 Klick-Interaktionen. Screenreader-Announcements in Deutsch via
@@ -55,8 +55,7 @@ Klick-Interaktionen. Screenreader-Announcements in Deutsch via
 
 ## INA-Verfügbarkeitsanzeige (M4-001, Phase A)
 
-Read-only Marker in RotationGrid (während Drag, `ring-amber-400/60`) und
-DoctorAssignPopover (Amber-Dot am Avatar). Keine Schreibpfad-Blockade —
+Read-only Marker im DoctorAssignPopover (Amber-Dot am Avatar). Keine Schreibpfad-Blockade —
 Drop und Auswahl bleiben in allen Fällen erlaubt (ADR-033).
 
 Quelle: `get_ina_availability_for_period` aus `ina_availability_service.py`

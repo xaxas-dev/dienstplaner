@@ -3,6 +3,12 @@
 > Briefing für Claude / Claude Code, um das Redesign aus `Dienstplaner Redesign.html`
 > in den bestehenden React-Codebase (`frontend/`) zu übernehmen.
 > **Stack ist gesetzt:** React + Vite + Tailwind + shadcn/ui + react-router + lucide-react.
+>
+> **Hinweis (Stand M2-007):** `PlanGrid`, `RotationGrid`, `ShiftCell`, `Sparkline`,
+> `KpiBar` und `ContextPanel` wurden durch `UnifiedPlanGrid`, `UnifiedShiftCell` und
+> `PlanSidebar` ersetzt bzw. entfernt. Abschnitte §6/§7/§12/§13 beschreiben den
+> ursprünglichen Design-Stand — geltende Konventionen stehen in `CLAUDE.md`
+> (Abschnitt „Unified Plan Grid").
 
 ---
 
