@@ -58,3 +58,7 @@ desktop.ini
 # Exports (werden on-demand generiert)
 exports/
 .worktrees/
+
+# Claude Code — maschinenspezifische Settings (Vorlage: .claude/settings.local.json.example)
+.claude/settings.local.json
+.claude/settings.json

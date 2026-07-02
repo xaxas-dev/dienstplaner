@@ -10,7 +10,6 @@ but incorrectly stated no DDL change was needed. This migration drops the old
 constraint and adds a new one with all 9 values.
 """
 
-import sqlalchemy as sa
 from alembic import op
 
 revision = "0021"

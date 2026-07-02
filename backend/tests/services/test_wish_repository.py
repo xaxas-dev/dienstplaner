@@ -1,5 +1,4 @@
 from datetime import date
-import pytest
 from app.repositories import wish_repository as repo
 from app.models.wish import Wish, WishType
 

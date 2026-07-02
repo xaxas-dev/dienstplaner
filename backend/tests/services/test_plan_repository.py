@@ -1,6 +1,5 @@
 from datetime import date, datetime
 
-import pytest
 from sqlalchemy.orm import Session
 
 from app.models.plan import Plan

@@ -1,6 +1,5 @@
 from datetime import date
 
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 

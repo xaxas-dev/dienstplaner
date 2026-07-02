@@ -1,7 +1,7 @@
 """Tests für holiday_service und holiday_repository."""
 from datetime import date
 
-from app.models.holiday import Holiday, HolidaySource
+from app.models.holiday import HolidaySource
 from app.repositories import holiday_repository as holiday_repo
 
 

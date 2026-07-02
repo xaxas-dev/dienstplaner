@@ -6,7 +6,7 @@ from app.repositories import doctor_repository as doctor_repo
 from app.repositories import plan_repository as plan_repo
 from app.schemas.wish import WishCreateBody, WishResponse, WishUpdate
 from app.services import wish_service
-from app.services.exceptions import DoctorNotFoundError, PlanNotFoundError, WishNotFoundError
+from app.services.exceptions import DoctorNotFoundError, PlanNotFoundError
 
 doctor_wishes_router = APIRouter(tags=["wishes"])
 wishes_router = APIRouter(tags=["wishes"])

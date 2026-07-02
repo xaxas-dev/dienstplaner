@@ -26,5 +26,10 @@
   },
   "enabledPlugins": {
     "claude-mem@thedotmack": true
+  },
+  "env": {
+    "VIRTUAL_ENV": "d:/Softwareprojekte/Dienstplaner/backend/.venv",
+    "UV_PROJECT_ENVIRONMENT": "d:/Softwareprojekte/Dienstplaner/backend/.venv",
+    "PYTHONPATH": "d:/Softwareprojekte/Dienstplaner/backend"
   }
 }

@@ -6,6 +6,7 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+from sqlalchemy.orm import Session
 
 from app.models.department import Department
 from app.models.doctor import Doctor

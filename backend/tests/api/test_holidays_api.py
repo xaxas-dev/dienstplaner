@@ -1,4 +1,3 @@
-from datetime import date
 
 
 def test_list_holidays_empty(client):
